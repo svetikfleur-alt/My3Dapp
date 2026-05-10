@@ -1,6 +1,4 @@
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using My3DApp.Core;
@@ -15,8 +13,9 @@ public class AiBackend : IDisposable
 {
     private readonly HttpClient _http = new();
     private readonly List<ChatMessage> _history = new();
-    private const string ApiUrl = "https://api.anthropic.com/v1/messages";
-    private const string Model   = "claude-sonnet-4-6";
+    private const string ApiUrl     = "https://api.anthropic.com/v1/messages";
+    private const string Model      = "claude-sonnet-4-6";
+    private const int    MaxTurns   = 20; // keep last N user+assistant pairs to avoid token overflow
 
     public string? LastGeometryScript { get; private set; }
 
@@ -75,12 +74,17 @@ public class AiBackend : IDisposable
 
         try
         {
+            // Trim to the most recent MaxTurns pairs to stay within context limits
+            var window = _history.Count > MaxTurns * 2
+                ? _history.TakeLast(MaxTurns * 2).ToArray()
+                : _history.ToArray();
+
             var request = new
             {
                 model = Model,
                 max_tokens = 1024,
                 system = SystemPrompt,
-                messages = _history.Select(m => new { role = m.Role, content = m.Content }).ToArray()
+                messages = window.Select(m => new { role = m.Role, content = m.Content }).ToArray()
             };
 
             var json = JsonSerializer.Serialize(request);

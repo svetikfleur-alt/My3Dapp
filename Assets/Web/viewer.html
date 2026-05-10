@@ -55,39 +55,81 @@ controls.dampingFactor = 0.07;
 controls.minDistance = 5;
 controls.maxDistance = 2000;
 
-// ── Lighting ──────────────────────────────────────────────────────────────────
-const ambientLight = new THREE.AmbientLight(0x404060, 0.8);
+// ── Lighting (3-point rig) ────────────────────────────────────────────────────
+const ambientLight = new THREE.AmbientLight(0x334466, 1.2);
 scene.add(ambientLight);
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-dirLight.position.set(300, 400, 200);
-dirLight.castShadow = true;
-dirLight.shadow.mapSize.set(2048, 2048);
-scene.add(dirLight);
+const keyLight = new THREE.DirectionalLight(0xfff8f0, 2.2);
+keyLight.position.set(300, 500, 250);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(4096, 4096);
+keyLight.shadow.camera.near = 10;
+keyLight.shadow.camera.far  = 3000;
+keyLight.shadow.camera.left = keyLight.shadow.camera.bottom = -400;
+keyLight.shadow.camera.right = keyLight.shadow.camera.top  =  400;
+keyLight.shadow.bias = -0.0005;
+scene.add(keyLight);
 
-const fillLight = new THREE.DirectionalLight(0x6090cc, 0.4);
-fillLight.position.set(-200, -100, -200);
+const fillLight = new THREE.DirectionalLight(0x8ab4e8, 0.6);
+fillLight.position.set(-250, 100, -200);
 scene.add(fillLight);
 
-// ── Grid & origin ─────────────────────────────────────────────────────────────
-const grid = new THREE.GridHelper(400, 40, 0x1A2A3A, 0x1A2A3A);
+const rimLight = new THREE.DirectionalLight(0xffd0a0, 0.35);
+rimLight.position.set(0, -200, -300);
+scene.add(rimLight);
+
+// Ground shadow receiver
+const groundGeo = new THREE.PlaneGeometry(2000, 2000);
+const groundMat = new THREE.ShadowMaterial({ opacity: 0.18 });
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// ── Grid & labelled axes ──────────────────────────────────────────────────────
+const grid = new THREE.GridHelper(500, 50, 0x1E3050, 0x162438);
 scene.add(grid);
 
-function addAxisLine(dir, color) {
-  const mat = new THREE.LineBasicMaterial({ color });
-  const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), dir]);
+function addAxisLine(from, to, color) {
+  const mat = new THREE.LineBasicMaterial({ color, linewidth: 2 });
+  const geo = new THREE.BufferGeometry().setFromPoints([from, to]);
   scene.add(new THREE.Line(geo, mat));
 }
-addAxisLine(new THREE.Vector3(60, 0, 0), 0xff3333);
-addAxisLine(new THREE.Vector3(0, 60, 0), 0x33ff33);
-addAxisLine(new THREE.Vector3(0, 0, 60), 0x3366ff);
+// Positive axes solid, negative dashed-like (shorter)
+addAxisLine(new THREE.Vector3(0,0,0), new THREE.Vector3(80,0,0),  0xff4444);
+addAxisLine(new THREE.Vector3(0,0,0), new THREE.Vector3(-30,0,0), 0x882222);
+addAxisLine(new THREE.Vector3(0,0,0), new THREE.Vector3(0,80,0),  0x44ff44);
+addAxisLine(new THREE.Vector3(0,0,0), new THREE.Vector3(0,-30,0), 0x228822);
+addAxisLine(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,80),  0x4488ff);
+addAxisLine(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,-30), 0x224488);
+
+// Axis labels (sprites)
+function makeAxisLabel(text, position, color) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64; canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = color;
+  ctx.font = 'bold 48px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 32, 32);
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({ map: tex, depthTest: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.position.copy(position);
+  sprite.scale.set(12, 12, 1);
+  scene.add(sprite);
+}
+makeAxisLabel('X', new THREE.Vector3(92, 0, 0),  '#ff6666');
+makeAxisLabel('Y', new THREE.Vector3(0, 92, 0),  '#66ff66');
+makeAxisLabel('Z', new THREE.Vector3(0, 0, 92),  '#6699ff');
 
 // ── Default part material ─────────────────────────────────────────────────────
 const defaultMaterial = new THREE.MeshStandardMaterial({
-  color: 0x4488cc,
-  roughness: 0.35,
-  metalness: 0.55,
-  envMapIntensity: 0.8,
+  color: 0x3a7bc8,
+  roughness: 0.28,
+  metalness: 0.62,
+  envMapIntensity: 1.0,
 });
 const wireframeMaterial = new THREE.MeshBasicMaterial({ color: 0x88aacc, wireframe: true });
 

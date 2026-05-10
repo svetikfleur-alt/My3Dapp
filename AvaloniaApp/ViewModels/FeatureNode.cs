@@ -19,7 +19,12 @@ public class FeatureNode : ViewModelBase
         set => SetField(ref _name, value);
     }
 
-    public string FeatureType { get; set; } = string.Empty;
+    private string _featureType = string.Empty;
+    public string FeatureType
+    {
+        get => _featureType;
+        set => SetField(ref _featureType, value);
+    }
     public ObservableCollection<FeatureNode> Children { get; } = new();
 
     private bool _isVisible = true;
