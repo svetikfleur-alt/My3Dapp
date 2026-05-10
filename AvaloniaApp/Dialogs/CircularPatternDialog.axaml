@@ -1,0 +1,106 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="My3DApp.AvaloniaApp.Dialogs.CircularPatternDialog"
+        Width="420"
+        Height="300"
+        MinWidth="400"
+        MinHeight="280"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Classes="FeatureDialogWindow"
+        Title="Circular Pattern">
+  <Border Classes="FeatureDialogPanel" Margin="0">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
+      <TextBlock Classes="FeatureDialogTitle"
+                 Text="Circular Pattern" />
+      <TextBlock Grid.Row="1"
+                 Margin="0,6,0,0"
+                 Classes="FeatureDialogSubtitle"
+                 Text="Repeat the selected body N times around a coordinate axis." />
+
+      <StackPanel Grid.Row="2"
+                  Margin="0,16,0,16"
+                  Spacing="12">
+        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
+                BorderBrush="{DynamicResource Studio.BorderBrush}"
+                BorderThickness="1"
+                Padding="12">
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="100,*">
+            <TextBlock Text="Count"
+                       FontWeight="SemiBold" />
+            <NumericUpDown x:Name="CountInput"
+                           Grid.Row="1"
+                           Width="130"
+                           HorizontalAlignment="Left"
+                           Margin="0,6,0,0"
+                           Increment="1"
+                           Minimum="2"
+                           Maximum="360"
+                           FormatString="0" />
+
+            <TextBlock Grid.Row="2"
+                       Text="Total Angle"
+                       Margin="0,12,0,0"
+                       FontWeight="SemiBold" />
+            <Grid Grid.Row="3"
+                  Grid.Column="0"
+                  Grid.ColumnSpan="2"
+                  ColumnDefinitions="130,80"
+                  Margin="0,6,0,0">
+              <NumericUpDown x:Name="AngleInput"
+                             Width="130"
+                             HorizontalAlignment="Left"
+                             Increment="15"
+                             Minimum="1"
+                             Maximum="360"
+                             FormatString="0.###" />
+              <Border Grid.Column="1"
+                      Margin="8,0,0,0"
+                      Background="{DynamicResource Studio.PanelBackgroundBrush}"
+                      BorderBrush="{DynamicResource Studio.BorderBrush}"
+                      BorderThickness="1"
+                      Padding="10,6"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Top">
+                <TextBlock HorizontalAlignment="Center"
+                           Text="°" />
+              </Border>
+            </Grid>
+          </Grid>
+        </Border>
+
+        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
+                BorderBrush="{DynamicResource Studio.BorderBrush}"
+                BorderThickness="1"
+                Padding="12">
+          <Grid ColumnDefinitions="100,*" RowDefinitions="Auto,Auto">
+            <TextBlock Text="Axis"
+                       FontWeight="SemiBold" />
+            <ComboBox x:Name="AxisComboBox"
+                      Grid.Row="1"
+                      Width="130"
+                      HorizontalAlignment="Left"
+                      Margin="0,6,0,0"
+                      SelectedIndex="1">
+              <ComboBoxItem Content="X axis" Tag="x" />
+              <ComboBoxItem Content="Y axis" Tag="y" />
+              <ComboBoxItem Content="Z axis" Tag="z" />
+            </ComboBox>
+          </Grid>
+        </Border>
+      </StackPanel>
+
+      <StackPanel Grid.Row="3"
+                  Orientation="Horizontal"
+                  HorizontalAlignment="Right"
+                  Spacing="8">
+        <Button Content="Cancel"
+                Classes="FeatureDialogButtonSecondary"
+                Click="OnCancelClick" />
+        <Button Content="OK"
+                Classes="FeatureDialogButtonPrimary"
+                Click="OnConfirmClick" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>

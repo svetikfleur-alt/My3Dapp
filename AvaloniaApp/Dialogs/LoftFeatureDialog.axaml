@@ -1,0 +1,117 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="My3DApp.AvaloniaApp.Dialogs.LoftFeatureDialog"
+        Width="480"
+        Height="440"
+        MinWidth="450"
+        MinHeight="420"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Classes="FeatureDialogWindow"
+        Title="Loft">
+  <Border Classes="FeatureDialogPanel" Margin="0">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="FeatureDialogTitle"
+                     Text="Loft" />
+          <TextBlock Classes="FeatureDialogSubtitle"
+                     TextWrapping="Wrap"
+                     Text="Create a solid blended between two closed sketch profiles." />
+        </StackPanel>
+        <Border Grid.Column="1"
+                Background="{DynamicResource Studio.PanelInsetBrush}"
+                BorderBrush="{DynamicResource Studio.BorderBrush}"
+                BorderThickness="1"
+                Padding="9,5"
+                VerticalAlignment="Top">
+          <TextBlock Text="FEATURE"
+                     FontSize="10"
+                     FontWeight="SemiBold" />
+        </Border>
+      </Grid>
+
+      <StackPanel Grid.Row="2"
+                  Margin="0,16,0,16"
+                  Spacing="12">
+        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
+                BorderBrush="{DynamicResource Studio.BorderBrush}"
+                BorderThickness="1"
+                Padding="12">
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="110,*">
+            <TextBlock Text="First profile"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center" />
+            <ComboBox x:Name="ProfileAComboBox"
+                      Grid.Column="1"
+                      HorizontalAlignment="Stretch" />
+
+            <TextBlock Grid.Row="1"
+                       Text="Second profile"
+                       Margin="0,10,0,0"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center" />
+            <ComboBox x:Name="ProfileBComboBox"
+                      Grid.Row="1"
+                      Grid.Column="1"
+                      Margin="0,8,0,0"
+                      HorizontalAlignment="Stretch" />
+
+            <TextBlock Grid.Row="2"
+                       Grid.ColumnSpan="2"
+                       Margin="0,8,0,0"
+                       Foreground="{DynamicResource Studio.TextMutedBrush}"
+                       TextWrapping="Wrap"
+                       x:Name="ProfileHintLabel"
+                       Text="" />
+          </Grid>
+        </Border>
+
+        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
+                BorderBrush="{DynamicResource Studio.BorderBrush}"
+                BorderThickness="1"
+                Padding="12">
+          <Grid ColumnDefinitions="*,88" RowDefinitions="Auto,Auto">
+            <TextBlock Text="Distance"
+                       FontWeight="SemiBold" />
+            <NumericUpDown x:Name="DistanceInput"
+                           Grid.Row="1"
+                           Width="160"
+                           HorizontalAlignment="Left"
+                           Margin="0,8,0,0"
+                           Increment="1"
+                           Minimum="0.1"
+                           Maximum="10000"
+                           FormatString="0.###" />
+            <Border Grid.Column="1"
+                    Grid.Row="1"
+                    Margin="8,8,0,0"
+                    Background="{DynamicResource Studio.PanelBackgroundBrush}"
+                    BorderBrush="{DynamicResource Studio.BorderBrush}"
+                    BorderThickness="1"
+                    Padding="10,6"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Top">
+              <TextBlock HorizontalAlignment="Center"
+                         Text="mm" />
+            </Border>
+          </Grid>
+        </Border>
+      </StackPanel>
+
+      <StackPanel Grid.Row="3"
+                  Orientation="Horizontal"
+                  HorizontalAlignment="Right"
+                  Spacing="8">
+        <Button Content="Cancel"
+                Classes="FeatureDialogButtonSecondary"
+                Click="OnCancelClick" />
+        <Button x:Name="OkButton"
+                Content="OK"
+                Classes="FeatureDialogButtonPrimary"
+                Click="OnConfirmClick" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>

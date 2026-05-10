@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="My3DApp.AvaloniaApp.Dialogs.OffsetSketchToolOptionsView">
+  <StackPanel Spacing="10">
+    <Border Background="{DynamicResource Studio.PanelInsetBrush}"
+            BorderBrush="{DynamicResource Studio.BorderBrush}"
+            BorderThickness="1"
+            Padding="12">
+      <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="96,*">
+        <TextBlock Text="Tool"
+                   FontWeight="SemiBold" />
+        <TextBlock Grid.Column="1"
+                   Text="Offset" />
+        <TextBlock Grid.Row="1"
+                   Margin="0,10,0,0"
+                   Text="Mode"
+                   FontWeight="SemiBold" />
+        <TextBlock Grid.Row="1"
+                   Grid.Column="1"
+                   Margin="0,10,0,0"
+                   Text="Click in the viewport to create a parallel offset copy of all current sketch lines and circles."
+                   TextWrapping="Wrap" />
+      </Grid>
+    </Border>
+
+    <Border Background="{DynamicResource Studio.PanelInsetBrush}"
+            BorderBrush="{DynamicResource Studio.BorderBrush}"
+            BorderThickness="1"
+            Padding="12">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Options"
+                   FontWeight="SemiBold" />
+        <Grid RowDefinitions="Auto" ColumnDefinitions="120,*">
+          <TextBlock Text="Distance (mm)"
+                     VerticalAlignment="Center" />
+          <NumericUpDown x:Name="DistanceInput"
+                         Grid.Column="1"
+                         Minimum="-1000"
+                         Maximum="1000"
+                         Value="1"
+                         Increment="0.5"
+                         FormatString="0.###"
+                         HorizontalAlignment="Stretch" />
+        </Grid>
+        <TextBlock Text="Negative values produce an inward offset. Lines and circles are supported."
+                   Foreground="{DynamicResource Studio.TextMutedBrush}"
+                   TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

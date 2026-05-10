@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="My3DApp.AvaloniaApp.Dialogs.PolygonSketchToolOptionsView">
+  <StackPanel Spacing="10">
+    <Border Background="{DynamicResource Studio.PanelInsetBrush}"
+            BorderBrush="{DynamicResource Studio.BorderBrush}"
+            BorderThickness="1"
+            Padding="12">
+      <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="96,*">
+        <TextBlock Text="Tool"
+                   FontWeight="SemiBold" />
+        <TextBlock Grid.Column="1"
+                   Text="Polygon" />
+        <TextBlock Grid.Row="1"
+                   Margin="0,10,0,0"
+                   Text="Mode"
+                   FontWeight="SemiBold" />
+        <TextBlock Grid.Row="1"
+                   Grid.Column="1"
+                   Margin="0,10,0,0"
+                   Text="Click center, then drag to set radius."
+                   TextWrapping="Wrap" />
+      </Grid>
+    </Border>
+
+    <Border Background="{DynamicResource Studio.PanelInsetBrush}"
+            BorderBrush="{DynamicResource Studio.BorderBrush}"
+            BorderThickness="1"
+            Padding="12">
+      <StackPanel Spacing="10">
+        <TextBlock Text="Options"
+                   FontWeight="SemiBold" />
+        <Grid RowDefinitions="Auto" ColumnDefinitions="120,*">
+          <TextBlock Text="Sides (n)"
+                     VerticalAlignment="Center" />
+          <NumericUpDown x:Name="SidesInput"
+                         Grid.Column="1"
+                         Minimum="3"
+                         Maximum="50"
+                         Value="6"
+                         Increment="1"
+                         FormatString="0"
+                         HorizontalAlignment="Stretch" />
+        </Grid>
+        <TextBlock Text="Valid range: 3 to 50 sides. Default is 6 (hexagon)."
+                   Foreground="{DynamicResource Studio.TextMutedBrush}"
+                   TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

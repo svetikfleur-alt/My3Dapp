@@ -1,0 +1,37 @@
+using System;
+using System.Linq;
+using FormaCore.Engine;
+
+var store = new CadProjectStore();
+var top = store.Project.Scene.ReferencePlanes.First(p => p.Name == "Top");
+store.Apply(new CadCommandAction(CadCommandActionKind.SelectEntity, EntityId: top.Id, EntityName: top.Name));
+store.Apply(new CadCommandAction(CadCommandActionKind.StartSketch, EntityId: top.Id, EntityName: top.Name));
+store.Apply(new CadCommandAction(CadCommandActionKind.SetSketchTool, SketchTool: CadSketchToolKind.Rectangle));
+store.Apply(new CadCommandAction(CadCommandActionKind.PlaceSketchEntity, U: 0, V: 0));
+store.Apply(new CadCommandAction(CadCommandActionKind.PlaceSketchEntity, U: 20, V: 10));
+store.Apply(new CadCommandAction(CadCommandActionKind.FinishSketch));
+var extrudeResult = store.Apply(new CadCommandAction(CadCommandActionKind.ExtrudeSelectedSketch, Amount: 12));
+var compiledExtrude = store.Compile();
+Console.WriteLine($"EXTRUDE_OK={extrudeResult.IsSuccess}");
+Console.WriteLine($"EXTRUDE_MESSAGE={extrudeResult.Message}");
+Console.WriteLine($"EXTRUDE_BODIES={compiledExtrude.Bodies.Count}");
+Console.WriteLine($"EXTRUDE_KIND={(compiledExtrude.Bodies.FirstOrDefault()?.Solid.GetType().Name ?? "none")}");
+
+var store2 = new CadProjectStore();
+var top2 = store2.Project.Scene.ReferencePlanes.First(p => p.Name == "Top");
+store2.Apply(new CadCommandAction(CadCommandActionKind.SelectEntity, EntityId: top2.Id, EntityName: top2.Name));
+store2.Apply(new CadCommandAction(CadCommandActionKind.StartSketch, EntityId: top2.Id, EntityName: top2.Name));
+store2.Apply(new CadCommandAction(CadCommandActionKind.SetSketchTool, SketchTool: CadSketchToolKind.Line));
+store2.Apply(new CadCommandAction(CadCommandActionKind.PlaceSketchEntity, U: 5, V: 0));
+store2.Apply(new CadCommandAction(CadCommandActionKind.PlaceSketchEntity, U: 5, V: 20));
+store2.Apply(new CadCommandAction(CadCommandActionKind.PlaceSketchEntity, U: 8, V: 20));
+store2.Apply(new CadCommandAction(CadCommandActionKind.PlaceSketchEntity, U: 8, V: 0));
+store2.Apply(new CadCommandAction(CadCommandActionKind.PlaceSketchEntity, U: 5, V: 0));
+store2.Apply(new CadCommandAction(CadCommandActionKind.FinishSketch));
+var revResult = store2.Apply(new CadCommandAction(CadCommandActionKind.RevolveSelectedSketch, Axis: CadAxis.Y, Amount: 360));
+var compiledRev = store2.Compile();
+Console.WriteLine($"REVOLVE_OK={revResult.IsSuccess}");
+Console.WriteLine($"REVOLVE_MESSAGE={revResult.Message}");
+Console.WriteLine($"REVOLVE_BODIES={compiledRev.Bodies.Count}");
+Console.WriteLine($"REVOLVE_KIND={(compiledRev.Bodies.FirstOrDefault()?.Solid.GetType().Name ?? "none")}");
+Console.WriteLine($"REVOLVE_DIAGS={string.Join("|", compiledRev.Diagnostics.Select(d => d.Message))}");
