@@ -3,6 +3,40 @@ using My3DApp.Core;
 
 namespace My3DApp.Engine;
 
+// ── Parametric solid definitions ──────────────────────────────────────────────
+// Solids are stored as parameters; Mesh is only materialised at export time.
+
+public abstract record SolidParams
+{
+    public abstract Mesh ToMesh();
+}
+
+public record BoxParams(float W, float H, float D) : SolidParams
+{
+    public override Mesh ToMesh() => Mesh.Box(W, H, D);
+    public override string ToString() => $"Box {W}×{H}×{D} mm";
+}
+
+public record CylinderParams(float Radius, float Height, int Segments = 32) : SolidParams
+{
+    public override Mesh ToMesh() => Mesh.Cylinder(Radius, Height, Segments);
+    public override string ToString() => $"Cylinder r={Radius} h={Height} mm";
+}
+
+public record SphereParams(float Radius, int Segments = 32) : SolidParams
+{
+    public override Mesh ToMesh() => Mesh.Sphere(Radius, Segments, Segments);
+    public override string ToString() => $"Sphere r={Radius} mm";
+}
+
+public record ImportedMeshParams(Mesh Mesh) : SolidParams
+{
+    public override Mesh ToMesh() => Mesh;
+    public override string ToString() => $"Imported ({Mesh.Triangles.Count} tris)";
+}
+
+// ── Scene object ──────────────────────────────────────────────────────────────
+
 public class SceneObject
 {
     public Guid Id { get; } = Guid.NewGuid();
@@ -11,10 +45,10 @@ public class SceneObject
     public bool Visible { get; set; } = true;
     public float[] Transform { get; set; } = Identity4x4();
 
-    // Optional computed geometry — null for features that haven't been meshed yet
-    public Mesh? Geometry { get; set; }
+    // Parametric solid definition — null for objects with no computable geometry
+    public SolidParams? Solid { get; set; }
 
-    // Path to the source file if this was imported
+    // Source file path for imported assets
     public string? SourcePath { get; set; }
 
     private static float[] Identity4x4() =>

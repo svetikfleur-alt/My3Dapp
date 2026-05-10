@@ -369,38 +369,32 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         var ext = Path.GetExtension(path).ToLowerInvariant();
 
-        // Collect all scene objects that have real geometry
-        var objectsWithGeo = _scene.Objects.Where(o => o.Geometry != null).ToList();
+        // Collect all scene objects that have a solid definition
+        var solids = _scene.Objects.Where(o => o.Solid != null).ToList();
 
-        if (objectsWithGeo.Count == 0)
+        if (solids.Count == 0)
         {
-            // Fall back: try to export whatever is selected/first even without geometry
-            Guid? exportId = SelectedFeatureNode?.SceneObjectId
-                ?? _scene.Objects.FirstOrDefault()?.Id;
-            if (exportId is null) { StatusMessage = "Nothing to export."; return; }
-            await _models.ExportAsync(exportId.Value, path);
-            StatusMessage = $"Exported (no geometry): {Path.GetFileName(path)}";
+            StatusMessage = "Nothing to export — add geometry first.";
             return;
         }
 
-        if (objectsWithGeo.Count == 1 && ext != ".stl")
+        if (solids.Count == 1 && ext != ".stl")
         {
-            // Single object non-STL: delegate to ModelManager for OBJ support
-            await _models.ExportAsync(objectsWithGeo[0].Id, path);
+            // Single solid, non-STL format: delegate to ModelManager (handles OBJ)
+            await _models.ExportAsync(solids[0].Id, path);
             StatusMessage = $"Exported: {Path.GetFileName(path)}";
             return;
         }
 
-        // Merge all geometries into a single STL (or the largest for OBJ fallback)
+        // Merge all solids into one mesh at export time
         var merged = new Mesh();
-        foreach (var obj in objectsWithGeo)
-            foreach (var tri in obj.Geometry!.Triangles)
+        foreach (var solid in solids)
+            foreach (var tri in solid.Solid!.ToMesh().Triangles)
                 merged.Triangles.Add(tri);
 
         await using var fs = File.Create(path);
         merged.WriteBinaryStl(fs);
-        var totalTris = merged.Triangles.Count;
-        StatusMessage = $"Exported {objectsWithGeo.Count} parts ({totalTris} triangles): {Path.GetFileName(path)}";
+        StatusMessage = $"Exported {solids.Count} solids ({merged.Triangles.Count} triangles): {Path.GetFileName(path)}";
     }
 
     // ── Toolbar handlers ──────────────────────────────────────────────────────
@@ -732,7 +726,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
             node.SceneObjectId = obj.Id;
             children.Add(node);
-            RuntimeLog.Info("VM", $"AI synced node '{name}' ({type}) — geometry {(obj.Geometry != null ? $"{obj.Geometry.Triangles.Count} tris" : "none")}");
+            RuntimeLog.Info("VM", $"AI synced solid '{name}' ({type}) — {obj.Solid?.ToString() ?? "no solid"}");
         }
 
         RefreshTreeBindings();
