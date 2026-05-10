@@ -115,6 +115,17 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand SolidViewCommand        { get; private set; } = null!;
     public ICommand OpenDocsCommand         { get; private set; } = null!;
     public ICommand ShowAboutCommand        { get; private set; } = null!;
+    // Feature tree context menu
+    public ICommand DeleteFeatureCommand    { get; private set; } = null!;
+    public ICommand RenameFeatureCommand    { get; private set; } = null!;
+    public ICommand ToggleVisibilityCommand { get; private set; } = null!;
+
+    private FeatureNode? _selectedFeatureNode;
+    public FeatureNode? SelectedFeatureNode
+    {
+        get => _selectedFeatureNode;
+        set => SetField(ref _selectedFeatureNode, value);
+    };
 
     // ── Constructor ───────────────────────────────────────────────────────────
     public MainWindowViewModel()
@@ -149,6 +160,9 @@ public class MainWindowViewModel : ViewModelBase
         SolidViewCommand        = new AsyncRelayCommand(() => ViewportService?.SetWireframeAsync(false) ?? Task.CompletedTask);
         OpenDocsCommand         = new RelayCommand(() => OpenUrl("https://github.com/svetikfleur-alt/my3dapp"));
         ShowAboutCommand        = new RelayCommand(ShowAbout);
+        DeleteFeatureCommand    = new RelayCommand(p => DeleteFeature(p as FeatureNode));
+        RenameFeatureCommand    = new RelayCommand(p => RenameFeature(p as FeatureNode));
+        ToggleVisibilityCommand = new RelayCommand(p => ToggleVisibility(p as FeatureNode));
     }
 
     // ── History ───────────────────────────────────────────────────────────────
@@ -266,6 +280,43 @@ public class MainWindowViewModel : ViewModelBase
     private void SetView(string v) { StatusMessage = $"View: {v}"; _ = ViewportService?.SetViewAsync(v); }
     private void OpenUrl(string url) =>
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+
+    // ── Feature tree context menu ─────────────────────────────────────────────
+    private void DeleteFeature(FeatureNode? node)
+    {
+        if (node is null) return;
+        // Search all roots and their children
+        foreach (var root in FeatureNodes)
+        {
+            if (root.Children.Remove(node))
+            {
+                StatusMessage = $"Deleted '{node.Name}'.";
+                RuntimeLog.Info("VM", $"Deleted feature node '{node.Name}'");
+                return;
+            }
+        }
+        // Don't delete root nodes
+        StatusMessage = "Cannot delete root node.";
+    }
+
+    private void RenameFeature(FeatureNode? node)
+    {
+        if (node is null) return;
+        // Inline rename: append " (renamed)" as a minimal placeholder.
+        // A real dialog would require an InputDialog service — wired separately.
+        var newName = node.Name.EndsWith(" (renamed)", StringComparison.Ordinal)
+            ? node.Name
+            : node.Name + " (renamed)";
+        node.Name = newName;
+        StatusMessage = $"Renamed to '{newName}'. (Full rename dialog coming soon.)";
+    }
+
+    private void ToggleVisibility(FeatureNode? node)
+    {
+        if (node is null) return;
+        node.IsVisible = !node.IsVisible;
+        StatusMessage = $"'{node.Name}' {(node.IsVisible ? "visible" : "hidden")}.";
+    }
 
     // ── AI handlers ───────────────────────────────────────────────────────────
     private async Task AiSendAsync()

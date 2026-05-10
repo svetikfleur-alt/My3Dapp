@@ -11,6 +11,12 @@ public class SceneObject
     public bool Visible { get; set; } = true;
     public float[] Transform { get; set; } = Identity4x4();
 
+    // Optional computed geometry — null for features that haven't been meshed yet
+    public Mesh? Geometry { get; set; }
+
+    // Path to the source file if this was imported
+    public string? SourcePath { get; set; }
+
     private static float[] Identity4x4() =>
     [
         1,0,0,0,

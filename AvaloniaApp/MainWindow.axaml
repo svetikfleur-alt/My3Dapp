@@ -83,12 +83,31 @@
                     </Border>
 
                     <!-- x:DataType on TreeDataTemplate required for compiled bindings -->
-                    <TreeView ItemsSource="{Binding FeatureNodes}" Background="Transparent">
+                    <TreeView ItemsSource="{Binding FeatureNodes}" Background="Transparent"
+                              SelectedItem="{Binding SelectedFeatureNode}">
                         <TreeView.ItemTemplate>
                             <TreeDataTemplate x:DataType="vm:FeatureNode" ItemsSource="{Binding Children}">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <StackPanel.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="Rename…"
+                                                      Command="{Binding $parent[TreeView].((vm:MainWindowViewModel)DataContext).RenameFeatureCommand}"
+                                                      CommandParameter="{Binding}" />
+                                            <MenuItem Header="Toggle Visibility"
+                                                      Command="{Binding $parent[TreeView].((vm:MainWindowViewModel)DataContext).ToggleVisibilityCommand}"
+                                                      CommandParameter="{Binding}" />
+                                            <Separator />
+                                            <MenuItem Header="Delete"
+                                                      Command="{Binding $parent[TreeView].((vm:MainWindowViewModel)DataContext).DeleteFeatureCommand}"
+                                                      CommandParameter="{Binding}" />
+                                        </ContextMenu>
+                                    </StackPanel.ContextMenu>
                                     <TextBlock Text="{Binding Icon}" FontSize="13" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Name}" Foreground="#D0E0F0" FontSize="13" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Name}" FontSize="13" VerticalAlignment="Center"
+                                               Foreground="#D0E0F0" />
+                                    <!-- Eye indicator when hidden -->
+                                    <TextBlock Text="⊘" FontSize="11" Foreground="#CC4444" VerticalAlignment="Center"
+                                               IsVisible="{Binding !IsVisible}" />
                                 </StackPanel>
                             </TreeDataTemplate>
                         </TreeView.ItemTemplate>
