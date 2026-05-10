@@ -29,3 +29,5 @@ belongs in LOG.md or HANDOFF.md, not here.
 
 Queue correction:
 - Task 01 was previously marked done without matching completion evidence. It is now pending again in TASK_QUEUE.md and is intentionally not listed as done here.
+
+- 67 - Shell consistency pass (2026-05-10) - Toolbar ToolSplitGroup uniformity: all toolbar groups (View, Transform, Modify, Boolean, Datum in 3D mode; Transform, Dimension, Constraints in sketch mode) now wrapped in ToolSplitGroup containers matching Shapes/Features groups; Boolean group consolidated into single IsVisible wrapper; Datum group cleaned of redundant bindings; commit bf3ba82; no build environment available but AXAML structure is structurally correct.

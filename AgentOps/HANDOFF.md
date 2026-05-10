@@ -1,19 +1,19 @@
-Done:
-- HoleFeatureDialog.axaml: Diameter NumericUpDown (min 0.01), CenterX/Y offsets, Through All/Blind radio, DepthValue (disabled when Through All), Cancel/OK
-- HoleFeatureDialog.axaml.cs: validation (diameter>0, depthValue>0 when blind), Close(result), OnDepthKindChanged toggles DepthValueInput.IsEnabled
-- Engine/CadModel.cs: HoleFeature, HoleDepthKind, CadFeatureKind.Hole, CadCommandActionKind.HoleSelectedBody (pre-existing)
-- Engine/CadProjectStore.cs: HandleHoleSelectedBody (diameter/centerX/Y/depthKind/depthValue; CSG subtract stubbed with Trace) (pre-existing)
-- StudioWorkspaceController.cs: FindHoleParams, EditHoleFeature, CadViewportCommandKind.HoleBody wired (pre-existing)
-- StudioShellViewModel.cs: HoleSelectedBodyAsync, GetHoleParams, UpdateHoleAsync; BuildFeatureSummary HoleFeature case (pre-existing)
-- MainWindow.axaml: Hole button (CanEdgeTools, ToolTip "Hole (H)", Click="OnHoleClick") after CP button
-- MainWindow.axaml.cs: OnHoleClick handler (opens dialog, calls HoleSelectedBodyAsync); H key shortcut (3D mode only, CanEdgeTools guard); OnFeatureTreeDoubleTapped updated to handle HoleFeature (checks GetHoleParams first, then CP fallback)
+Done (Task 67 — Shell consistency pass):
+- MainWindow.axaml: All toolbar groups now use ToolSplitGroup containers consistently:
+  - 3D mode View group: focus button + measure toggle + section toggle wrapped
+  - 3D mode Transform group: MoveToolButton wrapped in ToolSplitGroup
+  - 3D mode Modify group: 7 buttons (fillet/chamfer/hole/shell/LP/CP/mirror) wrapped
+  - 3D mode Boolean group: consolidated into single IsVisible="CanBooleanTools" StackPanel wrapper + ToolSplitGroup (removed redundant per-button IsVisible bindings)
+  - 3D mode Datum group: simplified (removed redundant IsThreeDMode bindings) + wrapped in ToolSplitGroup
+  - Sketch mode Transform group: move + rotate toggles wrapped
+  - Sketch mode Dimension group: linear/radius/angle toggles wrapped
+  - Sketch mode Constraints group: all 9 buttons wrapped in ToolSplitGroup (replacing bare StackPanel)
 
 Not done:
-- Live viewport preview of cylinder during dialog open (no dialog→viewport bridge; same status as other ops)
-- Face-level hit-test (curved face rejection requires face-level picking not yet in codebase; dialog uses "first face of body" fallback per spec notes)
+- Construction and Grid single-button groups (single items — ToolSplitGroup for one button would be over-structured)
 
 Broken:
-- none expected
+- none expected (pure AXAML structural change, no code-behind changes, no bindings altered)
 
 Next:
-- Verifier: run build (0 errors expected); confirm Hole button appears active when a body exists; open dialog, Diameter=10, Through All → OK → tree shows "Hole (⌀10 × Through)"; blind mode → DepthValue field enables; double-click node → dialog re-opens; H shortcut only in 3D mode
+- Verifier: run build (0 errors expected); confirm toolbar renders with consistent bordered groups in both Light and Dark themes; confirm Boolean group hides when only one body exists; confirm sketch mode constraints appear as a single grouped panel
