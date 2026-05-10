@@ -2248,6 +2248,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 string.Empty,
                 string.Empty,
                 string.Empty,
+                string.Empty,
                 CadEntityKind.ReferencePlane,
                 plane.Id,
                 isSelectable: true));
@@ -2613,6 +2614,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                     entity.IsConstruction ? "Reference" : "Entity",
                     BuildSketchEntitySummary(entity),
                     BuildSketchEntitySummary(entity),
+                    string.Empty,
                     CadEntityKind.SketchEntity,
                     entity.Id,
                     isSelectable: true));
@@ -2653,6 +2655,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             "Part",
             $"{FormatFeatureName(compiledBody.SourceKind.ToString())} | X {FormatNumber(translation.X)} | Y {FormatNumber(translation.Y)} | Z {FormatNumber(translation.Z)}",
             $"{compiledBody.Name} part body",
+            string.Empty,
             CadEntityKind.Body,
             compiledBody.BodyId,
             isSelectable: true,
