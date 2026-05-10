@@ -76,7 +76,8 @@
           </Border>
 
           <Button Classes="CommandButton"
-                  Content="Commands - Ctrl+K"
+                  Content="Commands"
+                  ToolTip.Tip="Command Palette (Ctrl+K)"
                   Click="OnCommandPaletteClick" />
         </StackPanel>
 
@@ -87,7 +88,7 @@
           <ScrollViewer HorizontalScrollBarVisibility="Auto"
                         VerticalScrollBarVisibility="Disabled">
           <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-            <TextBlock Text="Workflow" Classes="ToolbarGroupLabel" />
+            <TextBlock Text="WORKFLOW" Classes="ToolbarGroupLabel" />
             <Border Classes="ToolSplitGroup" Padding="4" IsVisible="{Binding IsThreeDMode}">
               <Button Classes="ToolbarActionButton"
                       IsEnabled="{Binding CanSketchPrimaryAction}"
@@ -169,7 +170,7 @@
 
               <Border Classes="ToolbarDivider" />
 
-              <TextBlock Text="Shapes" Classes="ToolbarGroupLabel" />
+              <TextBlock Text="SHAPES" Classes="ToolbarGroupLabel" />
               <Border Classes="ToolSplitGroup" Padding="4">
                 <StackPanel Orientation="Horizontal" Spacing="3">
                   <ItemsControl ItemsSource="{Binding RecentPrimitiveTools}">
@@ -332,7 +333,7 @@
 
               <Border Classes="ToolbarDivider" />
 
-              <TextBlock Text="Features" Classes="ToolbarGroupLabel" />
+              <TextBlock Text="FEATURES" Classes="ToolbarGroupLabel" />
               <Border Classes="ToolSplitGroup" Padding="4">
                 <StackPanel Orientation="Horizontal" Spacing="3">
                   <Button Classes="ToolbarActionButton"
@@ -363,7 +364,7 @@
               </Border>
 
               <Border Classes="ToolbarDivider" />
-              <TextBlock Text="View" Classes="ToolbarGroupLabel" />
+              <TextBlock Text="VIEW" Classes="ToolbarGroupLabel" />
               <Button Classes="ToolbarActionButton"
                       ToolTip.Tip="Zoom to fit (F)"
                       Click="OnFocusSelectionClick">
@@ -409,7 +410,7 @@
                              ToolTip.Tip="Section plane offset" />
 
               <Border Classes="ToolbarDivider" />
-              <TextBlock Text="Transform" Classes="ToolbarGroupLabel" />
+              <TextBlock Text="TRANSFORM" Classes="ToolbarGroupLabel" />
               <ToggleButton x:Name="MoveToolButton"
                             Classes="ToolbarIconToggle"
                             ToolTip.Tip="Move · M"
@@ -418,7 +419,7 @@
               </ToggleButton>
 
               <Border Classes="ToolbarDivider" />
-              <TextBlock Text="Modify" Classes="ToolbarGroupLabel" />
+              <TextBlock Text="MODIFY" Classes="ToolbarGroupLabel" />
               <Button Classes="ToolbarActionButton"
                       IsEnabled="{Binding CanEdgeTools}"
                       ToolTip.Tip="Fillet (round edges)"
@@ -463,7 +464,7 @@
               </Button>
 
               <Border Classes="ToolbarDivider" IsVisible="{Binding CanBooleanTools}" />
-              <TextBlock Text="Boolean" Classes="ToolbarGroupLabel" IsVisible="{Binding CanBooleanTools}" />
+              <TextBlock Text="BOOLEAN" Classes="ToolbarGroupLabel" IsVisible="{Binding CanBooleanTools}" />
               <Button Classes="ToolbarActionButton"
                       IsEnabled="{Binding CanBooleanTools}"
                       IsVisible="{Binding CanBooleanTools}"
@@ -487,7 +488,7 @@
               </Button>
 
               <Border Classes="ToolbarDivider" IsVisible="{Binding IsThreeDMode}" />
-              <TextBlock Text="Datum" Classes="ToolbarGroupLabel" IsVisible="{Binding IsThreeDMode}" />
+              <TextBlock Text="DATUM" Classes="ToolbarGroupLabel" IsVisible="{Binding IsThreeDMode}" />
               <Button Classes="ToolbarActionButton"
                       IsEnabled="{Binding IsThreeDMode}"
                       IsVisible="{Binding IsThreeDMode}"
@@ -500,7 +501,7 @@
             <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsSketchMode}">
               <Border Classes="ToolbarDivider" />
 
-              <TextBlock Text="Sketch" Classes="ToolbarGroupLabel" />
+              <TextBlock Text="SKETCH" Classes="ToolbarGroupLabel" />
               <Border Classes="ToolSplitGroup" Padding="4">
                 <StackPanel Orientation="Horizontal" Spacing="4">
                   <ToggleButton Classes="ToolbarIconToggle"
@@ -583,7 +584,7 @@
               </Border>
 
               <Border Classes="ToolbarDivider" />
-              <TextBlock Text="Transform" Classes="ToolbarGroupLabel" />
+              <TextBlock Text="TRANSFORM" Classes="ToolbarGroupLabel" />
               <ToggleButton x:Name="SketchTransformToolButton"
                             Classes="ToolbarIconToggle"
                             ToolTip.Tip="Transform sketch entities (move)"
@@ -602,7 +603,7 @@
               </ToggleButton>
 
               <Border Classes="ToolbarDivider" />
-              <TextBlock Text="Construction" Classes="ToolbarGroupLabel" />
+              <TextBlock Text="CONSTRUCTION" Classes="ToolbarGroupLabel" />
               <ToggleButton x:Name="ConstructionModeButton"
                             Classes="ToolbarIconToggle"
                             ToolTip.Tip="Toggle construction mode — new entities drawn as construction (dashed)"
@@ -613,7 +614,7 @@
               </ToggleButton>
 
               <Border Classes="ToolbarDivider" />
-              <TextBlock Text="Grid" Classes="ToolbarGroupLabel" />
+              <TextBlock Text="GRID" Classes="ToolbarGroupLabel" />
               <ToggleButton x:Name="GridToggleButton"
                             Classes="ToolbarIconToggle"
                             ToolTip.Tip="Toggle grid overlay [G]"
@@ -624,7 +625,7 @@
               </ToggleButton>
 
               <Border Classes="ToolbarDivider" />
-              <TextBlock Text="Dimension" Classes="ToolbarGroupLabel" />
+              <TextBlock Text="DIMENSION" Classes="ToolbarGroupLabel" />
               <ToggleButton Classes="ToolbarIconToggle"
                             Tag="LinearDimension"
                             ToolTip.Tip="Linear Dimension [D] — click a line to add its length"
@@ -651,7 +652,7 @@
               </ToggleButton>
 
               <Border Classes="ToolbarDivider" />
-              <TextBlock Text="Constraints" Classes="ToolbarGroupLabel" />
+              <TextBlock Text="CONSTRAINTS" Classes="ToolbarGroupLabel" />
               <StackPanel Orientation="Horizontal" Spacing="4">
                 <Button Classes="SketchConstraintToolButton"
                         ToolTip.Tip="Horizontal (snap last line horizontal)"
@@ -837,9 +838,9 @@
                         IsEnabled="{Binding CanCancelSketch}"
                         ToolTip.Tip="Cancel Sketch"
                         Click="OnSketchCancelClick">
-                  <TextBlock Text="✕"
-                             FontSize="12"
-                             FontWeight="SemiBold" />
+                  <svg:Svg Path="avares://My3DApp/Assets/Icons/delete.svg"
+                           Width="12"
+                           Height="12" />
                 </Button>
                 <TextBlock Grid.Row="1"
                            Grid.ColumnSpan="3"

@@ -1,19 +1,19 @@
-Done:
-- HoleFeatureDialog.axaml: Diameter NumericUpDown (min 0.01), CenterX/Y offsets, Through All/Blind radio, DepthValue (disabled when Through All), Cancel/OK
-- HoleFeatureDialog.axaml.cs: validation (diameter>0, depthValue>0 when blind), Close(result), OnDepthKindChanged toggles DepthValueInput.IsEnabled
-- Engine/CadModel.cs: HoleFeature, HoleDepthKind, CadFeatureKind.Hole, CadCommandActionKind.HoleSelectedBody (pre-existing)
-- Engine/CadProjectStore.cs: HandleHoleSelectedBody (diameter/centerX/Y/depthKind/depthValue; CSG subtract stubbed with Trace) (pre-existing)
-- StudioWorkspaceController.cs: FindHoleParams, EditHoleFeature, CadViewportCommandKind.HoleBody wired (pre-existing)
-- StudioShellViewModel.cs: HoleSelectedBodyAsync, GetHoleParams, UpdateHoleAsync; BuildFeatureSummary HoleFeature case (pre-existing)
-- MainWindow.axaml: Hole button (CanEdgeTools, ToolTip "Hole (H)", Click="OnHoleClick") after CP button
-- MainWindow.axaml.cs: OnHoleClick handler (opens dialog, calls HoleSelectedBodyAsync); H key shortcut (3D mode only, CanEdgeTools guard); OnFeatureTreeDoubleTapped updated to handle HoleFeature (checks GetHoleParams first, then CP fallback)
+Done (routine-ui polish pass — 2026-05-10):
+- MainWindow.axaml: All 14 toolbar group labels uppercased (WORKFLOW/SHAPES/FEATURES/VIEW/TRANSFORM/MODIFY/BOOLEAN/DATUM/SKETCH/CONSTRUCTION/GRID/DIMENSION/CONSTRAINTS)
+- MainWindow.axaml: Commands button label cleaned ("Commands - Ctrl+K" → "Commands" + tooltip)
+- MainWindow.axaml: Sketch cancel button in SketchTaskCard uses delete.svg instead of ✕ TextBlock
+- Studio.Dark.axaml + Studio.Light.axaml: ToolbarGroupLabel gains LetterSpacing=0.9, FontSize=9.5 for polished uppercase look
+- Studio.Dark.axaml + Studio.Light.axaml: ToolbarActionButton + ToolbarIconToggle + SketchTaskActionButton gain CornerRadius=7
+- Studio.Dark.axaml + Studio.Light.axaml: SketchTaskCard gains CornerRadius=10; SketchSidePanel gains CornerRadius=8
 
-Not done:
-- Live viewport preview of cylinder during dialog open (no dialog→viewport bridge; same status as other ops)
-- Face-level hit-test (curved face rejection requires face-level picking not yet in codebase; dialog uses "first face of body" fallback per spec notes)
+Not changed:
+- Geometry engine, sketch logic, Extrude/Revolve/Hole/Boolean operations
+- Viewport, WebViewportHost, all dialogs
+- MeasureToolToggle/SectionViewToggle text glyphs (no suitable SVG available for those)
+- Sweep/Loft icon workarounds (no sweep.svg or loft.svg in Assets/Icons)
 
 Broken:
 - none expected
 
 Next:
-- Verifier: run build (0 errors expected); confirm Hole button appears active when a body exists; open dialog, Diameter=10, Through All → OK → tree shows "Hole (⌀10 × Through)"; blind mode → DepthValue field enables; double-click node → dialog re-opens; H shortcut only in 3D mode
+- Verifier: run dotnet build, confirm 0 errors; verify toolbar labels display correctly in both themes

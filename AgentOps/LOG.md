@@ -1,3 +1,4 @@
+done: routine-ui — CAD UI polish pass (2026-05-10) — uppercase toolbar group labels (14 labels), Commands button clean label, sketch cancel SVG icon, ToolbarActionButton/ToolbarIconToggle/SketchTaskActionButton corner radius, SketchTaskCard+SketchSidePanel rounded, LetterSpacing on ToolbarGroupLabel; build N/A (dotnet not available in environment); both dark+light themes updated
 done: 30 — Export panel STL/OBJ (2026-04-28) — ExportDialog, OnExportClick, Ctrl+E, ExportFormat ViewModel, WorkspaceController export methods, status-bar confirm; build 0 errors 0 warnings; commit 1f97318
 done: 29 — Hole feature (2026-04-27) — HoleFeature, HoleDepthKind, HoleSelectedBody; dialog (diameter/offset/depth); toolbar ⌀ button; H shortcut 3D-only; double-click edit; CSG stub with HANDOFF; 0 errors 0 warnings
 done: 28 — Circular Pattern feature (2026-04-27) — CircularPatternDialog, enum+wiring, ViewModel method, toolbar CP button, LP click wired, feature tree label; 0 errors
