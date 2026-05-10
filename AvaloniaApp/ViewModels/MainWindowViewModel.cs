@@ -8,7 +8,7 @@ using My3DApp.Engine;
 
 namespace My3DApp.AvaloniaApp.ViewModels;
 
-public class MainWindowViewModel : ViewModelBase
+public class MainWindowViewModel : ViewModelBase, IDisposable
 {
     private readonly AiBackend _ai = new();
     private readonly SceneGraph _scene = new();
@@ -116,6 +116,7 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand OpenDocsCommand         { get; private set; } = null!;
     public ICommand ShowAboutCommand        { get; private set; } = null!;
     public ICommand AiCancelCommand         { get; private set; } = null!;
+    public ICommand AiClearCommand          { get; private set; } = null!;
 
     private FeatureNode? _selectedFeatureNode;
     public FeatureNode? SelectedFeatureNode
@@ -158,6 +159,7 @@ public class MainWindowViewModel : ViewModelBase
         OpenDocsCommand  = new RelayCommand(() => OpenUrl("https://github.com/svetikfleur-alt/my3dapp"));
         ShowAboutCommand = new RelayCommand(ShowAbout);
         AiCancelCommand  = new RelayCommand(() => _ai.CancelCurrentRequest(), () => AiIsThinking);
+        AiClearCommand   = new RelayCommand(AiClear);
 
         // Wire context-menu commands onto initial tree nodes
         foreach (var root in FeatureNodes)
@@ -212,8 +214,12 @@ public class MainWindowViewModel : ViewModelBase
             FileDialogService.ThreeMf);
 
         if (path is null) return;
+        await ImportFileDirectAsync(path);
+    }
 
-        StatusMessage = $"Importing {Path.GetFileName(path)}...";
+    public async Task ImportFileDirectAsync(string path)
+    {
+        StatusMessage = $"Importing {Path.GetFileName(path)}…";
         var obj = await _models.ImportAsync(path);
         if (obj is null) { StatusMessage = "Import failed."; return; }
 
@@ -374,10 +380,30 @@ public class MainWindowViewModel : ViewModelBase
 
     private async Task AiGenerateSketchAsync()
     {
-        AiPrompt = "Generate a sketch: ";
-        StatusMessage = "Describe the sketch you want to generate.";
-        await Task.CompletedTask;
+        var prompt = BuildContextualPrompt(
+            "Generate a parametric sketch with dimensions. Describe the profile and provide a geometry-script to visualise it.");
+        AiMessages.Add(new AiMessage { Role = "You", Content = "(Generate Sketch)" });
+        AiIsThinking = true;
+        StatusMessage = "AI generating sketch…";
+        try
+        {
+            var reply = await _ai.ChatAsync(prompt);
+            AiMessages.Add(new AiMessage { Role = "AI", Content = reply });
+            if (_ai.LastGeometryScript is { } script)
+                await (ViewportService?.ExecuteScriptAsync(script) ?? Task.CompletedTask);
+        }
+        finally { AiIsThinking = false; StatusMessage = "Ready"; }
     }
+
+    private void AiClear()
+    {
+        _ai.ClearHistory();
+        AiMessages.Clear();
+        AiMessages.Add(new AiMessage { Role = "AI", Content = "Chat cleared. How can I help you design?" });
+        StatusMessage = "AI chat cleared.";
+    }
+
+    public void Dispose() => _ai.Dispose();
 
     private async Task AiSuggestFeatureAsync()
     {

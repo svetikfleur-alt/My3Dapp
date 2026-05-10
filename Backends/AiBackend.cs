@@ -28,6 +28,8 @@ public class AiBackend : IDisposable
         _cts = null;
     }
 
+    public void ClearHistory() => _history.Clear();
+
     private static readonly string SystemPrompt = """
         You are an expert 3D CAD design assistant embedded in My3DApp, an AI-native Onshape-style CAD tool.
         You help users design 3D parts using parametric features: sketches, extrudes, revolves, lofts, shells,

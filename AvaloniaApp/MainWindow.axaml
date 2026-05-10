@@ -84,7 +84,7 @@
 
                     <!-- x:DataType on TreeDataTemplate required for compiled bindings -->
                     <TreeView ItemsSource="{Binding FeatureNodes}" Background="Transparent"
-                              SelectedItem="{Binding SelectedFeatureNode}">
+                              SelectedItem="{Binding SelectedFeatureNode, Mode=TwoWay}">
                         <TreeView.ItemTemplate>
                             <TreeDataTemplate x:DataType="vm:FeatureNode" ItemsSource="{Binding Children}">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
@@ -160,7 +160,11 @@
             <Border Grid.Column="4" Background="#16213E" BorderThickness="1,0,0,0" BorderBrush="#2A3F5F">
                 <DockPanel>
                     <Border DockPanel.Dock="Top" Background="#0F3460" Padding="8,6">
-                        <TextBlock Text="✦ AI Design Assistant" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="✦ AI Design Assistant" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Content="Clear" Command="{Binding AiClearCommand}"
+                                    Classes="icon-btn" ToolTip.Tip="Clear chat history" FontSize="11" />
+                        </Grid>
                     </Border>
 
                     <!-- Input area pinned to bottom -->
