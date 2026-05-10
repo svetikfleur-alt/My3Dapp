@@ -9,11 +9,13 @@
   html, body { width: 100%; height: 100%; overflow: hidden; background: #0D0D1A; }
   #canvas-container { width: 100%; height: 100%; }
   #status { position: fixed; bottom: 4px; left: 8px; color: #445566; font: 11px monospace; pointer-events: none; }
+  #viewcube { position: fixed; top: 8px; left: 8px; width: 76px; height: 76px; cursor: pointer; border-radius: 6px; }
 </style>
 </head>
 <body>
 <div id="canvas-container"></div>
 <div id="status">Loading Three.js...</div>
+<canvas id="viewcube" width="76" height="76" title="Click to reset view"></canvas>
 
 <script type="importmap">
 {
@@ -365,11 +367,84 @@ window.addEventListener('resize', () => {
   renderer.setSize(w, h);
 });
 
+// ── View cube ─────────────────────────────────────────────────────────────────
+const _vcCanvas = document.getElementById('viewcube');
+const _vcCtx    = _vcCanvas.getContext('2d');
+const _vcSize   = 76;
+const _vcCenter = _vcSize / 2;
+const _vcRadius = 26;
+
+const _vcAxes = [
+  { dir: new THREE.Vector3( 1, 0, 0), neg: new THREE.Vector3(-1, 0, 0), color: '#e05555', label: 'X' },
+  { dir: new THREE.Vector3( 0, 1, 0), neg: new THREE.Vector3( 0,-1, 0), color: '#55cc55', label: 'Y' },
+  { dir: new THREE.Vector3( 0, 0, 1), neg: new THREE.Vector3( 0, 0,-1), color: '#5588ee', label: 'Z' },
+];
+
+function drawViewCube() {
+  _vcCtx.clearRect(0, 0, _vcSize, _vcSize);
+
+  // Faint background circle
+  _vcCtx.beginPath();
+  _vcCtx.arc(_vcCenter, _vcCenter, _vcRadius + 8, 0, Math.PI * 2);
+  _vcCtx.fillStyle = 'rgba(10,20,35,0.72)';
+  _vcCtx.fill();
+
+  const vm = camera.matrixWorldInverse;
+
+  // Project each axis + its negative end
+  const lines = [];
+  _vcAxes.forEach(a => {
+    const p = a.dir.clone().applyMatrix4(vm);
+    const n = a.neg.clone().applyMatrix4(vm);
+    lines.push({ x: _vcCenter + p.x * _vcRadius, y: _vcCenter - p.y * _vcRadius,
+                 nx: _vcCenter + n.x * _vcRadius, ny: _vcCenter - n.y * _vcRadius,
+                 z: p.z, color: a.color, label: a.label });
+  });
+  lines.sort((a, b) => a.z - b.z); // back-to-front
+
+  lines.forEach(l => {
+    // Negative axis (dimmer)
+    _vcCtx.beginPath();
+    _vcCtx.moveTo(_vcCenter, _vcCenter);
+    _vcCtx.lineTo(l.nx, l.ny);
+    _vcCtx.strokeStyle = l.color + '44';
+    _vcCtx.lineWidth = 1.5;
+    _vcCtx.stroke();
+
+    // Positive axis
+    _vcCtx.beginPath();
+    _vcCtx.moveTo(_vcCenter, _vcCenter);
+    _vcCtx.lineTo(l.x, l.y);
+    _vcCtx.strokeStyle = l.color;
+    _vcCtx.lineWidth = 2;
+    _vcCtx.stroke();
+
+    // Label dot
+    _vcCtx.beginPath();
+    _vcCtx.arc(l.x, l.y, 7, 0, Math.PI * 2);
+    _vcCtx.fillStyle = l.color + 'cc';
+    _vcCtx.fill();
+    _vcCtx.fillStyle = '#ffffff';
+    _vcCtx.font = 'bold 9px sans-serif';
+    _vcCtx.textAlign = 'center';
+    _vcCtx.textBaseline = 'middle';
+    _vcCtx.fillText(l.label, l.x, l.y);
+  });
+}
+
+// Click on view cube → reset view
+_vcCanvas.addEventListener('click', () => {
+  camera.position.set(200, 150, 300);
+  controls.target.set(0, 0, 0);
+  controls.update();
+});
+
 // ── Render loop ───────────────────────────────────────────────────────────────
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
   renderer.render(scene, camera);
+  drawViewCube();
 }
 animate();
 setStatus('Ready');

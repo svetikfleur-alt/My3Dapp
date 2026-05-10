@@ -96,6 +96,42 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         set => SetField(ref _aiPrompt, value);
     }
 
+    private string _featureFilter = string.Empty;
+    public string FeatureFilter
+    {
+        get => _featureFilter;
+        set
+        {
+            if (SetField(ref _featureFilter, value))
+            {
+                OnPropertyChanged(nameof(FilteredFeatureNodes));
+                OnPropertyChanged(nameof(PartsHeader));
+            }
+        }
+    }
+
+    public IEnumerable<FeatureNode> FilteredFeatureNodes
+    {
+        get
+        {
+            if (FeatureNodes.Count == 0) return Enumerable.Empty<FeatureNode>();
+            var children = FeatureNodes[0].Children;
+            if (string.IsNullOrWhiteSpace(_featureFilter)) return FeatureNodes;
+            // Filter returns matching children wrapped in a synthetic root so TreeView shows them
+            var matched = children.Where(n =>
+                n.Name.Contains(_featureFilter, StringComparison.OrdinalIgnoreCase) ||
+                n.FeatureType.Contains(_featureFilter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            var root = new FeatureNode { Icon = FeatureNodes[0].Icon, Name = FeatureNodes[0].Name, FeatureType = "root" };
+            foreach (var n in matched) root.Children.Add(n);
+            return new[] { root };
+        }
+    }
+
+    public string PartsHeader =>
+        FeatureNodes.Count == 0 ? "PARTS" :
+        $"PARTS  ({FeatureNodes[0].Children.Count})";
+
     private bool _aiIsThinking;
     public bool AiIsThinking
     {
@@ -203,6 +239,17 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         // Wire context-menu commands onto initial tree nodes
         foreach (var root in FeatureNodes)
             WireNodeCommands(root);
+
+        // Notify filter/parts-header properties whenever the root children change
+        FeatureNodes.CollectionChanged += (_, _) => RefreshTreeBindings();
+        if (FeatureNodes.Count > 0)
+            FeatureNodes[0].Children.CollectionChanged += (_, _) => RefreshTreeBindings();
+    }
+
+    private void RefreshTreeBindings()
+    {
+        OnPropertyChanged(nameof(FilteredFeatureNodes));
+        OnPropertyChanged(nameof(PartsHeader));
     }
 
     // ── History ───────────────────────────────────────────────────────────────
@@ -233,7 +280,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         _scene.Clear();
         _history.Clear();
         FeatureNodes.Clear();
-        FeatureNodes.Add(MakeNode("📦", "Part Studio 1", "root"));
+        var newRoot = MakeNode("📦", "Part Studio 1", "root");
+        FeatureNodes.Add(newRoot);
+        newRoot.Children.CollectionChanged += (_, _) => RefreshTreeBindings();
         WindowTitle = "My3DApp — New Part Studio";
         StatusMessage = "New Part Studio created.";
         _ = ViewportService?.ExecuteScriptAsync("viewer.clearScene();");

@@ -6,13 +6,13 @@
         Title="{Binding WindowTitle}"
         Width="1400" Height="900"
         MinWidth="900" MinHeight="600"
-        Background="#1A1A2E">
+        Background="#111827">
 
     <DockPanel>
 
         <!-- Top Menu Bar -->
-        <Menu DockPanel.Dock="Top" Background="#16213E">
-            <MenuItem Header="_File">
+        <Menu DockPanel.Dock="Top" Background="#0F1E35" Padding="2,0">
+            <MenuItem Header="_File" Foreground="#A0BCD8">
                 <MenuItem Header="_New Part Studio" Command="{Binding NewPartStudioCommand}" />
                 <MenuItem Header="_Open..."          Command="{Binding OpenCommand}" />
                 <Separator />
@@ -20,167 +20,226 @@
                 <Separator />
                 <MenuItem Header="E_xit"             Command="{Binding ExitCommand}" />
             </MenuItem>
-            <MenuItem Header="_Edit">
+            <MenuItem Header="_Edit" Foreground="#A0BCD8">
                 <MenuItem Header="_Undo" Command="{Binding UndoCommand}" InputGesture="Ctrl+Z" />
                 <MenuItem Header="_Redo" Command="{Binding RedoCommand}" InputGesture="Ctrl+Y" />
             </MenuItem>
-            <MenuItem Header="_View">
+            <MenuItem Header="_View" Foreground="#A0BCD8">
                 <MenuItem Header="Front"     Command="{Binding SetViewCommand}" CommandParameter="front" />
                 <MenuItem Header="Top"       Command="{Binding SetViewCommand}" CommandParameter="top" />
                 <MenuItem Header="Right"     Command="{Binding SetViewCommand}" CommandParameter="right" />
                 <MenuItem Header="Isometric" Command="{Binding SetViewCommand}" CommandParameter="iso" />
             </MenuItem>
-            <MenuItem Header="_AI">
-                <MenuItem Header="Ask AI..."                      Command="{Binding FocusAiPanelCommand}" />
+            <MenuItem Header="_AI" Foreground="#A0BCD8">
+                <MenuItem Header="Ask AI..."                       Command="{Binding FocusAiPanelCommand}" />
                 <MenuItem Header="Generate Sketch from Description" Command="{Binding AiGenerateSketchCommand}" />
-                <MenuItem Header="Suggest Feature"               Command="{Binding AiSuggestFeatureCommand}" />
+                <MenuItem Header="Suggest Feature"                 Command="{Binding AiSuggestFeatureCommand}" />
             </MenuItem>
-            <MenuItem Header="_Help">
+            <MenuItem Header="_Help" Foreground="#A0BCD8">
                 <MenuItem Header="Documentation"   Command="{Binding OpenDocsCommand}" />
                 <MenuItem Header="About My3DApp"   Command="{Binding ShowAboutCommand}" />
             </MenuItem>
         </Menu>
 
         <!-- Top Toolbar -->
-        <Border DockPanel.Dock="Top" Background="#0F3460" Padding="4,2">
-            <StackPanel Orientation="Horizontal" Spacing="2">
-                <Button Content="⬜ Sketch"   Command="{Binding NewSketchCommand}"       ToolTip.Tip="New Sketch  [S]"    Classes="toolbar-btn" />
-                <Button Content="⬆ Extrude"  Command="{Binding ExtrudeCommand}"         ToolTip.Tip="Extrude  [E]"       Classes="toolbar-btn" />
-                <Button Content="↻ Revolve"  Command="{Binding RevolveCommand}"         ToolTip.Tip="Revolve  [R]"       Classes="toolbar-btn" />
-                <Button Content="⤵ Loft"     Command="{Binding LoftCommand}"            ToolTip.Tip="Loft  [L]"          Classes="toolbar-btn" />
-                <Button Content="⚙ Shell"    Command="{Binding ShellCommand}"           ToolTip.Tip="Shell  [H]"         Classes="toolbar-btn" />
-                <!-- Visual divider -->
-                <Border Width="1" Margin="4,4" Background="#2A3F5F" />
-                <Button Content="⊕ Union"    Command="{Binding BooleanUnionCommand}"    ToolTip.Tip="Boolean Union"      Classes="toolbar-btn" />
-                <Button Content="⊖ Subtract" Command="{Binding BooleanSubtractCommand}" ToolTip.Tip="Boolean Subtract"   Classes="toolbar-btn" />
-                <Button Content="⊗ Intersect" Command="{Binding BooleanIntersectCommand}" ToolTip.Tip="Boolean Intersect" Classes="toolbar-btn" />
-                <!-- Visual divider -->
-                <Border Width="1" Margin="4,4" Background="#2A3F5F" />
-                <Button Content="✦ AI Generate" Command="{Binding AiGenerateCommand}"  ToolTip.Tip="Generate with AI"   Classes="toolbar-btn ai-btn" />
+        <Border DockPanel.Dock="Top" Background="#0F1E35" Padding="4,3"
+                BorderThickness="0,0,0,1" BorderBrush="#1A304D">
+            <StackPanel Orientation="Horizontal" Spacing="1">
+                <Button Content="⬜ Sketch"    Command="{Binding NewSketchCommand}"       ToolTip.Tip="New Sketch  [S]"     Classes="toolbar-btn" />
+                <Button Content="⬆ Extrude"   Command="{Binding ExtrudeCommand}"         ToolTip.Tip="Extrude  [E]"        Classes="toolbar-btn" />
+                <Button Content="↻ Revolve"   Command="{Binding RevolveCommand}"         ToolTip.Tip="Revolve  [R]"        Classes="toolbar-btn" />
+                <Button Content="⤵ Loft"      Command="{Binding LoftCommand}"            ToolTip.Tip="Loft  [L]"           Classes="toolbar-btn" />
+                <Button Content="⚙ Shell"     Command="{Binding ShellCommand}"           ToolTip.Tip="Shell  [H]"          Classes="toolbar-btn" />
+                <Border Width="1" Margin="6,4" Background="#1E3050" />
+                <Button Content="⊕ Union"     Command="{Binding BooleanUnionCommand}"    ToolTip.Tip="Boolean Union"       Classes="toolbar-btn" />
+                <Button Content="⊖ Subtract"  Command="{Binding BooleanSubtractCommand}" ToolTip.Tip="Boolean Subtract"    Classes="toolbar-btn" />
+                <Button Content="⊗ Intersect" Command="{Binding BooleanIntersectCommand}" ToolTip.Tip="Boolean Intersect"  Classes="toolbar-btn" />
+                <Border Width="1" Margin="6,4" Background="#1E3050" />
+                <Button Content="✦ AI Generate" Command="{Binding AiGenerateCommand}"   ToolTip.Tip="Generate with AI"    Classes="toolbar-btn ai-btn" />
             </StackPanel>
         </Border>
 
         <!-- Status Bar -->
-        <Border DockPanel.Dock="Bottom" Background="#16213E" Padding="8,3">
+        <Border DockPanel.Dock="Bottom" Background="#0B1525" Padding="10,3"
+                BorderThickness="0,1,0,0" BorderBrush="#1A304D">
             <Grid ColumnDefinitions="*,Auto,Auto">
-                <TextBlock Grid.Column="0" Text="{Binding StatusMessage}"  Foreground="#8899AA" FontSize="12" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1" Text="{Binding CursorPosition}" Foreground="#8899AA" FontSize="12" VerticalAlignment="Center" Margin="0,0,16,0" />
-                <TextBlock Grid.Column="2" Text="{Binding SelectionInfo}"  Foreground="#8899AA" FontSize="12" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="0" Text="{Binding StatusMessage}"  Foreground="#4B6A8A" FontSize="11" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{Binding CursorPosition}" Foreground="#4B6A8A" FontSize="11" VerticalAlignment="Center" Margin="0,0,20,0" FontFamily="Consolas,Menlo,monospace" />
+                <TextBlock Grid.Column="2" Text="{Binding SelectionInfo}"  Foreground="#4B6A8A" FontSize="11" VerticalAlignment="Center" />
             </Grid>
         </Border>
 
         <!-- Main Content: Feature Tree | 3D Viewport | AI Panel -->
-        <Grid ColumnDefinitions="260,4,*,4,300">
+        <Grid ColumnDefinitions="240,4,*,4,300">
 
             <!-- Left: Feature Tree -->
-            <Border Grid.Column="0" Background="#16213E" BorderThickness="0,0,1,0" BorderBrush="#2A3F5F">
+            <Border Grid.Column="0" Background="#111827"
+                    BorderThickness="0,0,1,0" BorderBrush="#1A304D">
                 <DockPanel>
-                    <Border DockPanel.Dock="Top" Background="#0F3460" Padding="8,6">
+
+                    <!-- Tree header with title + add button -->
+                    <Border DockPanel.Dock="Top" Background="#0F1E35" Padding="8,6"
+                            BorderThickness="0,0,0,1" BorderBrush="#1A304D">
                         <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Grid.Column="0" Text="Feature Tree" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center" />
-                            <Button   Grid.Column="1" Content="+" Command="{Binding AddFeatureCommand}" Classes="icon-btn" />
+                            <TextBlock Grid.Column="0" Text="Feature Tree"
+                                       FontWeight="SemiBold" FontSize="12"
+                                       Foreground="#7BA3C8" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Content="+"
+                                    Command="{Binding AddFeatureCommand}"
+                                    Classes="icon-btn" />
                         </Grid>
                     </Border>
 
-                    <!-- x:DataType on TreeDataTemplate required for compiled bindings -->
-                    <TreeView ItemsSource="{Binding FeatureNodes}" Background="Transparent"
-                              SelectedItem="{Binding SelectedFeatureNode, Mode=TwoWay}">
-                        <TreeView.ItemTemplate>
-                            <TreeDataTemplate x:DataType="vm:FeatureNode" ItemsSource="{Binding Children}">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <StackPanel.ContextMenu>
-                                        <!-- Commands live on the node itself — avoids $parent traversal
-                                             which breaks with AvaloniaUseCompiledBindingsByDefault=true -->
-                                        <ContextMenu>
-                                            <MenuItem Header="Rename…"          Command="{Binding RenameCommand}" />
-                                            <MenuItem Header="Toggle Visibility" Command="{Binding ToggleVisibilityCommand}" />
-                                            <Separator />
-                                            <MenuItem Header="Delete"            Command="{Binding DeleteCommand}" />
-                                        </ContextMenu>
-                                    </StackPanel.ContextMenu>
-                                    <TextBlock Text="{Binding Icon}" FontSize="13" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Name}" FontSize="13" VerticalAlignment="Center"
-                                               Foreground="#D0E0F0" />
-                                    <!-- Eye indicator when hidden -->
-                                    <TextBlock Text="⊘" FontSize="11" Foreground="#CC4444" VerticalAlignment="Center"
-                                               IsVisible="{Binding !IsVisible}" />
-                                </StackPanel>
-                            </TreeDataTemplate>
-                        </TreeView.ItemTemplate>
-                    </TreeView>
+                    <!-- Filter bar -->
+                    <Border DockPanel.Dock="Top" Padding="6,5,6,4"
+                            Background="#0D1929"
+                            BorderThickness="0,0,0,1" BorderBrush="#152335">
+                        <TextBox Classes="filter-box"
+                                 Text="{Binding FeatureFilter}"
+                                 Watermark="🔍  Filter features…" />
+                    </Border>
 
                     <!-- Selected node properties strip -->
-                    <Border DockPanel.Dock="Bottom" Background="#0D1B2A"
-                            BorderThickness="0,1,0,0" BorderBrush="#2A3F5F"
+                    <Border DockPanel.Dock="Bottom" Background="#0B1525"
+                            BorderThickness="0,1,0,0" BorderBrush="#1A304D"
                             Padding="8,6"
                             IsVisible="{Binding SelectedFeatureNode, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <StackPanel Spacing="3">
-                            <TextBlock Text="Properties" FontWeight="SemiBold" Foreground="#6688AA" FontSize="11" />
+                            <TextBlock Text="PROPERTIES" Classes="section-label" Margin="0,0,0,4" />
                             <Grid ColumnDefinitions="Auto,8,*" RowDefinitions="Auto,Auto,Auto">
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Name"   Foreground="#445566" FontSize="11" />
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Name"    Foreground="#3A5470" FontSize="11" />
                                 <TextBlock Grid.Row="0" Grid.Column="2"
                                            Text="{Binding SelectedFeatureNode.Name}"
-                                           Foreground="#C8D8E8" FontSize="11" />
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Type"   Foreground="#445566" FontSize="11" />
+                                           Foreground="#8AAFCC" FontSize="11" />
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Type"    Foreground="#3A5470" FontSize="11" />
                                 <TextBlock Grid.Row="1" Grid.Column="2"
                                            Text="{Binding SelectedFeatureNode.FeatureType}"
-                                           Foreground="#C8D8E8" FontSize="11" />
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Visible" Foreground="#445566" FontSize="11" />
+                                           Foreground="#8AAFCC" FontSize="11" />
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Visible" Foreground="#3A5470" FontSize="11" />
                                 <TextBlock Grid.Row="2" Grid.Column="2"
                                            Text="{Binding SelectedFeatureNode.IsVisible}"
-                                           Foreground="#C8D8E8" FontSize="11" />
+                                           Foreground="#8AAFCC" FontSize="11" />
                             </Grid>
                         </StackPanel>
                     </Border>
+
+                    <!-- Scrollable tree area -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+
+                            <!-- Default Geometry section (static origin planes) -->
+                            <TextBlock Classes="section-label" Text="DEFAULT GEOMETRY" />
+                            <StackPanel Margin="0,0,0,4">
+                                <StackPanel Orientation="Horizontal" Spacing="6" Margin="16,2,8,2" Opacity="0.65">
+                                    <TextBlock Text="▭" Foreground="#3B82F6" FontSize="11" VerticalAlignment="Center" />
+                                    <TextBlock Text="Top Plane"   Foreground="#6B8EAE" FontSize="12" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="6" Margin="16,2,8,2" Opacity="0.65">
+                                    <TextBlock Text="▭" Foreground="#3B82F6" FontSize="11" VerticalAlignment="Center" />
+                                    <TextBlock Text="Front Plane" Foreground="#6B8EAE" FontSize="12" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="6" Margin="16,2,8,2" Opacity="0.65">
+                                    <TextBlock Text="▭" Foreground="#3B82F6" FontSize="11" VerticalAlignment="Center" />
+                                    <TextBlock Text="Right Plane" Foreground="#6B8EAE" FontSize="12" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="6" Margin="16,2,8,4" Opacity="0.65">
+                                    <TextBlock Text="·" Foreground="#4B9EF5" FontSize="14" VerticalAlignment="Center" />
+                                    <TextBlock Text="Origin"      Foreground="#6B8EAE" FontSize="12" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Parts section header with count -->
+                            <TextBlock Classes="section-label" Text="{Binding PartsHeader}" />
+
+                            <!-- x:DataType on TreeDataTemplate required for compiled bindings -->
+                            <TreeView ItemsSource="{Binding FilteredFeatureNodes}" Background="Transparent"
+                                      SelectedItem="{Binding SelectedFeatureNode, Mode=TwoWay}">
+                                <TreeView.ItemTemplate>
+                                    <TreeDataTemplate x:DataType="vm:FeatureNode" ItemsSource="{Binding Children}">
+                                        <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,1">
+                                            <StackPanel.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Header="Rename…"           Command="{Binding RenameCommand}" />
+                                                    <MenuItem Header="Toggle Visibility"  Command="{Binding ToggleVisibilityCommand}" />
+                                                    <Separator />
+                                                    <MenuItem Header="Delete"             Command="{Binding DeleteCommand}" />
+                                                </ContextMenu>
+                                            </StackPanel.ContextMenu>
+                                            <TextBlock Text="{Binding Icon}"     FontSize="12" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Name}"     FontSize="12" VerticalAlignment="Center"
+                                                       Foreground="#90AFCC" />
+                                            <TextBlock Text="⊘" FontSize="10" Foreground="#CC4444" VerticalAlignment="Center"
+                                                       IsVisible="{Binding !IsVisible}" />
+                                        </StackPanel>
+                                    </TreeDataTemplate>
+                                </TreeView.ItemTemplate>
+                            </TreeView>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
                 </DockPanel>
             </Border>
 
-            <GridSplitter Grid.Column="1" Background="#2A3F5F" ResizeDirection="Columns" />
+            <GridSplitter Grid.Column="1" Background="#1A304D" ResizeDirection="Columns" />
 
             <!-- Center: 3D Viewport host -->
             <Border Grid.Column="2" Background="#0D0D1A" Name="ViewportHost" ClipToBounds="True">
                 <Grid>
                     <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
-                               Foreground="#334455" FontSize="18"
+                               Foreground="#1E3050" FontSize="16"
                                IsVisible="{Binding IsViewportLoading}"
-                               Text="Loading 3D Viewport..." />
+                               Text="Loading 3D Viewport…" />
 
-                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Spacing="4">
-                        <Button Content="⊞" ToolTip.Tip="Fit to screen" Command="{Binding FitViewCommand}"   Classes="viewport-btn" />
-                        <Button Content="⌖" ToolTip.Tip="Reset view"    Command="{Binding ResetViewCommand}" Classes="viewport-btn" />
-                        <Button Content="□" ToolTip.Tip="Wireframe"     Command="{Binding WireframeCommand}" Classes="viewport-btn" />
-                        <Button Content="◼" ToolTip.Tip="Solid view"    Command="{Binding SolidViewCommand}" Classes="viewport-btn" />
+                    <!-- View controls — top right -->
+                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top"
+                                Margin="8,90,8,0" Spacing="4">
+                        <Button Content="⊞" ToolTip.Tip="Fit to screen  [F]" Command="{Binding FitViewCommand}"   Classes="viewport-btn" />
+                        <Button Content="⌖" ToolTip.Tip="Reset view"         Command="{Binding ResetViewCommand}" Classes="viewport-btn" />
+                        <Button Content="□" ToolTip.Tip="Wireframe"          Command="{Binding WireframeCommand}" Classes="viewport-btn" />
+                        <Button Content="◼" ToolTip.Tip="Solid view"         Command="{Binding SolidViewCommand}" Classes="viewport-btn" />
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <GridSplitter Grid.Column="3" Background="#2A3F5F" ResizeDirection="Columns" />
+            <GridSplitter Grid.Column="3" Background="#1A304D" ResizeDirection="Columns" />
 
             <!-- Right: AI Chat Panel -->
-            <Border Grid.Column="4" Background="#16213E" BorderThickness="1,0,0,0" BorderBrush="#2A3F5F">
+            <Border Grid.Column="4" Background="#111827"
+                    BorderThickness="1,0,0,0" BorderBrush="#1A304D">
                 <DockPanel>
-                    <Border DockPanel.Dock="Top" Background="#0F3460" Padding="8,6">
+                    <!-- Panel header -->
+                    <Border DockPanel.Dock="Top" Background="#0F1E35" Padding="10,7"
+                            BorderThickness="0,0,0,1" BorderBrush="#1A304D">
                         <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Grid.Column="0" Text="✦ AI Design Assistant" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center" />
-                            <Button Grid.Column="1" Content="Clear" Command="{Binding AiClearCommand}"
-                                    Classes="icon-btn" ToolTip.Tip="Clear chat history" FontSize="11" />
+                            <TextBlock Grid.Column="0" Text="✦  AI Design Assistant"
+                                       FontWeight="SemiBold" FontSize="12"
+                                       Foreground="#A78BFA" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Content="Clear"
+                                    Command="{Binding AiClearCommand}"
+                                    Classes="icon-btn" ToolTip.Tip="Clear chat history"
+                                    FontSize="11" Foreground="#4B6A8A" />
                         </Grid>
                     </Border>
 
                     <!-- Input area pinned to bottom -->
                     <Grid DockPanel.Dock="Bottom" RowDefinitions="Auto,Auto,Auto" Margin="8">
-                        <Border Grid.Row="0" Background="#0D1B2A" CornerRadius="6" Padding="8" Margin="0,0,0,6">
+                        <Border Grid.Row="0" Background="#0B1929" CornerRadius="6"
+                                Padding="2" Margin="0,0,0,6"
+                                BorderBrush="#1E3050" BorderThickness="1">
                             <TextBox Name="AiInputBox"
                                      Text="{Binding AiPrompt}"
-                                     Watermark="Ask AI to design, modify, or explain..."
+                                     Watermark="Ask AI to design, modify, or explain…"
                                      AcceptsReturn="True"
                                      MaxLines="4"
                                      Background="Transparent"
                                      BorderThickness="0"
-                                     Foreground="White" />
+                                     Foreground="#C8D8E8"
+                                     FontSize="13"
+                                     Padding="6,6" />
                         </Border>
                         <Grid Grid.Row="1" ColumnDefinitions="*,8,Auto">
-                            <Button Grid.Column="0" Content="✦ Send"
+                            <Button Grid.Column="0" Content="✦  Send"
                                     Command="{Binding AiSendCommand}"
                                     Classes="ai-send-btn" />
                             <Button Grid.Column="2" Content="✕"
@@ -189,24 +248,27 @@
                                     ToolTip.Tip="Cancel request"
                                     Classes="viewport-btn" />
                         </Grid>
-                        <!-- Thinking indicator -->
-                        <TextBlock Grid.Row="2" Text="AI is thinking…" Margin="0,4,0,0"
-                                   Foreground="#A78BFA" FontSize="11" FontStyle="Italic"
+                        <TextBlock Grid.Row="2" Text="AI is thinking…" Margin="0,5,0,0"
+                                   Foreground="#7C3AED" FontSize="11" FontStyle="Italic"
                                    IsVisible="{Binding AiIsThinking}" />
                     </Grid>
 
-                    <!-- Chat history — x:DataType on DataTemplate for compiled bindings -->
-                    <ScrollViewer Name="AiScrollViewer" Margin="8,0" VerticalScrollBarVisibility="Auto">
+                    <!-- Chat history -->
+                    <ScrollViewer Name="AiScrollViewer" Margin="8,4" VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding AiMessages}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:AiMessage">
-                                    <Border Margin="0,4" Padding="10,8" CornerRadius="8"
+                                    <Border Margin="0,3" Padding="10,8" CornerRadius="8"
                                             Background="{Binding Background}">
                                         <StackPanel>
-                                            <TextBlock Text="{Binding Role}"    FontWeight="Bold" FontSize="11"
-                                                       Foreground="{Binding RoleColor}" Margin="0,0,0,3" />
-                                            <TextBlock Text="{Binding Content}" TextWrapping="Wrap"
-                                                       Foreground="#C8D8E8" FontSize="13" />
+                                            <TextBlock Text="{Binding Role}"
+                                                       FontWeight="Bold" FontSize="10"
+                                                       Foreground="{Binding RoleColor}"
+                                                       Margin="0,0,0,4" />
+                                            <TextBlock Text="{Binding Content}"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="#B0C8E0" FontSize="12"
+                                                       LineHeight="18" />
                                         </StackPanel>
                                     </Border>
                                 </DataTemplate>

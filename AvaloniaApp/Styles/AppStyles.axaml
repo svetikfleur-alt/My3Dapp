@@ -1,72 +1,120 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Toolbar buttons -->
+    <!-- ── Toolbar buttons ────────────────────────────────────────────────────── -->
     <Style Selector="Button.toolbar-btn">
-        <Setter Property="Background"   Value="#1A2A4A" />
-        <Setter Property="Foreground"   Value="#B0C8E8" />
-        <Setter Property="BorderBrush"  Value="#2A3F5F" />
+        <Setter Property="Background"      Value="Transparent" />
+        <Setter Property="Foreground"      Value="#A0BCD8" />
+        <Setter Property="BorderBrush"     Value="Transparent" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="4" />
-        <Setter Property="Padding"      Value="8,4" />
-        <Setter Property="FontSize"     Value="12" />
-        <Setter Property="Cursor"       Value="Hand" />
+        <Setter Property="CornerRadius"    Value="4" />
+        <Setter Property="Padding"         Value="7,4" />
+        <Setter Property="FontSize"        Value="12" />
+        <Setter Property="Cursor"          Value="Hand" />
+        <Setter Property="MinWidth"        Value="0" />
     </Style>
     <Style Selector="Button.toolbar-btn:pointerover /template/ ContentPresenter">
-        <Setter Property="Background" Value="#2A3F6F" />
+        <Setter Property="Background" Value="#1E3A5F" />
     </Style>
     <Style Selector="Button.toolbar-btn:pressed /template/ ContentPresenter">
-        <Setter Property="Background" Value="#0F3460" />
+        <Setter Property="Background" Value="#0D2A4A" />
     </Style>
 
-    <!-- AI action button -->
+    <!-- ── AI action button (toolbar) ────────────────────────────────────────── -->
     <Style Selector="Button.ai-btn">
-        <Setter Property="Background"  Value="#4A2080" />
-        <Setter Property="Foreground"  Value="#E8D0FF" />
-        <Setter Property="BorderBrush" Value="#6A30B0" />
+        <Setter Property="Background"  Value="#3730A3" />
+        <Setter Property="Foreground"  Value="#C4B5FD" />
+        <Setter Property="BorderBrush" Value="#4F46E5" />
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="FontWeight"  Value="SemiBold" />
     </Style>
     <Style Selector="Button.ai-btn:pointerover /template/ ContentPresenter">
-        <Setter Property="Background" Value="#6030A0" />
+        <Setter Property="Background" Value="#4F46E5" />
+    </Style>
+    <Style Selector="Button.ai-btn:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="#2D2D8A" />
     </Style>
 
-    <!-- AI send button -->
+    <!-- ── AI send button ────────────────────────────────────────────────────── -->
     <Style Selector="Button.ai-send-btn">
-        <Setter Property="Background"       Value="#4A2080" />
-        <Setter Property="Foreground"       Value="White" />
-        <Setter Property="CornerRadius"     Value="6" />
-        <Setter Property="Padding"          Value="0,8" />
+        <Setter Property="Background"                 Value="#4F46E5" />
+        <Setter Property="Foreground"                 Value="White" />
+        <Setter Property="CornerRadius"               Value="6" />
+        <Setter Property="Padding"                    Value="0,8" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
-        <Setter Property="FontWeight"       Value="SemiBold" />
-        <Setter Property="Cursor"           Value="Hand" />
+        <Setter Property="FontWeight"                 Value="SemiBold" />
+        <Setter Property="FontSize"                   Value="13" />
+        <Setter Property="Cursor"                     Value="Hand" />
+        <Setter Property="BorderBrush"                Value="#6366F1" />
+        <Setter Property="BorderThickness"            Value="1" />
     </Style>
     <Style Selector="Button.ai-send-btn:pointerover /template/ ContentPresenter">
-        <Setter Property="Background" Value="#6030A0" />
+        <Setter Property="Background" Value="#6366F1" />
+    </Style>
+    <Style Selector="Button.ai-send-btn:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="#3730A3" />
     </Style>
 
-    <!-- Viewport overlay icon buttons -->
+    <!-- ── Viewport overlay icon buttons ─────────────────────────────────────── -->
     <Style Selector="Button.viewport-btn">
-        <Setter Property="Background"     Value="#1A2A4A88" />
-        <Setter Property="Foreground"     Value="#8899BB" />
-        <Setter Property="BorderBrush"    Value="#2A3F5F" />
+        <Setter Property="Background"      Value="#0D1B2A99" />
+        <Setter Property="Foreground"      Value="#6B8CAE" />
+        <Setter Property="BorderBrush"     Value="#1E3050" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius"   Value="4" />
-        <Setter Property="Width"          Value="28" />
-        <Setter Property="Height"         Value="28" />
-        <Setter Property="FontSize"       Value="14" />
-        <Setter Property="Padding"        Value="0" />
-        <Setter Property="Cursor"         Value="Hand" />
+        <Setter Property="CornerRadius"    Value="4" />
+        <Setter Property="Width"           Value="28" />
+        <Setter Property="Height"          Value="28" />
+        <Setter Property="FontSize"        Value="14" />
+        <Setter Property="Padding"         Value="0" />
+        <Setter Property="Cursor"          Value="Hand" />
+    </Style>
+    <Style Selector="Button.viewport-btn:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="#1E3A5F" />
     </Style>
 
-    <!-- Small icon button (feature tree +) -->
+    <!-- ── Small icon button (tree "+") ──────────────────────────────────────── -->
     <Style Selector="Button.icon-btn">
-        <Setter Property="Background"     Value="Transparent" />
-        <Setter Property="Foreground"     Value="#6688AA" />
+        <Setter Property="Background"      Value="Transparent" />
+        <Setter Property="Foreground"      Value="#4B6A8A" />
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Padding"        Value="4,0" />
-        <Setter Property="Cursor"         Value="Hand" />
-        <Setter Property="FontSize"       Value="16" />
-        <Setter Property="FontWeight"     Value="Light" />
+        <Setter Property="Padding"         Value="4,0" />
+        <Setter Property="Cursor"          Value="Hand" />
+        <Setter Property="FontSize"        Value="16" />
+        <Setter Property="FontWeight"      Value="Light" />
+    </Style>
+    <Style Selector="Button.icon-btn:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- ── Section header label in feature tree ──────────────────────────────── -->
+    <Style Selector="TextBlock.section-label">
+        <Setter Property="Foreground"  Value="#3A5470" />
+        <Setter Property="FontSize"    Value="10" />
+        <Setter Property="FontWeight"  Value="SemiBold" />
+        <Setter Property="Margin"      Value="8,6,8,2" />
+    </Style>
+
+    <!-- ── Filter TextBox ────────────────────────────────────────────────────── -->
+    <Style Selector="TextBox.filter-box">
+        <Setter Property="Background"      Value="#0B1929" />
+        <Setter Property="Foreground"      Value="#A0BCD8" />
+        <Setter Property="BorderBrush"     Value="#1E3050" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius"    Value="4" />
+        <Setter Property="Padding"         Value="6,4" />
+        <Setter Property="FontSize"        Value="12" />
+        <Setter Property="CaretBrush"      Value="#4B9EF5" />
+    </Style>
+    <Style Selector="TextBox.filter-box:focus /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="#3B82F6" />
+    </Style>
+
+    <!-- ── TreeViewItem hover ─────────────────────────────────────────────────── -->
+    <Style Selector="TreeViewItem:selected /template/ Border#PART_LayoutRoot">
+        <Setter Property="Background" Value="#1E3A5F" />
+    </Style>
+    <Style Selector="TreeViewItem:pointerover /template/ Border#PART_LayoutRoot">
+        <Setter Property="Background" Value="#152D4A" />
     </Style>
 
 </Styles>
