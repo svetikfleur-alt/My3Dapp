@@ -3278,6 +3278,62 @@ public sealed class CadProjectStore
         return Math.Sqrt((dx * dx) + (dy * dy));
     }
 
+    public static int ComputeSketchDof(CadSketchSession session)
+    {
+        int totalDof = 0;
+        foreach (var entity in session.DraftEntities)
+        {
+            totalDof += SketchEntityDof(entity);
+        }
+
+        int removedDof = 0;
+        foreach (var constraint in session.ManualConstraints)
+        {
+            removedDof += SketchConstraintDofCost(constraint, session.DraftEntities);
+        }
+
+        foreach (var dimension in session.ManualDimensions.Where(item => !item.IsDriven))
+        {
+            removedDof += 1;
+        }
+
+        return totalDof - removedDof;
+    }
+
+    private static int SketchEntityDof(CadSketchEntity entity) => entity switch
+    {
+        CadSketchPoint => 2,
+        CadSketchLine => 4,
+        CadSketchRectangle => 4,
+        CadSketchCircle => 3,
+        CadSketchArc => 5,
+        CadSketchSlot => 5,
+        CadSketchPolygon => 4,
+        CadSketchSpline spline => Math.Max(0, spline.ControlPointsXY.Count / 2) * 2,
+        _ => 2
+    };
+
+    private static int SketchConstraintDofCost(CadSketchConstraint constraint, IReadOnlyList<CadSketchEntity> entities)
+    {
+        return constraint.Kind switch
+        {
+            CadSketchConstraintKind.Coincident => 2,
+            CadSketchConstraintKind.Concentric => 2,
+            CadSketchConstraintKind.Fixed => constraint.EntityIds
+                .Select(id => entities.FirstOrDefault(entity => entity.Id == id))
+                .Where(entity => entity is not null)
+                .Sum(entity => SketchEntityDof(entity!)),
+            CadSketchConstraintKind.Horizontal => 1,
+            CadSketchConstraintKind.Vertical => 1,
+            CadSketchConstraintKind.EqualRadius => 1,
+            CadSketchConstraintKind.EqualLength => 1,
+            CadSketchConstraintKind.Tangent => 1,
+            CadSketchConstraintKind.Parallel => 1,
+            CadSketchConstraintKind.Perpendicular => 1,
+            _ => 0
+        };
+    }
+
     private static (double X, double Y) ReflectPoint(double px, double py, double ax, double ay, double dNormX, double dNormY)
     {
         var vx = px - ax;
@@ -5163,51 +5219,4 @@ public static class CadProjectTextExporter
         return result.ToString().Trim('_');
     }
 
-    public static int ComputeSketchDof(CadSketchSession session)
-    {
-        int totalDof = 0;
-        foreach (var entity in session.DraftEntities)
-            totalDof += EntityBaseDof(entity);
-
-        int removedDof = 0;
-        foreach (var c in session.ManualConstraints)
-            removedDof += ConstraintDofCost(c, session.DraftEntities);
-        foreach (var d in session.ManualDimensions.Where(d => !d.IsDriven))
-            removedDof += 1;
-
-        return totalDof - removedDof;
-    }
-
-    private static int EntityBaseDof(CadSketchEntity entity) => entity switch
-    {
-        CadSketchPoint     => 2,
-        CadSketchLine      => 4,
-        CadSketchRectangle => 4,
-        CadSketchCircle    => 3,
-        CadSketchArc       => 5,
-        CadSketchSlot      => 5,
-        CadSketchPolygon   => 4,
-        CadSketchSpline s  => Math.Max(0, s.ControlPointsXY.Count / 2) * 2,
-        _                  => 2
-    };
-
-    private static int ConstraintDofCost(CadSketchConstraint c, IReadOnlyList<CadSketchEntity> entities)
-    {
-        switch (c.Kind)
-        {
-            case CadSketchConstraintKind.Coincident:
-            case CadSketchConstraintKind.Concentric:
-                return 2;
-            case CadSketchConstraintKind.Fixed:
-                int fixedDof = 0;
-                foreach (var id in c.EntityIds)
-                {
-                    var e = entities.FirstOrDefault(x => x.Id == id);
-                    if (e != null) fixedDof += EntityBaseDof(e);
-                }
-                return fixedDof;
-            default:
-                return 1;
-        }
-    }
 }
