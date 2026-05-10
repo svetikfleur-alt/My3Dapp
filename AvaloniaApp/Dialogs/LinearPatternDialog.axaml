@@ -11,24 +11,30 @@
         Title="Linear Pattern">
   <Border Classes="FeatureDialogPanel" Margin="0">
     <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
-      <TextBlock Classes="FeatureDialogTitle"
-                 Text="Linear Pattern" />
-      <TextBlock Grid.Row="1"
-                 Margin="0,6,0,0"
-                 Classes="FeatureDialogSubtitle"
-                 Text="Repeat the selected body N times along a coordinate axis." />
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="FeatureDialogTitle"
+                     Text="Linear Pattern" />
+          <TextBlock Classes="FeatureDialogSubtitle"
+                     Text="Repeat the selected body N times along a coordinate axis." />
+        </StackPanel>
+        <Border Grid.Column="1"
+                Classes="FeatureDialogTag"
+                VerticalAlignment="Top">
+          <TextBlock Text="FEATURE"
+                     Classes="FeatureDialogTagText" />
+        </Border>
+      </Grid>
 
       <StackPanel Grid.Row="2"
                   Margin="0,16,0,16"
                   Spacing="12">
-        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="12">
+        <Border Classes="FeatureDialogSectionCard">
           <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="100,*">
             <TextBlock Text="Count"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <NumericUpDown x:Name="CountInput"
+                           Classes="FeatureDialogInput"
                            Grid.Row="1"
                            Width="130"
                            HorizontalAlignment="Left"
@@ -41,13 +47,14 @@
             <TextBlock Grid.Row="2"
                        Text="Spacing"
                        Margin="0,12,0,0"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <Grid Grid.Row="3"
                   Grid.Column="0"
                   Grid.ColumnSpan="2"
                   ColumnDefinitions="130,80"
                   Margin="0,6,0,0">
               <NumericUpDown x:Name="SpacingInput"
+                             Classes="FeatureDialogInput"
                              Width="130"
                              HorizontalAlignment="Left"
                              Increment="5"
@@ -55,11 +62,8 @@
                              Maximum="10000"
                              FormatString="0.###" />
               <Border Grid.Column="1"
+                      Classes="FeatureDialogUnitChip"
                       Margin="8,0,0,0"
-                      Background="{DynamicResource Studio.PanelBackgroundBrush}"
-                      BorderBrush="{DynamicResource Studio.BorderBrush}"
-                      BorderThickness="1"
-                      Padding="10,6"
                       HorizontalAlignment="Left"
                       VerticalAlignment="Top">
                 <TextBlock HorizontalAlignment="Center"
@@ -69,14 +73,12 @@
           </Grid>
         </Border>
 
-        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="12">
+        <Border Classes="FeatureDialogSectionCard">
           <Grid ColumnDefinitions="100,*" RowDefinitions="Auto,Auto">
             <TextBlock Text="Direction"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <ComboBox x:Name="AxisComboBox"
+                      Classes="FeatureDialogInput"
                       Grid.Row="1"
                       Width="130"
                       HorizontalAlignment="Left"
@@ -97,7 +99,7 @@
         <Button Content="Cancel"
                 Classes="FeatureDialogButtonSecondary"
                 Click="OnCancelClick" />
-        <Button Content="OK"
+        <Button Content="Apply"
                 Classes="FeatureDialogButtonPrimary"
                 Click="OnConfirmClick" />
       </StackPanel>

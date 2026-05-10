@@ -21,61 +21,54 @@
                      Text="Create a solid by sweeping a closed sketch profile along the sketch plane normal." />
         </StackPanel>
         <Border Grid.Column="1"
-                Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="9,5"
+                Classes="FeatureDialogTag"
                 VerticalAlignment="Top">
           <TextBlock Text="FEATURE"
-                     FontSize="10"
-                     FontWeight="SemiBold" />
+                     Classes="FeatureDialogTagText" />
         </Border>
       </Grid>
 
       <StackPanel Grid.Row="2"
                   Margin="0,16,0,16"
                   Spacing="12">
-        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="12">
+        <Border Classes="FeatureDialogSectionCard">
           <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="96,*">
             <TextBlock Text="Profile"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <TextBlock Grid.Column="1"
                        x:Name="ProfileValueTextBlock"
+                       Classes="FeatureDialogValueText"
                        TextWrapping="Wrap"
                        Text="Closed sketch profile" />
             <TextBlock Grid.Row="1"
                        Text="Plane"
                        Margin="0,10,0,0"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <TextBlock Grid.Row="1"
                        Grid.Column="1"
                        x:Name="PlaneValueTextBlock"
                        Margin="0,10,0,0"
+                       Classes="FeatureDialogValueText"
                        Text="Sketch plane" />
             <TextBlock Grid.Row="2"
                        Text="Recipe"
                        Margin="0,10,0,0"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <TextBlock Grid.Row="2"
                        Grid.Column="1"
                        Margin="0,10,0,0"
                        TextWrapping="Wrap"
-                       Foreground="{DynamicResource Studio.TextMutedBrush}"
+                       Classes="FeatureDialogHelpText"
                        Text="sweep(profile, distance, twist)" />
           </Grid>
         </Border>
 
-        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="12">
+        <Border Classes="FeatureDialogSectionCard">
           <Grid ColumnDefinitions="*,88" RowDefinitions="Auto,Auto,Auto,Auto">
             <TextBlock Text="Distance"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <NumericUpDown x:Name="DistanceInput"
+                           Classes="FeatureDialogInput"
                            Grid.Row="1"
                            Width="160"
                            HorizontalAlignment="Left"
@@ -86,11 +79,8 @@
                            FormatString="0.###" />
             <Border Grid.Column="1"
                     Grid.Row="1"
+                    Classes="FeatureDialogUnitChip"
                     Margin="8,8,0,0"
-                    Background="{DynamicResource Studio.PanelBackgroundBrush}"
-                    BorderBrush="{DynamicResource Studio.BorderBrush}"
-                    BorderThickness="1"
-                    Padding="10,6"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Top">
               <TextBlock HorizontalAlignment="Center"
@@ -100,8 +90,9 @@
             <TextBlock Grid.Row="2"
                        Text="Twist"
                        Margin="0,12,0,0"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <NumericUpDown x:Name="TwistInput"
+                           Classes="FeatureDialogInput"
                            Grid.Row="3"
                            Width="160"
                            HorizontalAlignment="Left"
@@ -112,11 +103,8 @@
                            FormatString="0.###" />
             <Border Grid.Column="1"
                     Grid.Row="3"
+                    Classes="FeatureDialogUnitChip"
                     Margin="8,8,0,0"
-                    Background="{DynamicResource Studio.PanelBackgroundBrush}"
-                    BorderBrush="{DynamicResource Studio.BorderBrush}"
-                    BorderThickness="1"
-                    Padding="10,6"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Top">
               <TextBlock HorizontalAlignment="Center"

@@ -21,72 +21,66 @@
                      Text="Create a solid from a selected closed sketch profile." />
         </StackPanel>
         <Border Grid.Column="1"
-                Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="9,5"
+                Classes="FeatureDialogTag"
                 VerticalAlignment="Top">
           <TextBlock Text="FEATURE"
-                     FontSize="10"
-                     FontWeight="SemiBold" />
+                     Classes="FeatureDialogTagText" />
         </Border>
       </Grid>
 
       <StackPanel Grid.Row="2"
                   Margin="0,16,0,16"
                   Spacing="12">
-        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="12">
+        <Border Classes="FeatureDialogSectionCard">
           <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="104,*">
             <TextBlock Text="Profile"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <TextBlock Grid.Column="1"
                        x:Name="ProfileValueTextBlock"
+                       Classes="FeatureDialogValueText"
                        TextWrapping="Wrap"
                        Text="Closed sketch profile" />
             <TextBlock Grid.Row="1"
                        Text="Plane"
                        Margin="0,10,0,0"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <TextBlock Grid.Row="1"
                        Grid.Column="1"
                        x:Name="PlaneValueTextBlock"
                        Margin="0,10,0,0"
+                       Classes="FeatureDialogValueText"
                        Text="Top" />
             <TextBlock Grid.Row="2"
                        Text="Status"
                        Margin="0,10,0,0"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <TextBlock Grid.Row="2"
                        Grid.Column="1"
                        x:Name="SelectionStatusTextBlock"
                        Margin="0,10,0,0"
+                       Classes="FeatureDialogValueText"
                        TextWrapping="Wrap"
                        Text="Ready" />
             <TextBlock Grid.Row="3"
                        Text="Recipe"
                        Margin="0,10,0,0"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <TextBlock Grid.Row="3"
                        Grid.Column="1"
                        x:Name="RecipeTextBlock"
                        Margin="0,10,0,0"
                        TextWrapping="Wrap"
-                       Foreground="{DynamicResource Studio.TextMutedBrush}"
+                       Classes="FeatureDialogHelpText"
                        Text="extrude(profile, depth, operation)" />
           </Grid>
         </Border>
 
-        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="12">
+        <Border Classes="FeatureDialogSectionCard">
           <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="104,*">
             <TextBlock Text="Operation"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <ComboBox Grid.Column="1"
+                      Classes="FeatureDialogInput"
                       x:Name="OperationComboBox"
                       SelectionChanged="OnOperationChanged"
                       SelectedIndex="0">
@@ -98,14 +92,14 @@
 
             <TextBlock Grid.Row="1"
                        Margin="0,10,0,0"
-                       Foreground="{DynamicResource Studio.TextMutedBrush}"
+                       Classes="FeatureDialogFieldLabel"
                        Text="Result"
-                       FontWeight="SemiBold" />
+                       />
             <TextBlock Grid.Row="1"
                        Grid.Column="1"
                        x:Name="OperationHelpTextBlock"
                        Margin="0,10,0,0"
-                       Foreground="{DynamicResource Studio.TextMutedBrush}"
+                       Classes="FeatureDialogHelpText"
                        TextWrapping="Wrap"
                        Text="Creates a separate solid body." />
 
@@ -113,10 +107,11 @@
                        x:Name="TargetBodyLabel"
                        Text="Target Body"
                        Margin="0,10,0,0"
-                       FontWeight="SemiBold"
+                       Classes="FeatureDialogFieldLabel"
                        IsVisible="False" />
             <ComboBox Grid.Row="2"
                       Grid.Column="1"
+                      Classes="FeatureDialogInput"
                       x:Name="TargetBodyComboBox"
                       Margin="0,8,0,0"
                       IsVisible="False" />
@@ -132,14 +127,12 @@
           </Grid>
         </Border>
 
-        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="12">
+        <Border Classes="FeatureDialogSectionCard">
           <Grid ColumnDefinitions="*,88" RowDefinitions="Auto,Auto,Auto,Auto">
             <TextBlock Text="Distance"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <NumericUpDown x:Name="DistanceInput"
+                           Classes="FeatureDialogInput"
                            Grid.Row="1"
                            Width="160"
                            HorizontalAlignment="Left"
@@ -150,11 +143,8 @@
                            FormatString="0.###" />
             <Border Grid.Column="1"
                     Grid.Row="1"
+                    Classes="FeatureDialogUnitChip"
                     Margin="8,8,0,0"
-                    Background="{DynamicResource Studio.PanelBackgroundBrush}"
-                    BorderBrush="{DynamicResource Studio.BorderBrush}"
-                    BorderThickness="1"
-                    Padding="10,6"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Top">
               <TextBlock HorizontalAlignment="Center"
@@ -163,13 +153,14 @@
 
             <CheckBox Grid.Row="2"
                       Grid.ColumnSpan="2"
+                      Classes="FeatureDialogCheckBox"
                       x:Name="ReverseDirectionCheckBox"
                       Margin="0,12,0,0"
                       Content="Reverse direction" />
             <TextBlock Grid.Row="3"
                        Grid.ColumnSpan="2"
                        Margin="0,8,0,0"
-                       Foreground="{DynamicResource Studio.TextMutedBrush}"
+                       Classes="FeatureDialogHelpText"
                        TextWrapping="Wrap"
                        Text="Apply creates the feature. Cancel leaves the sketch/body unchanged." />
           </Grid>

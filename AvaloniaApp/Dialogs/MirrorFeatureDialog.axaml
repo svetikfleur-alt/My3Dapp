@@ -21,29 +21,23 @@
                      Text="Reflect the selected body across a symmetry plane." />
         </StackPanel>
         <Border Grid.Column="1"
-                Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="9,5"
+                Classes="FeatureDialogTag"
                 VerticalAlignment="Top">
           <TextBlock Text="FEATURE"
-                     FontSize="10"
-                     FontWeight="SemiBold" />
+                     Classes="FeatureDialogTagText" />
         </Border>
       </Grid>
 
       <StackPanel Grid.Row="2"
                   Margin="0,16,0,16"
                   Spacing="12">
-        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="12">
+        <Border Classes="FeatureDialogSectionCard">
           <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="110,*">
             <TextBlock Text="Mirror plane"
-                       FontWeight="SemiBold"
+                       Classes="FeatureDialogFieldLabel"
                        VerticalAlignment="Center" />
             <ComboBox x:Name="AxisComboBox"
+                      Classes="FeatureDialogInput"
                       Grid.Column="1"
                       Width="180"
                       HorizontalAlignment="Left"
@@ -55,18 +49,18 @@
             <TextBlock Grid.Row="1"
                        Grid.ColumnSpan="2"
                        Margin="0,10,0,0"
-                       Foreground="{DynamicResource Studio.TextMutedBrush}"
+                       Classes="FeatureDialogHelpText"
                        TextWrapping="Wrap"
                        Text="The selected body is reflected across the chosen plane through the world origin." />
             <TextBlock Grid.Row="2"
                        Text="Recipe"
                        Margin="0,10,0,0"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <TextBlock Grid.Row="2"
                        Grid.Column="1"
                        Margin="0,10,0,0"
                        TextWrapping="Wrap"
-                       Foreground="{DynamicResource Studio.TextMutedBrush}"
+                       Classes="FeatureDialogHelpText"
                        Text="mirror(body, plane)" />
           </Grid>
         </Border>

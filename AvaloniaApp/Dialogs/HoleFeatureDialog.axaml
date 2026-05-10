@@ -11,29 +11,35 @@
         Title="Hole">
   <Border Classes="FeatureDialogPanel" Margin="0">
     <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
-      <TextBlock Classes="FeatureDialogTitle"
-                 Text="Hole" />
-      <TextBlock Grid.Row="1"
-                 Margin="0,6,0,0"
-                 Classes="FeatureDialogSubtitle"
-                 Text="Cut a cylindrical bore into the selected body." />
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="FeatureDialogTitle"
+                     Text="Hole" />
+          <TextBlock Classes="FeatureDialogSubtitle"
+                     Text="Cut a cylindrical bore into the selected body." />
+        </StackPanel>
+        <Border Grid.Column="1"
+                Classes="FeatureDialogTag"
+                VerticalAlignment="Top">
+          <TextBlock Text="FEATURE"
+                     Classes="FeatureDialogTagText" />
+        </Border>
+      </Grid>
 
       <StackPanel Grid.Row="2"
                   Margin="0,16,0,16"
                   Spacing="10">
 
-        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="12">
+        <Border Classes="FeatureDialogSectionCard">
           <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="130,*">
             <TextBlock Text="Diameter"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <Grid Grid.Row="1"
                   Grid.ColumnSpan="2"
                   ColumnDefinitions="150,80"
                   Margin="0,6,0,0">
               <NumericUpDown x:Name="DiameterInput"
+                             Classes="FeatureDialogInput"
                              Width="150"
                              HorizontalAlignment="Left"
                              Increment="1"
@@ -41,11 +47,8 @@
                              Maximum="10000"
                              FormatString="0.###" />
               <Border Grid.Column="1"
+                      Classes="FeatureDialogUnitChip"
                       Margin="8,0,0,0"
-                      Background="{DynamicResource Studio.PanelBackgroundBrush}"
-                      BorderBrush="{DynamicResource Studio.BorderBrush}"
-                      BorderThickness="1"
-                      Padding="10,6"
                       HorizontalAlignment="Left"
                       VerticalAlignment="Top">
                 <TextBlock HorizontalAlignment="Center"
@@ -55,13 +58,14 @@
 
             <TextBlock Grid.Row="2"
                        Text="Center Offset X / Y"
-                       FontWeight="SemiBold"
+                       Classes="FeatureDialogFieldLabel"
                        Margin="0,12,0,0" />
             <Grid Grid.Row="3"
                   Grid.ColumnSpan="2"
                   ColumnDefinitions="150,16,150"
                   Margin="0,6,0,0">
               <NumericUpDown x:Name="CenterXInput"
+                             Classes="FeatureDialogInput"
                              Width="150"
                              HorizontalAlignment="Left"
                              Increment="1"
@@ -73,6 +77,7 @@
                          VerticalAlignment="Center"
                          HorizontalAlignment="Center" />
               <NumericUpDown x:Name="CenterYInput"
+                             Classes="FeatureDialogInput"
                              Grid.Column="2"
                              Width="150"
                              HorizontalAlignment="Left"
@@ -84,21 +89,20 @@
           </Grid>
         </Border>
 
-        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="12">
+        <Border Classes="FeatureDialogSectionCard">
           <StackPanel Spacing="8">
             <TextBlock Text="Depth"
-                       FontWeight="SemiBold" />
+                       Classes="FeatureDialogFieldLabel" />
             <StackPanel Orientation="Horizontal"
                         Spacing="16">
               <RadioButton x:Name="ThroughAllRadio"
+                           Classes="FeatureDialogCheckBox"
                            Content="Through All"
                            IsChecked="True"
                            GroupName="DepthKind"
                            Checked="OnDepthKindChanged" />
               <RadioButton x:Name="BlindRadio"
+                           Classes="FeatureDialogCheckBox"
                            Content="Blind"
                            GroupName="DepthKind"
                            Checked="OnDepthKindChanged" />
@@ -106,6 +110,7 @@
             <Grid ColumnDefinitions="150,80"
                   Margin="0,4,0,0">
               <NumericUpDown x:Name="DepthValueInput"
+                             Classes="FeatureDialogInput"
                              Width="150"
                              HorizontalAlignment="Left"
                              Increment="1"
@@ -114,11 +119,8 @@
                              FormatString="0.###"
                              IsEnabled="False" />
               <Border Grid.Column="1"
+                      Classes="FeatureDialogUnitChip"
                       Margin="8,0,0,0"
-                      Background="{DynamicResource Studio.PanelBackgroundBrush}"
-                      BorderBrush="{DynamicResource Studio.BorderBrush}"
-                      BorderThickness="1"
-                      Padding="10,6"
                       HorizontalAlignment="Left"
                       VerticalAlignment="Top">
                 <TextBlock HorizontalAlignment="Center"
@@ -137,7 +139,7 @@
                 Classes="FeatureDialogButtonSecondary"
                 Click="OnCancelClick" />
         <Button x:Name="OkButton"
-                Content="OK"
+                Content="Apply"
                 Classes="FeatureDialogButtonPrimary"
                 Click="OnConfirmClick" />
       </StackPanel>

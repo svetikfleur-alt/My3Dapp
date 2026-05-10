@@ -23,28 +23,22 @@
                      Text="Adjust the feature parameter, then confirm." />
         </StackPanel>
         <Border Grid.Column="1"
-                Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="9,5"
+                Classes="FeatureDialogTag"
                 VerticalAlignment="Top">
           <TextBlock Text="EDIT"
-                     FontSize="10"
-                     FontWeight="SemiBold" />
+                     Classes="FeatureDialogTagText" />
         </Border>
       </Grid>
 
       <Border Grid.Row="2"
               Margin="0,16,0,16"
-              Background="{DynamicResource Studio.PanelInsetBrush}"
-              BorderBrush="{DynamicResource Studio.BorderBrush}"
-              BorderThickness="1"
-              Padding="12">
+              Classes="FeatureDialogSectionCard">
         <Grid ColumnDefinitions="*,84" RowDefinitions="Auto,Auto,Auto">
           <TextBlock x:Name="ValueLabelTextBlock"
                      Text="Value"
-                     FontWeight="SemiBold" />
+                     Classes="FeatureDialogFieldLabel" />
           <NumericUpDown x:Name="ValueInput"
+                         Classes="FeatureDialogInput"
                          Grid.Row="1"
                          Width="150"
                          HorizontalAlignment="Left"
@@ -55,11 +49,8 @@
                          FormatString="0.###" />
           <Border Grid.Column="1"
                   Grid.Row="1"
+                  Classes="FeatureDialogUnitChip"
                   Margin="8,8,0,0"
-                  Background="{DynamicResource Studio.PanelBackgroundBrush}"
-                  BorderBrush="{DynamicResource Studio.BorderBrush}"
-                  BorderThickness="1"
-                  Padding="10,6"
                   HorizontalAlignment="Stretch"
                   VerticalAlignment="Top">
             <TextBlock x:Name="UnitTextBlock"
@@ -70,7 +61,7 @@
                      Grid.ColumnSpan="2"
                      Margin="0,10,0,0"
                      TextWrapping="Wrap"
-                     Foreground="{DynamicResource Studio.TextMutedBrush}"
+                     Classes="FeatureDialogHelpText"
                      Text="Apply updates the existing feature with the new value." />
         </Grid>
       </Border>

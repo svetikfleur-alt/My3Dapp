@@ -3278,47 +3278,6 @@ public sealed class CadProjectStore
         return Math.Sqrt((dx * dx) + (dy * dy));
     }
 
-    public static int ComputeSketchDof(CadSketchSession session)
-    {
-        var entityDof = session.DraftEntities.Sum(SketchEntityDof);
-
-        var constraintDof = 0;
-        foreach (var c in session.ManualConstraints)
-        {
-            constraintDof += c.Kind switch
-            {
-                CadSketchConstraintKind.Coincident => 2,
-                CadSketchConstraintKind.Horizontal => 1,
-                CadSketchConstraintKind.Vertical => 1,
-                CadSketchConstraintKind.EqualRadius => 1,
-                CadSketchConstraintKind.EqualLength => 1,
-                CadSketchConstraintKind.Tangent => 1,
-                CadSketchConstraintKind.Parallel => 1,
-                CadSketchConstraintKind.Perpendicular => 1,
-                CadSketchConstraintKind.Concentric => 2,
-                CadSketchConstraintKind.Fixed =>
-                    SketchEntityDof(session.DraftEntities.FirstOrDefault(e => c.EntityIds.Contains(e.Id))),
-                _ => 0
-            };
-        }
-
-        var dimDof = session.ManualDimensions.Count(d => !d.IsDriven);
-        return entityDof - constraintDof - dimDof;
-    }
-
-    private static int SketchEntityDof(CadSketchEntity? entity) => entity switch
-    {
-        CadSketchPoint => 2,
-        CadSketchLine => 4,
-        CadSketchArc => 5,
-        CadSketchCircle => 3,
-        CadSketchRectangle => 4,
-        CadSketchSlot => 5,
-        CadSketchPolygon => 3,
-        CadSketchSpline spline => spline.ControlPointsXY.Count,
-        _ => 0
-    };
-
     private static (double X, double Y) ReflectPoint(double px, double py, double ax, double ay, double dNormX, double dNormY)
     {
         var vx = px - ax;
@@ -3768,14 +3727,14 @@ public sealed class CadProjectStore
             case CadSketchConstraintKind.Horizontal:
                 if (entities[0] is CadSketchLine horizontalLine && !horizontalLine.IsFixed)
                 {
-                    horizontalLine.EndY = horizontalLine.StartY;
+                    ApplyHorizontalConstraint(session, horizontalLine);
                 }
                 break;
 
             case CadSketchConstraintKind.Vertical:
                 if (entities[0] is CadSketchLine verticalLine && !verticalLine.IsFixed)
                 {
-                    verticalLine.EndX = verticalLine.StartX;
+                    ApplyVerticalConstraint(session, verticalLine);
                 }
                 break;
 
@@ -3789,7 +3748,7 @@ public sealed class CadProjectStore
                     entities[1] is CadSketchLine drivenLine &&
                     !drivenLine.IsFixed)
                 {
-                    SetLineLengthPreserveStart(drivenLine, LineLength(referenceLine));
+                    SetLineLengthWithAnchor(session, drivenLine, LineLength(referenceLine));
                 }
                 break;
 
@@ -3813,7 +3772,7 @@ public sealed class CadProjectStore
                     entities[1] is CadSketchLine parallelDriven &&
                     !parallelDriven.IsFixed)
                 {
-                    MatchLineDirection(parallelReference, parallelDriven, perpendicular: false);
+                    MatchLineDirection(session, parallelReference, parallelDriven, perpendicular: false);
                 }
                 break;
 
@@ -3823,7 +3782,7 @@ public sealed class CadProjectStore
                     entities[1] is CadSketchLine perpDriven &&
                     !perpDriven.IsFixed)
                 {
-                    MatchLineDirection(perpReference, perpDriven, perpendicular: true);
+                    MatchLineDirection(session, perpReference, perpDriven, perpendicular: true);
                 }
                 break;
 
@@ -3851,7 +3810,7 @@ public sealed class CadProjectStore
 
             if (entity is CadSketchLine line && string.Equals(dimension.ParameterKey, "Length", StringComparison.OrdinalIgnoreCase))
             {
-                SetLineLengthPreserveStart(line, dimension.Value);
+                SetLineLengthWithAnchor(session, line, dimension.Value);
                 return;
             }
 
@@ -3876,10 +3835,7 @@ public sealed class CadProjectStore
             var baseAngle = Math.Atan2(lineA.EndY - lineA.StartY, lineA.EndX - lineA.StartX);
             var targetAngle = baseAngle + (dimension.Value * Math.PI / 180.0);
             var lenB = LineLength(lineB);
-            lineB.StartX = ix;
-            lineB.StartY = iy;
-            lineB.EndX = ix + Math.Cos(targetAngle) * lenB;
-            lineB.EndY = iy + Math.Sin(targetAngle) * lenB;
+            SetLineDirectionAroundAnchor(session, lineB, targetAngle, ix, iy, lenB);
         }
     }
 
@@ -3922,6 +3878,30 @@ public sealed class CadProjectStore
             }
 
             SetLineEndpoint(drivenLine, bestDrivenIndex, referenceCandidates[bestReferenceIndex]);
+            return;
+        }
+
+        if (reference is CadSketchPoint referencePoint && driven is CadSketchLine drivenLineFromPoint)
+        {
+            SnapLineEndpointToTarget(drivenLineFromPoint, new Vector2D(referencePoint.X, referencePoint.Y));
+            return;
+        }
+
+        if (reference is CadSketchLine referenceLineToPoint && driven is CadSketchPoint drivenPoint)
+        {
+            var endpoints = GetLineEndpoints(referenceLineToPoint);
+            var startDistance = Distance(new Vector2D(drivenPoint.X, drivenPoint.Y), endpoints.Start);
+            var endDistance = Distance(new Vector2D(drivenPoint.X, drivenPoint.Y), endpoints.End);
+            var target = startDistance <= endDistance ? endpoints.Start : endpoints.End;
+            drivenPoint.X = target.X;
+            drivenPoint.Y = target.Y;
+            return;
+        }
+
+        if (reference is CadSketchPoint sourcePoint && driven is CadSketchPoint targetPoint)
+        {
+            targetPoint.X = sourcePoint.X;
+            targetPoint.Y = sourcePoint.Y;
             return;
         }
 
@@ -3969,7 +3949,30 @@ public sealed class CadProjectStore
         line.EndY = line.StartY + uy * safeLength;
     }
 
-    private static void MatchLineDirection(CadSketchLine reference, CadSketchLine driven, bool perpendicular)
+    private static void SetLineLengthWithAnchor(CadSketchSession session, CadSketchLine line, double targetLength)
+    {
+        var anchorIndex = GetPreferredLineAnchorIndex(session, line);
+        if (anchorIndex == 0)
+        {
+            SetLineLengthPreserveStart(line, targetLength);
+            return;
+        }
+
+        var reversed = new CadSketchLine
+        {
+            StartX = line.EndX,
+            StartY = line.EndY,
+            EndX = line.StartX,
+            EndY = line.StartY
+        };
+        SetLineLengthPreserveStart(reversed, targetLength);
+        line.StartX = reversed.EndX;
+        line.StartY = reversed.EndY;
+        line.EndX = reversed.StartX;
+        line.EndY = reversed.StartY;
+    }
+
+    private static void MatchLineDirection(CadSketchSession session, CadSketchLine reference, CadSketchLine driven, bool perpendicular)
     {
         var refLen = LineLength(reference);
         var drivenLen = LineLength(driven);
@@ -3985,8 +3988,105 @@ public sealed class CadProjectStore
             (ux, uy) = (-uy, ux);
         }
 
-        driven.EndX = driven.StartX + ux * drivenLen;
-        driven.EndY = driven.StartY + uy * drivenLen;
+        var anchorIndex = GetPreferredLineAnchorIndex(session, driven);
+        if (anchorIndex == 0)
+        {
+            driven.EndX = driven.StartX + ux * drivenLen;
+            driven.EndY = driven.StartY + uy * drivenLen;
+        }
+        else
+        {
+            driven.StartX = driven.EndX - ux * drivenLen;
+            driven.StartY = driven.EndY - uy * drivenLen;
+        }
+    }
+
+    private static void ApplyHorizontalConstraint(CadSketchSession session, CadSketchLine line)
+    {
+        var anchorIndex = GetPreferredLineAnchorIndex(session, line);
+        if (anchorIndex == 0)
+        {
+            line.EndY = line.StartY;
+        }
+        else
+        {
+            line.StartY = line.EndY;
+        }
+    }
+
+    private static void ApplyVerticalConstraint(CadSketchSession session, CadSketchLine line)
+    {
+        var anchorIndex = GetPreferredLineAnchorIndex(session, line);
+        if (anchorIndex == 0)
+        {
+            line.EndX = line.StartX;
+        }
+        else
+        {
+            line.StartX = line.EndX;
+        }
+    }
+
+    private static void SetLineDirectionAroundAnchor(CadSketchSession session, CadSketchLine line, double targetAngle, double anchorX, double anchorY, double length)
+    {
+        var anchorIndex = GetPreferredLineAnchorIndex(session, line, new Vector2D(anchorX, anchorY));
+        var dx = Math.Cos(targetAngle) * length;
+        var dy = Math.Sin(targetAngle) * length;
+        if (anchorIndex == 0)
+        {
+            line.StartX = anchorX;
+            line.StartY = anchorY;
+            line.EndX = anchorX + dx;
+            line.EndY = anchorY + dy;
+        }
+        else
+        {
+            line.EndX = anchorX;
+            line.EndY = anchorY;
+            line.StartX = anchorX - dx;
+            line.StartY = anchorY - dy;
+        }
+    }
+
+    private static void SnapLineEndpointToTarget(CadSketchLine line, Vector2D target)
+    {
+        var endpoints = GetLineEndpoints(line);
+        var startDistance = Distance(endpoints.Start, target);
+        var endDistance = Distance(endpoints.End, target);
+        SetLineEndpoint(line, startDistance <= endDistance ? 0 : 1, target);
+    }
+
+    private static int GetPreferredLineAnchorIndex(CadSketchSession session, CadSketchLine line, Vector2D? preferredAnchor = null)
+    {
+        if (preferredAnchor is Vector2D anchor)
+        {
+            var endpoints = GetLineEndpoints(line);
+            return Distance(endpoints.Start, anchor) <= Distance(endpoints.End, anchor) ? 0 : 1;
+        }
+
+        var endpointsForLine = GetLineEndpoints(line);
+        foreach (var constraint in session.ManualConstraints.Where(item =>
+                     item.Kind == CadSketchConstraintKind.Coincident &&
+                     item.EntityIds.Contains(line.Id)))
+        {
+            foreach (var entityId in constraint.EntityIds)
+            {
+                if (entityId == line.Id)
+                {
+                    continue;
+                }
+
+                var target = session.DraftEntities.FirstOrDefault(item => item.Id == entityId);
+                if (target is null || !TryGetCenter(target, out var center))
+                {
+                    continue;
+                }
+
+                return Distance(endpointsForLine.Start, center) <= Distance(endpointsForLine.End, center) ? 0 : 1;
+            }
+        }
+
+        return 0;
     }
 
     private static double TryGetRadius(CadSketchEntity entity) => entity switch
