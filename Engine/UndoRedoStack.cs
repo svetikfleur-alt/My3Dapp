@@ -1,4 +1,4 @@
-using My3DApp.AvaloniaApp.Services;
+using My3DApp.Core;
 
 namespace My3DApp.Engine;
 
