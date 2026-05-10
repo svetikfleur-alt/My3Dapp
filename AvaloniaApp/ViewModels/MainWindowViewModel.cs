@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -366,22 +367,40 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         StatusMessage = $"Exporting to {Path.GetFileName(path)}...";
 
-        // Prefer the selected feature node's scene object; fall back to first in scene
-        Guid? exportId = SelectedFeatureNode?.SceneObjectId
-            ?? _scene.Objects.FirstOrDefault()?.Id;
-        if (exportId is null) { StatusMessage = "Nothing to export."; return; }
+        var ext = Path.GetExtension(path).ToLowerInvariant();
 
-        // Warn when geometry is null (AI-generated nodes have no computed mesh)
-        var sceneObj = _scene.Find(exportId.Value);
-        if (sceneObj?.Geometry is null)
+        // Collect all scene objects that have real geometry
+        var objectsWithGeo = _scene.Objects.Where(o => o.Geometry != null).ToList();
+
+        if (objectsWithGeo.Count == 0)
         {
-            StatusMessage = $"Warning: '{sceneObj?.Name ?? "object"}' has no computed mesh — exported file will be empty. " +
-                            "Import an STL or use toolbar primitives for exportable geometry.";
+            // Fall back: try to export whatever is selected/first even without geometry
+            Guid? exportId = SelectedFeatureNode?.SceneObjectId
+                ?? _scene.Objects.FirstOrDefault()?.Id;
+            if (exportId is null) { StatusMessage = "Nothing to export."; return; }
+            await _models.ExportAsync(exportId.Value, path);
+            StatusMessage = $"Exported (no geometry): {Path.GetFileName(path)}";
+            return;
         }
 
-        await _models.ExportAsync(exportId.Value, path);
-        if (sceneObj?.Geometry != null)
+        if (objectsWithGeo.Count == 1 && ext != ".stl")
+        {
+            // Single object non-STL: delegate to ModelManager for OBJ support
+            await _models.ExportAsync(objectsWithGeo[0].Id, path);
             StatusMessage = $"Exported: {Path.GetFileName(path)}";
+            return;
+        }
+
+        // Merge all geometries into a single STL (or the largest for OBJ fallback)
+        var merged = new Mesh();
+        foreach (var obj in objectsWithGeo)
+            foreach (var tri in obj.Geometry!.Triangles)
+                merged.Triangles.Add(tri);
+
+        await using var fs = File.Create(path);
+        merged.WriteBinaryStl(fs);
+        var totalTris = merged.Triangles.Count;
+        StatusMessage = $"Exported {objectsWithGeo.Count} parts ({totalTris} triangles): {Path.GetFileName(path)}";
     }
 
     // ── Toolbar handlers ──────────────────────────────────────────────────────
@@ -683,10 +702,37 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
             var node = MakeNode(icon, name, type);
             node.ViewportAddScript = lineMatch.Success ? lineMatch.Value : null;
-            var obj = _scene.Add(name, type);
+
+            // Parse numeric dimensions and build real C# mesh so STL export works
+            SceneObject obj = call switch
+            {
+                "addBox" when Regex.Match(script,
+                    $@"viewer\.addBox\s*\(\s*[""']{Regex.Escape(name)}[""']\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)")
+                    is { Success: true } bm
+                    && float.TryParse(bm.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var bw)
+                    && float.TryParse(bm.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var bh)
+                    && float.TryParse(bm.Groups[3].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var bd)
+                    => _models.CreateBox(name, bw, bh, bd),
+
+                "addCylinder" when Regex.Match(script,
+                    $@"viewer\.addCylinder\s*\(\s*[""']{Regex.Escape(name)}[""']\s*,\s*([\d.]+)\s*,\s*([\d.]+)")
+                    is { Success: true } cm
+                    && float.TryParse(cm.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var cr)
+                    && float.TryParse(cm.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var ch)
+                    => _models.CreateCylinder(name, cr, ch),
+
+                "addSphere" when Regex.Match(script,
+                    $@"viewer\.addSphere\s*\(\s*[""']{Regex.Escape(name)}[""']\s*,\s*([\d.]+)")
+                    is { Success: true } sm
+                    && float.TryParse(sm.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var sr)
+                    => _models.CreateSphere(name, sr),
+
+                _ => _scene.Add(name, type)
+            };
+
             node.SceneObjectId = obj.Id;
             children.Add(node);
-            RuntimeLog.Info("VM", $"AI synced node '{name}' ({type})");
+            RuntimeLog.Info("VM", $"AI synced node '{name}' ({type}) — geometry {(obj.Geometry != null ? $"{obj.Geometry.Triangles.Count} tris" : "none")}");
         }
 
         RefreshTreeBindings();
