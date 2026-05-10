@@ -41,6 +41,10 @@ public class FeatureNode : ViewModelBase
         set => SetField(ref _isSelected, value);
     }
 
+    // Set when the node corresponds to a SceneGraph object (import, extrude, sketch, etc.)
+    // Used by delete and visibility sync to keep the engine scene in sync with the UI tree.
+    public Guid? SceneObjectId { get; set; }
+
     // Commands set by the ViewModel when the node is created.
     // Keeping commands on the node avoids $parent traversal in compiled bindings.
     public ICommand? DeleteCommand          { get; set; }

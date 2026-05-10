@@ -65,8 +65,6 @@ public class ViewportService : IDisposable
 
         var viewerPath = GetViewerPath();
         NavigateTo($"file:///{viewerPath.Replace('\\', '/')}");
-
-        await Task.CompletedTask;
     }
 
     private static string GetViewerPath()

@@ -178,6 +178,14 @@ window.viewer = {
     if (obj) { scene.remove(obj); delete meshObjects[name]; }
   },
 
+  setObjectVisible(name, visible) {
+    const obj = meshObjects[name];
+    if (obj) {
+      obj.visible = visible;
+      setStatus(visible ? `Showed "${name}"` : `Hid "${name}"`);
+    }
+  },
+
   clearScene() {
     Object.keys(meshObjects).forEach(k => {
       scene.remove(meshObjects[k]);

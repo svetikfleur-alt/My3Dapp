@@ -68,7 +68,6 @@ public class ModelManager
         else
         {
             RuntimeLog.Info("Model", $"Imported '{name}' from {filePath} (geometry not parsed for {ext})");
-            await Task.CompletedTask;
         }
 
         return obj;

@@ -265,19 +265,29 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     // ── Toolbar handlers ──────────────────────────────────────────────────────
     private void NewSketch()
     {
+        if (FeatureNodes.Count == 0) return;
         var name = $"Sketch {FeatureNodes[0].Children.Count + 1}";
-        _history.Push(new AddSceneObjectAction(_scene, name, "sketch"));
-        FeatureNodes[0].Children.Add(MakeNode("⬜", name, "sketch"));
+        var action = new AddSceneObjectAction(_scene, name, "sketch");
+        _history.Push(action);
+        var node = MakeNode("⬜", name, "sketch");
+        node.SceneObjectId = _scene.Objects.FirstOrDefault(o => o.Name == name)?.Id;
+        FeatureNodes[0].Children.Add(node);
         StatusMessage = $"{name} — select a plane to begin.";
         RuntimeLog.Info("VM", $"New sketch '{name}' created.");
     }
 
     private void Extrude()
     {
+        if (FeatureNodes.Count == 0) return;
         var name = $"Extrude {FeatureNodes[0].Children.Count + 1}";
-        _history.Push(new AddSceneObjectAction(_scene, name, "extrude"));
-        FeatureNodes[0].Children.Add(MakeNode("⬆", name, "extrude"));
-        StatusMessage = "Extrude: set depth in properties panel.";
+        var action = new AddSceneObjectAction(_scene, name, "extrude");
+        _history.Push(action);
+        var node = MakeNode("⬆", name, "extrude");
+        node.SceneObjectId = _scene.Objects.FirstOrDefault(o => o.Name == name)?.Id;
+        FeatureNodes[0].Children.Add(node);
+        // Push a default box to the viewport as a placeholder for the extrude
+        _ = ViewportService?.ExecuteScriptAsync($"viewer.addBox('{name.Replace("'", "")}', 100, 50, 30);");
+        StatusMessage = $"{name} added. Adjust dimensions in the properties panel.";
     }
 
     private void Revolve()       => StatusMessage = "Revolve: select profile and axis.";
@@ -290,8 +300,16 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private void FocusAiPanel()  => StatusMessage = "AI panel focused.";
     private void AddFeature()    => StatusMessage = "Select feature type to add.";
     private void Exit()          => Environment.Exit(0);
-    private void Undo()          { if (_history.Undo()) StatusMessage = "Undo complete."; }
-    private void Redo()          { if (_history.Redo()) StatusMessage = "Redo complete."; }
+    private void Undo()
+    {
+        var desc = _history.NextUndoDescription;
+        if (_history.Undo()) StatusMessage = desc != null ? $"Undid: {desc}" : "Undo complete.";
+    }
+    private void Redo()
+    {
+        var desc = _history.NextRedoDescription;
+        if (_history.Redo()) StatusMessage = desc != null ? $"Redid: {desc}" : "Redo complete.";
+    }
     private void ShowAbout()     => StatusMessage = "My3DApp — AI Native CAD  |  v0.1.0-alpha";
     private void SetView(string v) { StatusMessage = $"View: {v}"; _ = ViewportService?.SetViewAsync(v); }
     private void OpenUrl(string url) =>
@@ -304,6 +322,17 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         {
             if (root.Children.Remove(node))
             {
+                // Sync scene graph and viewport
+                if (node.SceneObjectId is { } id)
+                {
+                    var obj = _scene.Find(id);
+                    if (obj != null)
+                        _history.Push(new RemoveSceneObjectAction(_scene, obj));
+                    else
+                        _scene.Remove(id);
+                }
+                _ = ViewportService?.ExecuteScriptAsync(
+                    $"viewer.removeObject('{node.Name.Replace("'", "")}');");
                 StatusMessage = $"Deleted '{node.Name}'.";
                 RuntimeLog.Info("VM", $"Deleted feature '{node.Name}'");
                 return;
@@ -327,6 +356,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private void ToggleVisibility(FeatureNode node)
     {
         node.IsVisible = !node.IsVisible;
+        _ = ViewportService?.ExecuteScriptAsync(
+            $"viewer.setObjectVisible('{node.Name.Replace("'", "")}', {(node.IsVisible ? "true" : "false")});");
         StatusMessage = $"'{node.Name}' {(node.IsVisible ? "visible" : "hidden")}.";
     }
 
@@ -407,6 +438,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     private async Task AiSuggestFeatureAsync()
     {
+        AiMessages.Add(new AiMessage { Role = "You", Content = "(Suggest next feature)" });
         AiIsThinking = true;
         StatusMessage = "AI analyzing part...";
         try
@@ -414,6 +446,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             var prompt = BuildContextualPrompt("Based on my current feature tree, what should I model next?");
             var reply = await _ai.ChatAsync(prompt);
             AiMessages.Add(new AiMessage { Role = "AI", Content = reply });
+            if (_ai.LastGeometryScript is { } script)
+                await (ViewportService?.ExecuteScriptAsync(script) ?? Task.CompletedTask);
         }
         finally
         {
