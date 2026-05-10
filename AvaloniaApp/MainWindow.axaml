@@ -364,26 +364,29 @@
 
               <Border Classes="ToolbarDivider" />
               <TextBlock Text="View" Classes="ToolbarGroupLabel" />
-              <Button Classes="ToolbarActionButton"
-                      ToolTip.Tip="Zoom to fit (F)"
-                      Click="OnFocusSelectionClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/focus.svg" Width="16" Height="16" />
-              </Button>
-              <ToggleButton x:Name="MeasureToolToggle"
-                            Classes="ToolbarIconToggle"
-                            ToolTip.Tip="Measure point-to-point distance"
-                            IsEnabled="{Binding IsThreeDMode}"
-                            Click="OnMeasureToolToggleClick">
-                <TextBlock Text="⇿" FontSize="14" FontWeight="Bold" />
-              </ToggleButton>
-
-              <ToggleButton x:Name="SectionViewToggle"
-                            Classes="ToolbarIconToggle"
-                            ToolTip.Tip="Section view — toggle cross-section clipping plane"
-                            IsEnabled="{Binding IsThreeDMode}"
-                            Click="OnSectionViewToggleClick">
-                <TextBlock Text="§" FontSize="14" FontWeight="Bold" />
-              </ToggleButton>
+              <Border Classes="ToolSplitGroup" Padding="4">
+                <StackPanel Orientation="Horizontal" Spacing="3">
+                  <Button Classes="ToolbarActionButton"
+                          ToolTip.Tip="Zoom to fit (F)"
+                          Click="OnFocusSelectionClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/focus.svg" Width="16" Height="16" />
+                  </Button>
+                  <ToggleButton x:Name="MeasureToolToggle"
+                                Classes="ToolbarIconToggle"
+                                ToolTip.Tip="Measure point-to-point distance"
+                                IsEnabled="{Binding IsThreeDMode}"
+                                Click="OnMeasureToolToggleClick">
+                    <TextBlock Text="⇿" FontSize="14" FontWeight="Bold" />
+                  </ToggleButton>
+                  <ToggleButton x:Name="SectionViewToggle"
+                                Classes="ToolbarIconToggle"
+                                ToolTip.Tip="Section view — toggle cross-section clipping plane"
+                                IsEnabled="{Binding IsThreeDMode}"
+                                Click="OnSectionViewToggleClick">
+                    <TextBlock Text="§" FontSize="14" FontWeight="Bold" />
+                  </ToggleButton>
+                </StackPanel>
+              </Border>
               <ComboBox x:Name="SectionAxisCombo"
                         Width="42"
                         FontSize="11"
@@ -410,91 +413,101 @@
 
               <Border Classes="ToolbarDivider" />
               <TextBlock Text="Transform" Classes="ToolbarGroupLabel" />
-              <ToggleButton x:Name="MoveToolButton"
-                            Classes="ToolbarIconToggle"
-                            ToolTip.Tip="Move · M"
-                            Click="OnMoveToolClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/move.svg" Width="16" Height="16" />
-              </ToggleButton>
+              <Border Classes="ToolSplitGroup" Padding="4">
+                <ToggleButton x:Name="MoveToolButton"
+                              Classes="ToolbarIconToggle"
+                              ToolTip.Tip="Move · M"
+                              Click="OnMoveToolClick">
+                  <svg:Svg Path="avares://My3DApp/Assets/Icons/move.svg" Width="16" Height="16" />
+                </ToggleButton>
+              </Border>
 
               <Border Classes="ToolbarDivider" />
               <TextBlock Text="Modify" Classes="ToolbarGroupLabel" />
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Fillet (round edges)"
-                      Click="OnFilletClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/fillet.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Chamfer (bevel edges)"
-                      Click="OnChamferClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/chamfer.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Hole (H)"
-                      Click="OnHoleClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/hole.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Shell"
-                      Click="OnShellClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/shell.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Linear Pattern"
-                      Click="OnLinearPatternClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/linear-pattern.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Circular Pattern"
-                      Click="OnCircularPatternClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/circular-pattern.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Mirror selected body"
-                      Click="OnMirrorMenuItemClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/mirror.svg" Width="16" Height="16" />
-              </Button>
+              <Border Classes="ToolSplitGroup" Padding="4">
+                <StackPanel Orientation="Horizontal" Spacing="3">
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanEdgeTools}"
+                          ToolTip.Tip="Fillet (round edges)"
+                          Click="OnFilletClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/fillet.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanEdgeTools}"
+                          ToolTip.Tip="Chamfer (bevel edges)"
+                          Click="OnChamferClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/chamfer.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanEdgeTools}"
+                          ToolTip.Tip="Hole (H)"
+                          Click="OnHoleClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/hole.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanEdgeTools}"
+                          ToolTip.Tip="Shell"
+                          Click="OnShellClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/shell.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanEdgeTools}"
+                          ToolTip.Tip="Linear Pattern"
+                          Click="OnLinearPatternClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/linear-pattern.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanEdgeTools}"
+                          ToolTip.Tip="Circular Pattern"
+                          Click="OnCircularPatternClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/circular-pattern.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanEdgeTools}"
+                          ToolTip.Tip="Mirror selected body"
+                          Click="OnMirrorMenuItemClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/mirror.svg" Width="16" Height="16" />
+                  </Button>
+                </StackPanel>
+              </Border>
 
-              <Border Classes="ToolbarDivider" IsVisible="{Binding CanBooleanTools}" />
-              <TextBlock Text="Boolean" Classes="ToolbarGroupLabel" IsVisible="{Binding CanBooleanTools}" />
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanBooleanTools}"
-                      IsVisible="{Binding CanBooleanTools}"
-                      ToolTip.Tip="Union — merge two bodies"
-                      Click="OnBooleanUnionClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/boolean-union.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanBooleanTools}"
-                      IsVisible="{Binding CanBooleanTools}"
-                      ToolTip.Tip="Subtract — cut Body B from Body A"
-                      Click="OnBooleanSubtractClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/boolean-subtract.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanBooleanTools}"
-                      IsVisible="{Binding CanBooleanTools}"
-                      ToolTip.Tip="Intersect — keep only overlapping volume"
-                      Click="OnBooleanIntersectClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/boolean-intersect.svg" Width="16" Height="16" />
-              </Button>
+              <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding CanBooleanTools}">
+                <Border Classes="ToolbarDivider" />
+                <TextBlock Text="Boolean" Classes="ToolbarGroupLabel" />
+                <Border Classes="ToolSplitGroup" Padding="4">
+                  <StackPanel Orientation="Horizontal" Spacing="3">
+                    <Button Classes="ToolbarActionButton"
+                            IsEnabled="{Binding CanBooleanTools}"
+                            ToolTip.Tip="Union — merge two bodies"
+                            Click="OnBooleanUnionClick">
+                      <svg:Svg Path="avares://My3DApp/Assets/Icons/boolean-union.svg" Width="16" Height="16" />
+                    </Button>
+                    <Button Classes="ToolbarActionButton"
+                            IsEnabled="{Binding CanBooleanTools}"
+                            ToolTip.Tip="Subtract — cut Body B from Body A"
+                            Click="OnBooleanSubtractClick">
+                      <svg:Svg Path="avares://My3DApp/Assets/Icons/boolean-subtract.svg" Width="16" Height="16" />
+                    </Button>
+                    <Button Classes="ToolbarActionButton"
+                            IsEnabled="{Binding CanBooleanTools}"
+                            ToolTip.Tip="Intersect — keep only overlapping volume"
+                            Click="OnBooleanIntersectClick">
+                      <svg:Svg Path="avares://My3DApp/Assets/Icons/boolean-intersect.svg" Width="16" Height="16" />
+                    </Button>
+                  </StackPanel>
+                </Border>
+              </StackPanel>
 
-              <Border Classes="ToolbarDivider" IsVisible="{Binding IsThreeDMode}" />
-              <TextBlock Text="Datum" Classes="ToolbarGroupLabel" IsVisible="{Binding IsThreeDMode}" />
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding IsThreeDMode}"
-                      IsVisible="{Binding IsThreeDMode}"
-                      ToolTip.Tip="Create datum plane (offset from reference plane)"
-                      Click="OnCreateDatumPlaneClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/sketch-plane.svg" Width="16" Height="16" />
-              </Button>
+              <Border Classes="ToolbarDivider" />
+              <TextBlock Text="Datum" Classes="ToolbarGroupLabel" />
+              <Border Classes="ToolSplitGroup" Padding="4">
+                <Button Classes="ToolbarActionButton"
+                        IsEnabled="{Binding IsThreeDMode}"
+                        ToolTip.Tip="Create datum plane (offset from reference plane)"
+                        Click="OnCreateDatumPlaneClick">
+                  <svg:Svg Path="avares://My3DApp/Assets/Icons/sketch-plane.svg" Width="16" Height="16" />
+                </Button>
+              </Border>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsSketchMode}">
@@ -584,22 +597,25 @@
 
               <Border Classes="ToolbarDivider" />
               <TextBlock Text="Transform" Classes="ToolbarGroupLabel" />
-              <ToggleButton x:Name="SketchTransformToolButton"
-                            Classes="ToolbarIconToggle"
-                            ToolTip.Tip="Transform sketch entities (move)"
-                            IsChecked="{Binding IsTransformSketchToolSelected, Mode=OneWay}"
-                            IsEnabled="{Binding CanSketchTools}"
-                            Click="OnSketchTransformToolClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/move.svg" Width="16" Height="16" />
-              </ToggleButton>
-              <!-- Rotate tool button — task 52 -->
-              <ToggleButton x:Name="SketchRotateToolButton"
-                            Classes="ToolbarIconToggle"
-                            ToolTip.Tip="Rotate sketch entity about a pivot point"
-                            IsEnabled="{Binding CanSketchTools}"
-                            Click="OnSketchRotateToolClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/rotate.svg" Width="16" Height="16" />
-              </ToggleButton>
+              <Border Classes="ToolSplitGroup" Padding="4">
+                <StackPanel Orientation="Horizontal" Spacing="3">
+                  <ToggleButton x:Name="SketchTransformToolButton"
+                                Classes="ToolbarIconToggle"
+                                ToolTip.Tip="Transform sketch entities (move)"
+                                IsChecked="{Binding IsTransformSketchToolSelected, Mode=OneWay}"
+                                IsEnabled="{Binding CanSketchTools}"
+                                Click="OnSketchTransformToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/move.svg" Width="16" Height="16" />
+                  </ToggleButton>
+                  <ToggleButton x:Name="SketchRotateToolButton"
+                                Classes="ToolbarIconToggle"
+                                ToolTip.Tip="Rotate sketch entity about a pivot point"
+                                IsEnabled="{Binding CanSketchTools}"
+                                Click="OnSketchRotateToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/rotate.svg" Width="16" Height="16" />
+                  </ToggleButton>
+                </StackPanel>
+              </Border>
 
               <Border Classes="ToolbarDivider" />
               <TextBlock Text="Construction" Classes="ToolbarGroupLabel" />
@@ -625,89 +641,95 @@
 
               <Border Classes="ToolbarDivider" />
               <TextBlock Text="Dimension" Classes="ToolbarGroupLabel" />
-              <ToggleButton Classes="ToolbarIconToggle"
-                            Tag="LinearDimension"
-                            ToolTip.Tip="Linear Dimension [D] — click a line to add its length"
-                            IsChecked="{Binding IsLinearDimensionToolSelected, Mode=OneWay}"
-                            IsEnabled="{Binding CanSketchTools}"
-                            Click="OnSketchToolClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/linear-dimension.svg" Width="16" Height="16" />
-              </ToggleButton>
-              <ToggleButton Classes="ToolbarIconToggle"
-                            Tag="RadiusDimension"
-                            ToolTip.Tip="Radius Dimension [I] — click a circle or arc"
-                            IsChecked="{Binding IsRadiusDimensionToolSelected, Mode=OneWay}"
-                            IsEnabled="{Binding CanSketchTools}"
-                            Click="OnSketchToolClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/radius-dimension.svg" Width="16" Height="16" />
-              </ToggleButton>
-              <ToggleButton Classes="ToolbarIconToggle"
-                            Tag="AngleDimension"
-                            ToolTip.Tip="Angle Dimension — click two lines to measure angle"
-                            IsChecked="{Binding IsAngleDimensionToolSelected, Mode=OneWay}"
-                            IsEnabled="{Binding CanSketchTools}"
-                            Click="OnSketchToolClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/angle-dimension.svg" Width="16" Height="16" />
-              </ToggleButton>
+              <Border Classes="ToolSplitGroup" Padding="4">
+                <StackPanel Orientation="Horizontal" Spacing="3">
+                  <ToggleButton Classes="ToolbarIconToggle"
+                                Tag="LinearDimension"
+                                ToolTip.Tip="Linear Dimension [D] — click a line to add its length"
+                                IsChecked="{Binding IsLinearDimensionToolSelected, Mode=OneWay}"
+                                IsEnabled="{Binding CanSketchTools}"
+                                Click="OnSketchToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/linear-dimension.svg" Width="16" Height="16" />
+                  </ToggleButton>
+                  <ToggleButton Classes="ToolbarIconToggle"
+                                Tag="RadiusDimension"
+                                ToolTip.Tip="Radius Dimension [I] — click a circle or arc"
+                                IsChecked="{Binding IsRadiusDimensionToolSelected, Mode=OneWay}"
+                                IsEnabled="{Binding CanSketchTools}"
+                                Click="OnSketchToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/radius-dimension.svg" Width="16" Height="16" />
+                  </ToggleButton>
+                  <ToggleButton Classes="ToolbarIconToggle"
+                                Tag="AngleDimension"
+                                ToolTip.Tip="Angle Dimension — click two lines to measure angle"
+                                IsChecked="{Binding IsAngleDimensionToolSelected, Mode=OneWay}"
+                                IsEnabled="{Binding CanSketchTools}"
+                                Click="OnSketchToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/angle-dimension.svg" Width="16" Height="16" />
+                  </ToggleButton>
+                </StackPanel>
+              </Border>
 
               <Border Classes="ToolbarDivider" />
               <TextBlock Text="Constraints" Classes="ToolbarGroupLabel" />
-              <StackPanel Orientation="Horizontal" Spacing="4">
-                <Button Classes="SketchConstraintToolButton"
-                        ToolTip.Tip="Horizontal (snap last line horizontal)"
-                        IsEnabled="{Binding CanSketchTools}"
-                        Click="OnApplyHorizontalConstraintClick">
-                  <svg:Svg Path="avares://My3DApp/Assets/Icons/horizontal.svg" Width="15" Height="15" />
-                </Button>
-                <Button Classes="SketchConstraintToolButton"
-                        ToolTip.Tip="Vertical (snap last line vertical)"
-                        IsEnabled="{Binding CanSketchTools}"
-                        Click="OnApplyVerticalConstraintClick">
-                  <svg:Svg Path="avares://My3DApp/Assets/Icons/vertical.svg" Width="15" Height="15" />
-                </Button>
-                <Button Classes="SketchConstraintToolButton"
-                        ToolTip.Tip="Coincident (snap last line to previous line)"
-                        IsEnabled="{Binding CanSketchTools}"
-                        Click="OnApplyCoincidentConstraintClick">
-                  <svg:Svg Path="avares://My3DApp/Assets/Icons/coincident.svg" Width="15" Height="15" />
-                </Button>
-                <Button Classes="SketchConstraintToolButton"
-                        ToolTip.Tip="Equal (match last two line lengths or radii)"
-                        IsEnabled="{Binding CanSketchTools}"
-                        Click="OnApplyEqualConstraintClick">
-                  <svg:Svg Path="avares://My3DApp/Assets/Icons/equal.svg" Width="15" Height="15" />
-                </Button>
-                <Button Classes="SketchConstraintToolButton"
-                        ToolTip.Tip="Fix (lock last sketch entity)"
-                        IsEnabled="{Binding CanSketchTools}"
-                        Click="OnApplyFixedConstraintClick">
-                  <svg:Svg Path="avares://My3DApp/Assets/Icons/fix.svg" Width="15" Height="15" />
-                </Button>
-                <Button Classes="SketchConstraintToolButton"
-                        ToolTip.Tip="Tangent"
-                        IsEnabled="{Binding CanSketchTools}"
-                        Click="OnApplyTangentConstraintClick">
-                  <svg:Svg Path="avares://My3DApp/Assets/Icons/tangent.svg" Width="15" Height="15" />
-                </Button>
-                <Button Classes="SketchConstraintToolButton"
-                        ToolTip.Tip="Parallel"
-                        IsEnabled="{Binding CanSketchTools}"
-                        Click="OnApplyParallelConstraintClick">
-                  <svg:Svg Path="avares://My3DApp/Assets/Icons/parallel.svg" Width="15" Height="15" />
-                </Button>
-                <Button Classes="SketchConstraintToolButton"
-                        ToolTip.Tip="Perpendicular (make last two lines 90°)"
-                        IsEnabled="{Binding CanSketchTools}"
-                        Click="OnApplyPerpendicularConstraintClick">
-                  <svg:Svg Path="avares://My3DApp/Assets/Icons/perpendicular.svg" Width="15" Height="15" />
-                </Button>
-                <Button Classes="SketchConstraintToolButton"
-                        ToolTip.Tip="Concentric (share center for last two circles/arcs)"
-                        IsEnabled="{Binding CanSketchTools}"
-                        Click="OnApplyConcentricConstraintClick">
-                  <svg:Svg Path="avares://My3DApp/Assets/Icons/concentric.svg" Width="15" Height="15" />
-                </Button>
-              </StackPanel>
+              <Border Classes="ToolSplitGroup" Padding="4">
+                <StackPanel Orientation="Horizontal" Spacing="3">
+                  <Button Classes="SketchConstraintToolButton"
+                          ToolTip.Tip="Horizontal (snap last line horizontal)"
+                          IsEnabled="{Binding CanSketchTools}"
+                          Click="OnApplyHorizontalConstraintClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/horizontal.svg" Width="15" Height="15" />
+                  </Button>
+                  <Button Classes="SketchConstraintToolButton"
+                          ToolTip.Tip="Vertical (snap last line vertical)"
+                          IsEnabled="{Binding CanSketchTools}"
+                          Click="OnApplyVerticalConstraintClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/vertical.svg" Width="15" Height="15" />
+                  </Button>
+                  <Button Classes="SketchConstraintToolButton"
+                          ToolTip.Tip="Coincident (snap last line to previous line)"
+                          IsEnabled="{Binding CanSketchTools}"
+                          Click="OnApplyCoincidentConstraintClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/coincident.svg" Width="15" Height="15" />
+                  </Button>
+                  <Button Classes="SketchConstraintToolButton"
+                          ToolTip.Tip="Equal (match last two line lengths or radii)"
+                          IsEnabled="{Binding CanSketchTools}"
+                          Click="OnApplyEqualConstraintClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/equal.svg" Width="15" Height="15" />
+                  </Button>
+                  <Button Classes="SketchConstraintToolButton"
+                          ToolTip.Tip="Fix (lock last sketch entity)"
+                          IsEnabled="{Binding CanSketchTools}"
+                          Click="OnApplyFixedConstraintClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/fix.svg" Width="15" Height="15" />
+                  </Button>
+                  <Button Classes="SketchConstraintToolButton"
+                          ToolTip.Tip="Tangent"
+                          IsEnabled="{Binding CanSketchTools}"
+                          Click="OnApplyTangentConstraintClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/tangent.svg" Width="15" Height="15" />
+                  </Button>
+                  <Button Classes="SketchConstraintToolButton"
+                          ToolTip.Tip="Parallel"
+                          IsEnabled="{Binding CanSketchTools}"
+                          Click="OnApplyParallelConstraintClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/parallel.svg" Width="15" Height="15" />
+                  </Button>
+                  <Button Classes="SketchConstraintToolButton"
+                          ToolTip.Tip="Perpendicular (make last two lines 90°)"
+                          IsEnabled="{Binding CanSketchTools}"
+                          Click="OnApplyPerpendicularConstraintClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/perpendicular.svg" Width="15" Height="15" />
+                  </Button>
+                  <Button Classes="SketchConstraintToolButton"
+                          ToolTip.Tip="Concentric (share center for last two circles/arcs)"
+                          IsEnabled="{Binding CanSketchTools}"
+                          Click="OnApplyConcentricConstraintClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/concentric.svg" Width="15" Height="15" />
+                  </Button>
+                </StackPanel>
+              </Border>
 
               <Border Classes="ToolbarDivider" />
               <Border Classes="SketchHintPanel" Padding="10,6">
