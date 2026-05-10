@@ -20,35 +20,48 @@
             BorderBrush="{DynamicResource Studio.BorderBrush}"
             BorderThickness="0,0,0,1"
             Padding="14,12,14,10">
-      <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto">
-        <Grid ColumnDefinitions="260,*" VerticalAlignment="Center">
-          <StackPanel Spacing="3">
-            <TextBlock Text="Workspace"
-                       Classes="ToolbarMetaLabel" />
-            <Border Classes="ModeSwitchShell" Padding="8,7">
-              <StackPanel Spacing="4">
-                <Border Classes="ToolbarModeBadge"
-                        HorizontalAlignment="Left">
-                  <TextBlock Text="{Binding WorkspaceModeBadge}" Classes="ToolbarModeBadgeText" />
-                </Border>
-                <TextBlock Text="{Binding WorkspaceModeSummary}"
-                           Classes="ToolbarSubtleText"
-                           TextWrapping="Wrap" />
-              </StackPanel>
-            </Border>
-          </StackPanel>
+      <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*,Auto">
+        <Grid ColumnDefinitions="Auto,*" VerticalAlignment="Center">
+          <Border Classes="StudioBrandMark">
+            <TextBlock Text="M3"
+                       Classes="StudioBrandMarkText" />
+          </Border>
 
-          <StackPanel Grid.Column="1" Margin="16,0,0,0" Spacing="2" VerticalAlignment="Center">
+          <StackPanel Grid.Column="1" Margin="14,0,0,0" Spacing="2" VerticalAlignment="Center">
             <TextBlock Text="{Binding ProjectTitle}"
                        Classes="ToolbarTitleText" />
-            <StackPanel Orientation="Horizontal" Spacing="8">
-              <TextBlock Text="{Binding AssistantSelectionSummary}"
-                         Classes="ToolbarSubtleText" />
-            </StackPanel>
+            <TextBlock Text="{Binding StatusBarText}"
+                       Classes="ToolbarSubtleText"
+                       MaxWidth="640"
+                       TextTrimming="CharacterEllipsis" />
           </StackPanel>
         </Grid>
 
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <Border Grid.Column="1"
+                HorizontalAlignment="Center"
+                Classes="ModeSwitchShell"
+                Padding="4">
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <ToggleButton x:Name="Workspace3DButton"
+                          Content="3D"
+                          IsChecked="{Binding IsThreeDMode, Mode=OneWay}"
+                          Classes="ModeToggleButton WorkspaceModeButton"
+                          ToolTip.Tip="Return to 3D workspace"
+                          Click="OnWorkspace3DClick" />
+            <ToggleButton x:Name="WorkspaceSketchButton"
+                          Content="Sketch"
+                          IsChecked="{Binding IsSketchMode, Mode=OneWay}"
+                          Classes="ModeToggleButton WorkspaceModeButton"
+                          ToolTip.Tip="Start or finish sketch workflow"
+                          Click="OnWorkspaceSketchClick" />
+          </StackPanel>
+        </Border>
+
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Border Classes="ToolbarModeChip">
+            <TextBlock Text="{Binding WorkspaceModeBadge}" Classes="ToolbarModeChipText" />
+          </Border>
+
           <Border Classes="ModeSwitchShell" Padding="4">
             <StackPanel Orientation="Horizontal" Spacing="4">
               <ToggleButton x:Name="LightThemeButton"
@@ -68,7 +81,7 @@
         </StackPanel>
 
         <Border Grid.Row="1"
-                Grid.ColumnSpan="2"
+                Grid.ColumnSpan="3"
                 Classes="ToolbarCommandStrip"
                 Margin="0,12,0,0">
           <ScrollViewer HorizontalScrollBarVisibility="Auto"
@@ -108,6 +121,52 @@
             </Border>
 
             <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding IsThreeDMode}">
+              <Border Classes="ToolbarDivider" />
+              <Border Classes="ToolSplitGroup" Padding="4">
+                <StackPanel Orientation="Horizontal" Spacing="3">
+                  <Button Classes="ToolbarActionButton"
+                          ToolTip.Tip="Open project (Ctrl+O)"
+                          Click="OnOpenProjectClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/open.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button x:Name="RecentFilesButton"
+                          Classes="ToolbarActionButton"
+                          ToolTip.Tip="Recent projects"
+                          IsEnabled="{Binding HasRecentFiles}"
+                          Click="OnRecentFilesClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/chevron-down.svg" Width="12" Height="12" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          ToolTip.Tip="Save project (Ctrl+S)"
+                          Click="OnSaveProjectClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/save.svg" Width="16" Height="16" />
+                  </Button>
+                </StackPanel>
+              </Border>
+
+              <Border Classes="ToolSplitGroup" Padding="4">
+                <StackPanel Orientation="Horizontal" Spacing="3">
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanUndo}"
+                          ToolTip.Tip="Undo (Ctrl+Z)"
+                          Click="OnUndoClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/undo.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanRedo}"
+                          ToolTip.Tip="Redo (Ctrl+Y)"
+                          Click="OnRedoClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/redo.svg" Width="16" Height="16" />
+                  </Button>
+                </StackPanel>
+              </Border>
+
+              <Button Classes="ToolbarActionButton"
+                      ToolTip.Tip="Export model (Ctrl+E)"
+                      Click="OnExportClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/export.svg" Width="16" Height="16" />
+              </Button>
+
               <Border Classes="ToolbarDivider" />
 
               <TextBlock Text="Shapes" Classes="ToolbarGroupLabel" />
@@ -435,57 +494,6 @@
                       ToolTip.Tip="Create datum plane (offset from reference plane)"
                       Click="OnCreateDatumPlaneClick">
                 <svg:Svg Path="avares://My3DApp/Assets/Icons/sketch-plane.svg" Width="16" Height="16" />
-              </Button>
-
-              <Border Classes="ToolbarDivider" />
-              <TextBlock Text="Project" Classes="ToolbarGroupLabel" />
-              <Border Classes="ToolSplitGroup" Padding="4">
-                <StackPanel Orientation="Horizontal" Spacing="3">
-                  <Button Classes="ToolbarActionButton"
-                          ToolTip.Tip="Open project (Ctrl+O)"
-                          Click="OnOpenProjectClick">
-                    <svg:Svg Path="avares://My3DApp/Assets/Icons/open.svg" Width="16" Height="16" />
-                  </Button>
-                  <Button x:Name="RecentFilesButton"
-                          Classes="ToolbarActionButton"
-                          ToolTip.Tip="Recent projects"
-                          IsEnabled="{Binding HasRecentFiles}"
-                          Click="OnRecentFilesClick">
-                    <svg:Svg Path="avares://My3DApp/Assets/Icons/chevron-down.svg" Width="12" Height="12" />
-                  </Button>
-                  <Button Classes="ToolbarActionButton"
-                          ToolTip.Tip="Save project (Ctrl+S)"
-                          Click="OnSaveProjectClick">
-                    <svg:Svg Path="avares://My3DApp/Assets/Icons/save.svg" Width="16" Height="16" />
-                  </Button>
-                </StackPanel>
-              </Border>
-
-              <Border Classes="ToolbarDivider" />
-              <TextBlock Text="Edit" Classes="ToolbarGroupLabel" />
-              <Border Classes="ToolSplitGroup" Padding="4">
-                <StackPanel Orientation="Horizontal" Spacing="3">
-                  <Button Classes="ToolbarActionButton"
-                          IsEnabled="{Binding CanUndo}"
-                          ToolTip.Tip="Undo (Ctrl+Z)"
-                          Click="OnUndoClick">
-                    <svg:Svg Path="avares://My3DApp/Assets/Icons/undo.svg" Width="16" Height="16" />
-                  </Button>
-                  <Button Classes="ToolbarActionButton"
-                          IsEnabled="{Binding CanRedo}"
-                          ToolTip.Tip="Redo (Ctrl+Y)"
-                          Click="OnRedoClick">
-                    <svg:Svg Path="avares://My3DApp/Assets/Icons/redo.svg" Width="16" Height="16" />
-                  </Button>
-                </StackPanel>
-              </Border>
-
-              <Border Classes="ToolbarDivider" />
-              <TextBlock Text="Export" Classes="ToolbarGroupLabel" />
-              <Button Classes="ToolbarActionButton"
-                      ToolTip.Tip="Export model (Ctrl+E)"
-                      Click="OnExportClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/export.svg" Width="16" Height="16" />
               </Button>
             </StackPanel>
 
@@ -1157,7 +1165,7 @@
 
               <!-- Header: title + Refresh + Clear -->
               <Grid ColumnDefinitions="*,Auto,Auto">
-                <TextBlock Text="Assistant"
+                <TextBlock Text="AI Copilot"
                            FontSize="12"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource Studio.TextMutedBrush}"
@@ -1304,7 +1312,7 @@
                          TextWrapping="Wrap"
                          MinHeight="40"
                          MaxHeight="100"
-                         Watermark="Command or question..."
+                         Watermark="Describe a bracket, spacer, mount, cutout, or ask for a CAD step..."
                          Classes="AssistantInputBox"
                          KeyDown="OnAssistantInputKeyDown" />
                 <Button Grid.Column="1"

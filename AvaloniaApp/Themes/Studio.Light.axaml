@@ -73,12 +73,46 @@
     <Setter Property="CornerRadius" Value="14" />
   </Style>
 
+  <Style Selector="Border.StudioBrandMark">
+    <Setter Property="Width" Value="42" />
+    <Setter Property="Height" Value="42" />
+    <Setter Property="CornerRadius" Value="14" />
+    <Setter Property="Background" Value="#17324d" />
+    <Setter Property="BorderBrush" Value="#264b70" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BoxShadow" Value="0 8 20 0 #1c203040" />
+  </Style>
+
+  <Style Selector="TextBlock.StudioBrandMarkText">
+    <Setter Property="Foreground" Value="#ffffff" />
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Border.ToolbarModeChip">
+    <Setter Property="Background" Value="#e5f1fd" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="10,5" />
+    <Setter Property="CornerRadius" Value="999" />
+  </Style>
+
+  <Style Selector="TextBlock.ToolbarModeChipText">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="LetterSpacing" Value="0.5" />
+  </Style>
+
   <Style Selector="Border.ToolbarCommandStrip">
     <Setter Property="Background" Value="{DynamicResource Studio.PanelInsetBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="Padding" Value="8" />
     <Setter Property="CornerRadius" Value="16" />
+    <Setter Property="BoxShadow" Value="0 10 26 0 #10203320" />
   </Style>
 
   <Style Selector="TextBlock.ToolbarGroupLabel">
@@ -317,12 +351,15 @@
 
   <Style Selector="Window.FeatureDialogWindow">
     <Setter Property="Background" Value="{DynamicResource Studio.ToolbarBackgroundBrush}" />
+    <Setter Property="TransparencyLevelHint" Value="None" />
   </Style>
 
   <Style Selector="Border.FeatureDialogPanel">
     <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="18" />
+    <Setter Property="BoxShadow" Value="0 18 44 0 #18233a38" />
   </Style>
 
   <Style Selector="TextBlock.FeatureDialogTitle">
