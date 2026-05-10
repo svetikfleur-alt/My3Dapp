@@ -458,9 +458,39 @@ function drawViewCube() {
   });
 }
 
-// Click on view cube → reset view
-_vcCanvas.addEventListener('click', () => {
-  camera.position.set(200, 150, 300);
+// Click on view cube → snap to the nearest axis view based on click position
+_vcCanvas.addEventListener('click', (e) => {
+  const rect = _vcCanvas.getBoundingClientRect();
+  const cx = e.clientX - rect.left - _vcCenter;
+  const cy = e.clientY - rect.top  - _vcCenter;
+
+  // Find which axis label was closest to click point (in projected coords)
+  const vm2 = camera.matrixWorldInverse;
+  const candidates = [
+    { dir: new THREE.Vector3( 1, 0, 0), view: 'right',  label: '+X' },
+    { dir: new THREE.Vector3(-1, 0, 0), view: 'left',   label: '-X' },
+    { dir: new THREE.Vector3( 0, 1, 0), view: 'top',    label: '+Y' },
+    { dir: new THREE.Vector3( 0,-1, 0), view: 'bottom', label: '-Y' },
+    { dir: new THREE.Vector3( 0, 0, 1), view: 'front',  label: '+Z' },
+    { dir: new THREE.Vector3( 0, 0,-1), view: 'back',   label: '-Z' },
+  ];
+  let best = null, bestDist = Infinity;
+  candidates.forEach(c => {
+    const p = c.dir.clone().applyMatrix4(vm2);
+    const px = p.x * _vcRadius, py = -p.y * _vcRadius;
+    const d = Math.hypot(cx - px, cy - py);
+    if (d < bestDist) { bestDist = d; best = c; }
+  });
+
+  const d = 250;
+  const viewPositions = {
+    front:  [0, 0, d],  back:   [0, 0, -d],
+    top:    [0, d, 0.001], bottom: [0, -d, 0.001],
+    right:  [d, 0, 0],  left:   [-d, 0, 0],
+    iso:    [d*0.6, d*0.5, d*0.8],
+  };
+  const pos = best ? (viewPositions[best.view] ?? viewPositions.iso) : viewPositions.iso;
+  camera.position.set(...pos);
   controls.target.set(0, 0, 0);
   controls.update();
 });

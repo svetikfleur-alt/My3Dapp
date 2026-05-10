@@ -371,8 +371,17 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             ?? _scene.Objects.FirstOrDefault()?.Id;
         if (exportId is null) { StatusMessage = "Nothing to export."; return; }
 
+        // Warn when geometry is null (AI-generated nodes have no computed mesh)
+        var sceneObj = _scene.Find(exportId.Value);
+        if (sceneObj?.Geometry is null)
+        {
+            StatusMessage = $"Warning: '{sceneObj?.Name ?? "object"}' has no computed mesh — exported file will be empty. " +
+                            "Import an STL or use toolbar primitives for exportable geometry.";
+        }
+
         await _models.ExportAsync(exportId.Value, path);
-        StatusMessage = $"Exported: {Path.GetFileName(path)}";
+        if (sceneObj?.Geometry != null)
+            StatusMessage = $"Exported: {Path.GetFileName(path)}";
     }
 
     // ── Toolbar handlers ──────────────────────────────────────────────────────
@@ -471,16 +480,36 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         StatusMessage = "Cannot delete root node.";
     }
 
-    private void RenameFeature(FeatureNode node)
+    private async void RenameFeature(FeatureNode node)
     {
-        // Appends " (2)", " (3)" … until unique — real input dialog wired later
-        var baseName = node.Name.Contains(" (") ? node.Name[..node.Name.LastIndexOf(" (")] : node.Name;
+        if (FileDialogs is null)
+        {
+            // Fallback when dialog service isn't ready (shouldn't happen at runtime)
+            node.Name += " (renamed)";
+            return;
+        }
+        var newName = await FileDialogs.ShowRenameDialogAsync(node.Name);
+        if (newName is null || newName == node.Name) return;
+
+        // Ensure uniqueness
+        var base2 = newName;
         int suffix = 2;
-        string candidate;
-        do { candidate = $"{baseName} ({suffix++})"; }
-        while (AllNodes().Any(n => n != node && n.Name == candidate));
-        node.Name = candidate;
-        StatusMessage = $"Renamed to '{candidate}'.";
+        while (AllNodes().Any(n => n != node && n.Name == newName))
+            newName = $"{base2} ({suffix++})";
+
+        // Rename in viewport too (remove + re-add with new name)
+        var oldSafe = node.Name.Replace("'", "");
+        var newSafe = newName.Replace("'", "");
+        if (node.ViewportAddScript is { } addScript)
+        {
+            _ = ViewportService?.ExecuteScriptAsync($"viewer.removeObject('{oldSafe}');");
+            node.ViewportAddScript = addScript.Replace($"'{oldSafe}'", $"'{newSafe}'");
+            _ = ViewportService?.ExecuteScriptAsync(node.ViewportAddScript);
+        }
+
+        node.Name = newName;
+        StatusMessage = $"Renamed to '{newName}'.";
+        RefreshTreeBindings();
     }
 
     private void ToggleVisibility(FeatureNode node)
@@ -618,7 +647,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         }
 
         // removeObject('name') → remove matching node
-        foreach (Match m in Regex.Matches(script, @"viewer\.removeObject\s*\(\s*'([^']+)'"))
+        foreach (Match m in Regex.Matches(script, @"viewer\.removeObject\s*\(\s*['""]([^'""]+)['""]"))
         {
             var name = m.Groups[1].Value;
             var node = children.FirstOrDefault(n => n.Name == name);
@@ -629,9 +658,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             }
         }
 
-        // addBox / addCylinder / addSphere / addSketchPlane → add nodes
+        // addBox / addCylinder / addSphere / addSketchPlane → add nodes (single or double quotes)
         var addPattern = new Regex(
-            @"viewer\.(addBox|addCylinder|addSphere|addSketchPlane)\s*\(\s*'([^']+)'");
+            @"viewer\.(addBox|addCylinder|addSphere|addSketchPlane)\s*\(\s*['""]([^'""]+)['""]");
         foreach (Match m in addPattern.Matches(script))
         {
             var call = m.Groups[1].Value;
@@ -648,8 +677,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             };
 
             // Extract just this one add-call line so ViewportAddScript is precise
+            // [""'] in a $@"" string is the regex character class ["'] (double-quote or single-quote)
             var lineMatch = Regex.Match(script,
-                $@"viewer\.{call}\s*\(\s*'{Regex.Escape(name)}'[^;]*\);");
+                $@"viewer\.{call}\s*\(\s*[""']{Regex.Escape(name)}[""'][^;]*\);");
 
             var node = MakeNode(icon, name, type);
             node.ViewportAddScript = lineMatch.Success ? lineMatch.Value : null;
