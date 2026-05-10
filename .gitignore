@@ -3,6 +3,7 @@ bin/
 obj/
 dist/
 .claude/
+node_modules/
 logs/
 *.dmp
 *.tmp
@@ -41,10 +42,18 @@ AgentOps/runner/build_*.log.err
 AgentOps/runner/runner.log
 
 # Local review artifacts
+.auto-dev-loop-context.md
+desktop.ini
+testfile
+testfile_xyz
+temp_*/
+temp_github_export/
+cloud_sync_mirror/
 temp_video_review/
 webview2-data/
 *.WebView2/
 Blueprint/behavior/*.mp4
+AgentOps/*.png
 
 # Raw third-party reference drops and local archives
 LEAP71_ShapeKernel-main.zip
