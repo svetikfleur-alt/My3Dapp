@@ -15,7 +15,8 @@ internal sealed class FeatureNodeUndoAction : IUndoableAction
     private readonly ObservableCollection<FeatureNode> _parent;
     private readonly FeatureNode _node;
     private readonly ViewportService? _viewport;
-    private readonly string? _viewportAddScript;   // e.g. "viewer.addBox('N', 100,50,30); viewer.fitView();"
+    private readonly string? _viewportAddScript;
+    private readonly SolidParams? _solid;
     private SceneObject? _sceneObject;
 
     public string Description => $"Add {_node.FeatureType} '{_node.Name}'";
@@ -25,20 +26,23 @@ internal sealed class FeatureNodeUndoAction : IUndoableAction
         ObservableCollection<FeatureNode> parent,
         FeatureNode node,
         ViewportService? viewport,
-        string? viewportAddScript)
+        string? viewportAddScript,
+        SolidParams? solid = null)
     {
-        _scene           = scene;
-        _parent          = parent;
-        _node            = node;
-        _viewport        = viewport;
+        _scene             = scene;
+        _parent            = parent;
+        _node              = node;
+        _viewport          = viewport;
         _viewportAddScript = viewportAddScript;
+        _solid             = solid;
     }
 
     public void Execute()
     {
-        _sceneObject  = _scene.Add(_node.Name, _node.FeatureType);
+        _sceneObject = _scene.Add(_node.Name, _node.FeatureType);
+        _sceneObject.Solid = _solid;
         _node.SceneObjectId = _sceneObject.Id;
-        _node.ViewportAddScript = _viewportAddScript; // stored for delete-undo replay
+        _node.ViewportAddScript = _viewportAddScript;
 
         if (!_parent.Contains(_node))
             _parent.Add(_node);

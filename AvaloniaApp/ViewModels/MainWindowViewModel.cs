@@ -401,7 +401,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     // Creates a FeatureNodeUndoAction, pushes it (Execute is called inside Push), updates status.
     // viewportScript uses {name} as a placeholder for the safe (single-quote-escaped) node name.
     private void PushFeatureNode(string icon, string featureType, string displayPrefix,
-                                 string? viewportScript, string status)
+                                 string? viewportScript, string status,
+                                 SolidParams? solid = null)
     {
         if (FeatureNodes.Count == 0) return;
         var count = FeatureNodes[0].Children.Count + 1;
@@ -410,9 +411,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         var safe  = name.Replace("'", "");
         var script = viewportScript?.Replace("{name}", safe);
         _history.Push(new FeatureNodeUndoAction(
-            _scene, FeatureNodes[0].Children, node, ViewportService, script));
+            _scene, FeatureNodes[0].Children, node, ViewportService, script, solid));
         StatusMessage = status.Replace("{name}", name);
-        RuntimeLog.Info("VM", $"Created '{name}' ({featureType})");
+        RuntimeLog.Info("VM", $"Created '{name}' ({featureType}) solid={solid?.ToString() ?? "none"}");
     }
 
     private void NewSketch()
@@ -423,17 +424,20 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private void Extrude()
         => PushFeatureNode("⬆", "extrude", "Extrude",
             "viewer.addBox('{name}', 100, 50, 30); viewer.fitView();",
-            "{name} added. Adjust dimensions in the properties panel.");
+            "{name} added. Adjust dimensions in the properties panel.",
+            new BoxParams(100, 50, 30));
 
     private void Revolve()
         => PushFeatureNode("↻", "revolve", "Revolve",
             "viewer.addCylinder('{name}', 40, 80, 32); viewer.fitView();",
-            "{name} added — select profile and axis to refine.");
+            "{name} added — select profile and axis to refine.",
+            new CylinderParams(40, 80, 32));
 
     private void Loft()
         => PushFeatureNode("⤵", "loft", "Loft",
             "viewer.addBox('{name}', 80, 120, 80); viewer.fitView();",
-            "{name} added — select profiles to define the loft.");
+            "{name} added — select profiles to define the loft.",
+            new BoxParams(80, 120, 80));
 
     private void Shell()
         => PushFeatureNode("⚙", "shell", "Shell",

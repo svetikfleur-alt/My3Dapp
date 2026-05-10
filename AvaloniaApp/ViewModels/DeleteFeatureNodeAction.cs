@@ -32,10 +32,15 @@ internal sealed class DeleteFeatureNodeAction : IUndoableAction
         _viewport      = viewport;
     }
 
+    private SceneObject? _removed; // stored so Undo can restore it with its Solid intact
+
     public void Execute()
     {
         if (_node.SceneObjectId.HasValue)
+        {
+            _removed = _scene.Find(_node.SceneObjectId.Value);
             _scene.Remove(_node.SceneObjectId.Value);
+        }
 
         _parent.Remove(_node);
 
@@ -45,14 +50,13 @@ internal sealed class DeleteFeatureNodeAction : IUndoableAction
 
     public void Undo()
     {
-        // Re-create scene object and re-insert the node at its original position
-        var obj = _scene.Add(_node.Name, _node.FeatureType);
-        _node.SceneObjectId = obj.Id;
+        // Restore the original SceneObject (preserving its Solid definition)
+        if (_removed != null)
+            _scene.AddExisting(_removed);
 
         var insertAt = Math.Min(_originalIndex, _parent.Count);
         _parent.Insert(insertAt, _node);
 
-        // Replay the add script to restore viewport geometry
         if (_node.ViewportAddScript is { } script)
             _ = _viewport?.ExecuteScriptAsync(script);
     }
