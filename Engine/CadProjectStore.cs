@@ -462,6 +462,7 @@ public sealed class CadProjectStore
                 CadSketchConstraintKind.Horizontal,
                 "Line is constrained horizontal.",
                 [lastLine.Id]));
+            SolveSketchSession(session);
             session.PreviewEntities.Clear();
             return Success("Applied horizontal constraint to last line.", false);
         }
@@ -471,6 +472,7 @@ public sealed class CadProjectStore
             CadSketchConstraintKind.Vertical,
             "Line is constrained vertical.",
             [lastLine.Id]));
+        SolveSketchSession(session);
         session.PreviewEntities.Clear();
         return Success("Applied vertical constraint to last line.", false);
     }
@@ -497,6 +499,7 @@ public sealed class CadProjectStore
             CadSketchConstraintKind.Coincident,
             "Last line start is coincident with previous line end.",
             [previous.Id, current.Id]));
+        SolveSketchSession(session);
         session.PreviewEntities.Clear();
         return Success("Applied coincident constraint between the last two lines.", false);
     }
@@ -537,6 +540,7 @@ public sealed class CadProjectStore
                     CadSketchConstraintKind.EqualLength,
                     "Last line length equals previous line length.",
                     [a.Id, b.Id]));
+                SolveSketchSession(session);
                 session.PreviewEntities.Clear();
                 return Success("Applied equal length between the last two lines.", false);
             }
@@ -561,6 +565,7 @@ public sealed class CadProjectStore
             CadSketchConstraintKind.EqualRadius,
             "Last radius equals previous radius.",
             [reference.Id, driven.Id]));
+        SolveSketchSession(session);
         session.PreviewEntities.Clear();
         return Success("Applied equal radius between the last two radius entities.", false);
     }
@@ -578,6 +583,7 @@ public sealed class CadProjectStore
             CadSketchConstraintKind.Fixed,
             $"{entity.EntityType} fixed in place.",
             [entity.Id]));
+        SolveSketchSession(session);
         session.PreviewEntities.Clear();
         return Success($"Fixed {entity.EntityType} in place.", false);
     }
@@ -607,6 +613,7 @@ public sealed class CadProjectStore
             CadSketchConstraintKind.Parallel,
             "Lines are constrained parallel.",
             [reference.Id, driven.Id]));
+        SolveSketchSession(session);
         session.PreviewEntities.Clear();
         return Success("Applied parallel constraint to last two lines.", false);
     }
@@ -636,6 +643,7 @@ public sealed class CadProjectStore
             CadSketchConstraintKind.Perpendicular,
             "Lines are constrained perpendicular.",
             [reference.Id, driven.Id]));
+        SolveSketchSession(session);
         session.PreviewEntities.Clear();
         return Success("Applied perpendicular constraint to last two lines.", false);
     }
@@ -671,6 +679,7 @@ public sealed class CadProjectStore
             CadSketchConstraintKind.Concentric,
             "Entities share the same center.",
             [reference.Id, driven.Id]));
+        SolveSketchSession(session);
         session.PreviewEntities.Clear();
         return Success("Applied concentric constraint to last two circles/arcs.", false);
     }
@@ -745,6 +754,7 @@ public sealed class CadProjectStore
             CadSketchConstraintKind.Tangent,
             "Entities are tangent at their shared point.",
             [prev.Id, last.Id]));
+        SolveSketchSession(session);
         session.PreviewEntities.Clear();
         return Success("Applied tangent constraint.", false);
     }
@@ -779,6 +789,7 @@ public sealed class CadProjectStore
                     return Failure($"Cannot set {key} on this entity.");
                 }
 
+                SolveSketchSession(Project.ActiveSketchSession);
                 Project.ActiveSketchSession.PreviewEntities.Clear();
                 return Success($"Updated {key} to {value:0.###}.", true);
             }
@@ -1035,6 +1046,7 @@ public sealed class CadProjectStore
         }
 
         session.ManualConstraints.RemoveAt(index);
+        SolveSketchSession(session);
         return Success("Constraint removed.", true);
     }
 
@@ -1059,6 +1071,7 @@ public sealed class CadProjectStore
 
         entity.IsConstruction = !entity.IsConstruction;
         var state = entity.IsConstruction ? "construction" : "normal";
+        SolveSketchSession(session);
         session.PreviewEntities.Clear();
         return Success($"Entity set to {state} mode.", true);
     }

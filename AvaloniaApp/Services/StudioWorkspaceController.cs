@@ -811,7 +811,7 @@ public sealed class StudioWorkspaceController
                 });
             }
 
-            var previewCurves = BuildSketchCurves(session.PlaneName, session.PreviewEntities, []);
+            var previewCurves = BuildSketchCurves(session.PlaneName, session.PreviewEntities, new HashSet<Guid>());
             if (previewCurves.Count > 0)
             {
                 sketches.Add(new ViewportRenderSketch

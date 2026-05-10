@@ -2227,6 +2227,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 nodeType,
                 string.Empty,
                 string.Empty,
+                string.Empty,
                 CadEntityKind.ReferencePlane,
                 plane.Id,
                 isSelectable: true));
@@ -2625,6 +2626,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             "part",
             "Part",
             $"{FormatFeatureName(compiledBody.SourceKind.ToString())} | X {FormatNumber(translation.X)} | Y {FormatNumber(translation.Y)} | Z {FormatNumber(translation.Z)}",
+            $"{compiledBody.Name} part body",
             CadEntityKind.Body,
             compiledBody.BodyId,
             isSelectable: true,
@@ -2800,6 +2802,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             node.IconKind,
             node.TypeLabel,
             node.SecondaryText,
+            node.TooltipText,
             node.EntityKind,
             node.EntityId,
             node.IsSelectable,

@@ -3905,6 +3905,10 @@ public sealed class WebViewportHost : NativeControlHost
           const iso = new THREE.Vector3(1, 0.82, 1).normalize().multiplyScalar(dist);
           const views = {
             iso:    { pos: iso,                              up: new THREE.Vector3(0, 1, 0) },
+            'iso-ne': { pos: new THREE.Vector3( 1, 0.82,  1).normalize().multiplyScalar(dist), up: new THREE.Vector3(0, 1, 0) },
+            'iso-nw': { pos: new THREE.Vector3(-1, 0.82,  1).normalize().multiplyScalar(dist), up: new THREE.Vector3(0, 1, 0) },
+            'iso-se': { pos: new THREE.Vector3( 1, 0.82, -1).normalize().multiplyScalar(dist), up: new THREE.Vector3(0, 1, 0) },
+            'iso-sw': { pos: new THREE.Vector3(-1, 0.82, -1).normalize().multiplyScalar(dist), up: new THREE.Vector3(0, 1, 0) },
             top:    { pos: new THREE.Vector3(0, dist, 0.1),  up: new THREE.Vector3(0, 0, -1) },
             front:  { pos: new THREE.Vector3(0, 0, dist),    up: new THREE.Vector3(0, 1, 0) },
             right:  { pos: new THREE.Vector3(dist, 0, 0),    up: new THREE.Vector3(0, 1, 0) },
@@ -3937,7 +3941,7 @@ public sealed class WebViewportHost : NativeControlHost
         const vcCanvas = document.getElementById('vcube');
         if (!vcCanvas) return;
 
-        const sz = 120;
+        const sz = 92;
         vcCanvas.width  = Math.round(sz * window.devicePixelRatio);
         vcCanvas.height = Math.round(sz * window.devicePixelRatio);
         vcCanvas.style.width  = sz + 'px';
