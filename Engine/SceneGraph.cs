@@ -11,22 +11,34 @@ public abstract record SolidParams
     public abstract Mesh ToMesh();
 }
 
-public record BoxParams(float W, float H, float D) : SolidParams
+public record BoxParams(float W, float H, float D, float X = 0, float Y = 0, float Z = 0) : SolidParams
 {
-    public override Mesh ToMesh() => Mesh.Box(W, H, D);
-    public override string ToString() => $"Box {W}×{H}×{D} mm";
+    public override Mesh ToMesh()
+    {
+        var m = Mesh.Box(W, H, D);
+        return (X != 0 || Y != 0 || Z != 0) ? m.Translated(X, Y, Z) : m;
+    }
+    public override string ToString() => $"Box {W}×{H}×{D} mm @ ({X},{Y},{Z})";
 }
 
-public record CylinderParams(float Radius, float Height, int Segments = 32) : SolidParams
+public record CylinderParams(float Radius, float Height, int Segments = 32, float X = 0, float Y = 0, float Z = 0) : SolidParams
 {
-    public override Mesh ToMesh() => Mesh.Cylinder(Radius, Height, Segments);
-    public override string ToString() => $"Cylinder r={Radius} h={Height} mm";
+    public override Mesh ToMesh()
+    {
+        var m = Mesh.Cylinder(Radius, Height, Segments);
+        return (X != 0 || Y != 0 || Z != 0) ? m.Translated(X, Y, Z) : m;
+    }
+    public override string ToString() => $"Cylinder r={Radius} h={Height} mm @ ({X},{Y},{Z})";
 }
 
-public record SphereParams(float Radius, int Segments = 32) : SolidParams
+public record SphereParams(float Radius, int Segments = 32, float X = 0, float Y = 0, float Z = 0) : SolidParams
 {
-    public override Mesh ToMesh() => Mesh.Sphere(Radius, Segments, Segments);
-    public override string ToString() => $"Sphere r={Radius} mm";
+    public override Mesh ToMesh()
+    {
+        var m = Mesh.Sphere(Radius, Segments, Segments);
+        return (X != 0 || Y != 0 || Z != 0) ? m.Translated(X, Y, Z) : m;
+    }
+    public override string ToString() => $"Sphere r={Radius} mm @ ({X},{Y},{Z})";
 }
 
 public record ImportedMeshParams(Mesh Mesh) : SolidParams

@@ -11,27 +11,30 @@ public class ModelManager
 
     // ── Primitive creation ────────────────────────────────────────────────────
 
-    public SceneObject CreateBox(string name, float w, float h, float d)
+    public SceneObject CreateBox(string name, float w, float h, float d,
+                                 float x = 0, float y = 0, float z = 0)
     {
         var obj = _scene.Add(name, "box");
-        obj.Solid = new BoxParams(w, h, d);
-        RuntimeLog.Info("Model", $"Created box '{name}' [{w}×{h}×{d} mm]");
+        obj.Solid = new BoxParams(w, h, d, x, y, z);
+        RuntimeLog.Info("Model", $"Created box '{name}' [{w}×{h}×{d} mm] @ ({x},{y},{z})");
         return obj;
     }
 
-    public SceneObject CreateCylinder(string name, float radius, float height, int segments = 32)
+    public SceneObject CreateCylinder(string name, float radius, float height,
+                                      int segments = 32, float x = 0, float y = 0, float z = 0)
     {
         var obj = _scene.Add(name, "cylinder");
-        obj.Solid = new CylinderParams(radius, height, segments);
-        RuntimeLog.Info("Model", $"Created cylinder '{name}' r={radius} h={height} mm");
+        obj.Solid = new CylinderParams(radius, height, segments, x, y, z);
+        RuntimeLog.Info("Model", $"Created cylinder '{name}' r={radius} h={height} mm @ ({x},{y},{z})");
         return obj;
     }
 
-    public SceneObject CreateSphere(string name, float radius, int segments = 32)
+    public SceneObject CreateSphere(string name, float radius,
+                                    int segments = 32, float x = 0, float y = 0, float z = 0)
     {
         var obj = _scene.Add(name, "sphere");
-        obj.Solid = new SphereParams(radius);
-        RuntimeLog.Info("Model", $"Created sphere '{name}' r={radius} mm");
+        obj.Solid = new SphereParams(radius, segments, x, y, z);
+        RuntimeLog.Info("Model", $"Created sphere '{name}' r={radius} mm @ ({x},{y},{z})");
         return obj;
     }
 

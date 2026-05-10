@@ -701,29 +701,32 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             var node = MakeNode(icon, name, type);
             node.ViewportAddScript = lineMatch.Success ? lineMatch.Value : null;
 
-            // Parse numeric dimensions and build real C# mesh so STL export works
+            // Parse dimensions + optional position from the script call
             SceneObject obj = call switch
             {
                 "addBox" when Regex.Match(script,
-                    $@"viewer\.addBox\s*\(\s*[""']{Regex.Escape(name)}[""']\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)")
+                    $@"viewer\.addBox\s*\(\s*[""']{Regex.Escape(name)}[""']\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)(?:\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+))?")
                     is { Success: true } bm
                     && float.TryParse(bm.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var bw)
                     && float.TryParse(bm.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var bh)
                     && float.TryParse(bm.Groups[3].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var bd)
-                    => _models.CreateBox(name, bw, bh, bd),
+                    => _models.CreateBox(name, bw, bh, bd,
+                        TryF(bm.Groups[4].Value), TryF(bm.Groups[5].Value), TryF(bm.Groups[6].Value)),
 
                 "addCylinder" when Regex.Match(script,
-                    $@"viewer\.addCylinder\s*\(\s*[""']{Regex.Escape(name)}[""']\s*,\s*([\d.]+)\s*,\s*([\d.]+)")
+                    $@"viewer\.addCylinder\s*\(\s*[""']{Regex.Escape(name)}[""']\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)(?:\s*,\s*(-?[\d.]+))?(?:\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+))?")
                     is { Success: true } cm
                     && float.TryParse(cm.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var cr)
                     && float.TryParse(cm.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var ch)
-                    => _models.CreateCylinder(name, cr, ch),
+                    => _models.CreateCylinder(name, cr, ch, 32,
+                        TryF(cm.Groups[4].Value), TryF(cm.Groups[5].Value), TryF(cm.Groups[6].Value)),
 
                 "addSphere" when Regex.Match(script,
-                    $@"viewer\.addSphere\s*\(\s*[""']{Regex.Escape(name)}[""']\s*,\s*([\d.]+)")
+                    $@"viewer\.addSphere\s*\(\s*[""']{Regex.Escape(name)}[""']\s*,\s*(-?[\d.]+)(?:\s*,\s*(-?[\d.]+))?(?:\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+))?")
                     is { Success: true } sm
                     && float.TryParse(sm.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var sr)
-                    => _models.CreateSphere(name, sr),
+                    => _models.CreateSphere(name, sr, 32,
+                        TryF(sm.Groups[3].Value), TryF(sm.Groups[4].Value), TryF(sm.Groups[5].Value)),
 
                 _ => _scene.Add(name, type)
             };
@@ -755,4 +758,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         foreach (var child in node.Children)
             AppendFeatureNode(sb, child, depth + 1);
     }
+
+    // Returns the parsed float or 0 when the regex group didn't match.
+    private static float TryF(string s)
+        => float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? v : 0f;
 }

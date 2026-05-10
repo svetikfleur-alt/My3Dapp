@@ -143,6 +143,16 @@ public class Mesh
         AddTri(a, c, d);
     }
 
+    // Returns a new Mesh with every vertex offset by (dx, dy, dz).
+    public Mesh Translated(float dx, float dy, float dz)
+    {
+        var offset = new Vector3(dx, dy, dz);
+        var m = new Mesh();
+        foreach (var t in Triangles)
+            m.Triangles.Add(new Triangle(t.Normal, t.V0 + offset, t.V1 + offset, t.V2 + offset));
+        return m;
+    }
+
     private static void Write(BinaryWriter bw, Vector3 v)
     {
         bw.Write(v.X); bw.Write(v.Y); bw.Write(v.Z);

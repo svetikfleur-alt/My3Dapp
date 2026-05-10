@@ -192,35 +192,38 @@ window.viewer = {
     setStatus(`Sketch plane "${name}" ready`);
   },
 
-  addBox(name, w = 100, h = 50, d = 30) {
+  addBox(name, w = 100, h = 50, d = 30, x = 0, y = 0, z = 0) {
     const geo = new THREE.BoxGeometry(w, h, d);
     const mesh = new THREE.Mesh(geo, isWireframe ? wireframeMaterial.clone() : defaultMaterial.clone());
     mesh.castShadow = true;
     mesh.receiveShadow = true;
+    mesh.position.set(x, y, z);
     mesh.name = name;
     scene.add(mesh);
     meshObjects[name] = mesh;
-    setStatus(`Added box "${name}" [${w}×${h}×${d}]`);
+    setStatus(`Added box "${name}" [${w}×${h}×${d}] @ (${x},${y},${z})`);
   },
 
-  addCylinder(name, radius = 30, height = 60, segments = 32) {
+  addCylinder(name, radius = 30, height = 60, segments = 32, x = 0, y = 0, z = 0) {
     const geo = new THREE.CylinderGeometry(radius, radius, height, segments);
     const mesh = new THREE.Mesh(geo, isWireframe ? wireframeMaterial.clone() : defaultMaterial.clone());
     mesh.castShadow = true;
+    mesh.position.set(x, y, z);
     mesh.name = name;
     scene.add(mesh);
     meshObjects[name] = mesh;
-    setStatus(`Added cylinder "${name}" r=${radius} h=${height}`);
+    setStatus(`Added cylinder "${name}" r=${radius} h=${height} @ (${x},${y},${z})`);
   },
 
-  addSphere(name, radius = 40, segments = 32) {
+  addSphere(name, radius = 40, segments = 32, x = 0, y = 0, z = 0) {
     const geo = new THREE.SphereGeometry(radius, segments, segments);
     const mesh = new THREE.Mesh(geo, isWireframe ? wireframeMaterial.clone() : defaultMaterial.clone());
     mesh.castShadow = true;
+    mesh.position.set(x, y, z);
     mesh.name = name;
     scene.add(mesh);
     meshObjects[name] = mesh;
-    setStatus(`Added sphere "${name}" r=${radius}`);
+    setStatus(`Added sphere "${name}" r=${radius} @ (${x},${y},${z})`);
   },
 
   removeObject(name) {
