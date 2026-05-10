@@ -135,6 +135,7 @@ const wireframeMaterial = new THREE.MeshBasicMaterial({ color: 0x88aacc, wirefra
 
 let isWireframe = false;
 const meshObjects = {};
+let _selectedMesh = null; // currently highlighted mesh
 
 // ── Viewer API (called by C# via ExecuteScriptAsync) ──────────────────────────
 window.viewer = {
@@ -197,6 +198,9 @@ window.viewer = {
   removeObject(name) {
     const obj = meshObjects[name];
     if (obj) { scene.remove(obj); delete meshObjects[name]; }
+    // Remove edge overlays created by addSketchPlane
+    const edgeObj = scene.getObjectByName(name + '_edges');
+    if (edgeObj) scene.remove(edgeObj);
   },
 
   setObjectVisible(name, visible) {
@@ -212,6 +216,11 @@ window.viewer = {
       scene.remove(meshObjects[k]);
       delete meshObjects[k];
     });
+    // Remove any orphaned edge overlays from sketch planes
+    const orphans = [];
+    scene.traverse(obj => { if (obj.name.endsWith('_edges')) orphans.push(obj); });
+    orphans.forEach(obj => scene.remove(obj));
+    if (_selectedMesh) { _selectedMesh.material.emissive?.set(0x000000); _selectedMesh = null; }
     setStatus('Scene cleared');
   },
 
@@ -282,7 +291,6 @@ function setStatus(msg) {
 
 // ── Click-to-select → host app ────────────────────────────────────────────────
 renderer.domElement.addEventListener('click', (e) => {
-  if (!window.chrome?.webview) return;
   const rect = renderer.domElement.getBoundingClientRect();
   const ndc = new THREE.Vector2(
      ((e.clientX - rect.left) / rect.width)  * 2 - 1,
@@ -291,8 +299,21 @@ renderer.domElement.addEventListener('click', (e) => {
   const pickRay = new THREE.Raycaster();
   pickRay.setFromCamera(ndc, camera);
   const hits = pickRay.intersectObjects(Object.values(meshObjects), false);
-  const name = hits.length > 0 ? hits[0].object.name : null;
-  window.chrome.webview.postMessage(JSON.stringify({ type: 'select', name }));
+  const hit = hits.length > 0 ? hits[0].object : null;
+
+  // Clear previous selection highlight
+  if (_selectedMesh && _selectedMesh !== hit) {
+    if (_selectedMesh.material.emissive) _selectedMesh.material.emissive.set(0x000000);
+  }
+  // Apply selection highlight
+  _selectedMesh = hit;
+  if (_selectedMesh?.material?.emissive) {
+    _selectedMesh.material.emissive.set(0x224488);
+  }
+
+  if (window.chrome?.webview) {
+    window.chrome.webview.postMessage(JSON.stringify({ type: 'select', name: hit?.name ?? null }));
+  }
 });
 
 // ── Cursor position → host app (WebView2 postMessage) ────────────────────────

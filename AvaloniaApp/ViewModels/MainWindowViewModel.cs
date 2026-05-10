@@ -361,9 +361,38 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     }
 
     private void Shell()         => StatusMessage = "Shell: select faces to remove.";
-    private void BooleanUnion()     => StatusMessage = "Boolean Union: select bodies.";
-    private void BooleanSubtract()  => StatusMessage = "Boolean Subtract: select target and tool bodies.";
-    private void BooleanIntersect() => StatusMessage = "Boolean Intersect: select bodies.";
+    private void BooleanUnion()
+    {
+        if (FeatureNodes.Count == 0) return;
+        var name = $"Union {FeatureNodes[0].Children.Count + 1}";
+        _history.Push(new AddSceneObjectAction(_scene, name, "boolean-union"));
+        var node = MakeNode("⊕", name, "boolean-union");
+        node.SceneObjectId = _scene.Objects.FirstOrDefault(o => o.Name == name)?.Id;
+        FeatureNodes[0].Children.Add(node);
+        StatusMessage = $"{name} — select two bodies to merge.";
+    }
+
+    private void BooleanSubtract()
+    {
+        if (FeatureNodes.Count == 0) return;
+        var name = $"Subtract {FeatureNodes[0].Children.Count + 1}";
+        _history.Push(new AddSceneObjectAction(_scene, name, "boolean-subtract"));
+        var node = MakeNode("⊖", name, "boolean-subtract");
+        node.SceneObjectId = _scene.Objects.FirstOrDefault(o => o.Name == name)?.Id;
+        FeatureNodes[0].Children.Add(node);
+        StatusMessage = $"{name} — select target body, then tool body.";
+    }
+
+    private void BooleanIntersect()
+    {
+        if (FeatureNodes.Count == 0) return;
+        var name = $"Intersect {FeatureNodes[0].Children.Count + 1}";
+        _history.Push(new AddSceneObjectAction(_scene, name, "boolean-intersect"));
+        var node = MakeNode("⊗", name, "boolean-intersect");
+        node.SceneObjectId = _scene.Objects.FirstOrDefault(o => o.Name == name)?.Id;
+        FeatureNodes[0].Children.Add(node);
+        StatusMessage = $"{name} — select bodies to intersect.";
+    }
     private void AiGenerate()    => StatusMessage = "AI: enter a description in the AI panel →";
     private void FocusAiPanel()  => StatusMessage = "AI panel focused.";
     private void AddFeature()    => StatusMessage = "Select feature type to add.";

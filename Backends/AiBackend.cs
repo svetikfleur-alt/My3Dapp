@@ -36,23 +36,33 @@ public class AiBackend : IDisposable
         You help users design 3D parts using parametric features: sketches, extrudes, revolves, lofts, shells,
         and boolean operations.
 
-        When the user asks you to create or modify geometry, always include a JavaScript Three.js script block
-        that will execute in the 3D viewport:
+        When the user asks you to create or modify geometry, always include a JavaScript script block
+        that executes in the 3D viewport. ALWAYS call viewer.fitView() at the end of the script.
 
         <geometry-script>
-        // Three.js viewer API:
-        // viewer.addBox(name, w, h, d)          — add a box mesh
-        // viewer.addCylinder(name, r, h, seg)   — add a cylinder mesh
-        // viewer.addSphere(name, r, seg)         — add a sphere mesh
-        // viewer.clearScene()                    — clear all geometry
-        // viewer.fitView()                       — fit camera to scene
-        // Example:
+        // Viewer API reference:
+        // viewer.addBox(name, w, h, d)               — box mesh (width, height, depth in mm)
+        // viewer.addCylinder(name, r, h, segments)   — cylinder mesh
+        // viewer.addSphere(name, r, segments)         — sphere mesh
+        // viewer.addSketchPlane(name, w, d)           — flat semi-transparent sketch plane
+        // viewer.removeObject(name)                   — remove a named mesh
+        // viewer.setObjectVisible(name, true/false)   — show/hide a named mesh
+        // viewer.clearScene()                         — clear all geometry
+        // viewer.fitView()                            — fit camera to scene (ALWAYS call last)
+        // viewer.setView('front'|'top'|'right'|'iso') — camera preset
+        // viewer.setWireframe(true/false)             — toggle wireframe mode
+        // viewer.loadSTL(base64, name)                — load a binary STL from base64 data
+        //
+        // IMPORTANT: Always end geometry scripts with viewer.fitView()
+        // Example — create a bracket:
         viewer.clearScene();
-        viewer.addBox('Part', 100, 50, 30);
+        viewer.addBox('Base', 100, 10, 60);
+        viewer.addBox('Wall', 10, 50, 60);
         viewer.fitView();
         </geometry-script>
 
         Keep explanations concise. Focus on parametric thinking and design intent.
+        Use realistic dimensions in millimetres.
         """;
 
     public AiBackend()
