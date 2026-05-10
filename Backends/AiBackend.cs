@@ -1,0 +1,119 @@
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
+using My3DApp.AvaloniaApp.Services;
+
+namespace My3DApp.Backends;
+
+/// <summary>
+/// Talks to the Claude API (claude-sonnet-4-6) for design assistance.
+/// Parses optional <geometry-script> blocks from the reply for live viewport updates.
+/// </summary>
+public class AiBackend : IDisposable
+{
+    private readonly HttpClient _http = new();
+    private readonly List<ChatMessage> _history = new();
+    private const string ApiUrl = "https://api.anthropic.com/v1/messages";
+    private const string Model   = "claude-sonnet-4-6";
+
+    public string? LastGeometryScript { get; private set; }
+
+    private static readonly string SystemPrompt = """
+        You are an expert 3D CAD design assistant embedded in My3DApp, an AI-native Onshape-style CAD tool.
+        You help users design 3D parts using parametric features: sketches, extrudes, revolves, lofts, shells,
+        and boolean operations.
+
+        When the user asks you to create or modify geometry, always include a JavaScript Three.js script block
+        that will execute in the 3D viewport:
+
+        <geometry-script>
+        // Three.js viewer API:
+        // viewer.addBox(name, w, h, d)          — add a box mesh
+        // viewer.addCylinder(name, r, h, seg)   — add a cylinder mesh
+        // viewer.addSphere(name, r, seg)         — add a sphere mesh
+        // viewer.clearScene()                    — clear all geometry
+        // viewer.fitView()                       — fit camera to scene
+        // Example:
+        viewer.clearScene();
+        viewer.addBox('Part', 100, 50, 30);
+        viewer.fitView();
+        </geometry-script>
+
+        Keep explanations concise. Focus on parametric thinking and design intent.
+        """;
+
+    public AiBackend()
+    {
+        _http.DefaultRequestHeaders.Add("x-api-key", GetApiKey());
+        _http.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
+        _http.Timeout = TimeSpan.FromSeconds(60);
+    }
+
+    public async Task<string> ChatAsync(string userMessage)
+    {
+        LastGeometryScript = null;
+        _history.Add(new ChatMessage("user", userMessage));
+
+        var apiKey = GetApiKey();
+        if (string.IsNullOrEmpty(apiKey))
+            return "API key not configured. Set ANTHROPIC_API_KEY environment variable.";
+
+        try
+        {
+            var request = new
+            {
+                model = Model,
+                max_tokens = 1024,
+                system = SystemPrompt,
+                messages = _history.Select(m => new { role = m.Role, content = m.Content }).ToArray()
+            };
+
+            var json = JsonSerializer.Serialize(request);
+            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _http.PostAsync(ApiUrl, content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var err = await response.Content.ReadAsStringAsync();
+                RuntimeLog.Error("AI", $"API error {response.StatusCode}: {err}");
+                return $"AI API error ({response.StatusCode}). Check logs.";
+            }
+
+            var body = await response.Content.ReadAsStringAsync();
+            var doc = JsonDocument.Parse(body);
+            var text = doc.RootElement
+                .GetProperty("content")[0]
+                .GetProperty("text")
+                .GetString() ?? string.Empty;
+
+            // Extract optional geometry script
+            const string scriptOpen  = "<geometry-script>";
+            const string scriptClose = "</geometry-script>";
+            var start = text.IndexOf(scriptOpen, StringComparison.Ordinal);
+            var end   = text.IndexOf(scriptClose, StringComparison.Ordinal);
+            if (start >= 0 && end > start)
+            {
+                LastGeometryScript = text[(start + scriptOpen.Length)..end].Trim();
+                // Remove the script block from the displayed text
+                text = (text[..start] + text[(end + scriptClose.Length)..]).Trim();
+            }
+
+            _history.Add(new ChatMessage("assistant", text));
+            return text;
+        }
+        catch (Exception ex)
+        {
+            RuntimeLog.Error("AI", "Chat request failed.", ex);
+            return $"Error: {ex.Message}";
+        }
+    }
+
+    private static string GetApiKey()
+        => Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY") ?? string.Empty;
+
+    public void Dispose() => _http.Dispose();
+
+    private record ChatMessage(string Role, string Content);
+}

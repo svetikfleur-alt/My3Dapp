@@ -1,0 +1,170 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:My3DApp.AvaloniaApp.ViewModels"
+        xmlns:local="using:My3DApp.AvaloniaApp"
+        x:Class="My3DApp.AvaloniaApp.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding WindowTitle}"
+        Width="1400" Height="900"
+        MinWidth="900" MinHeight="600"
+        Background="#1A1A2E">
+
+    <DockPanel>
+
+        <!-- Top Menu Bar -->
+        <Menu DockPanel.Dock="Top" Background="#16213E">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New Part Studio" Command="{Binding NewPartStudioCommand}" />
+                <MenuItem Header="_Open..." Command="{Binding OpenCommand}" />
+                <Separator />
+                <MenuItem Header="_Export..." Command="{Binding ExportCommand}" />
+                <Separator />
+                <MenuItem Header="E_xit" Command="{Binding ExitCommand}" />
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Undo" Command="{Binding UndoCommand}" InputGesture="Ctrl+Z" />
+                <MenuItem Header="_Redo" Command="{Binding RedoCommand}" InputGesture="Ctrl+Y" />
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="Front" Command="{Binding SetViewCommand}" CommandParameter="front" />
+                <MenuItem Header="Top" Command="{Binding SetViewCommand}" CommandParameter="top" />
+                <MenuItem Header="Right" Command="{Binding SetViewCommand}" CommandParameter="right" />
+                <MenuItem Header="Isometric" Command="{Binding SetViewCommand}" CommandParameter="iso" />
+            </MenuItem>
+            <MenuItem Header="_AI">
+                <MenuItem Header="Ask AI..." Command="{Binding FocusAiPanelCommand}" />
+                <MenuItem Header="Generate Sketch from Description" Command="{Binding AiGenerateSketchCommand}" />
+                <MenuItem Header="Suggest Feature" Command="{Binding AiSuggestFeatureCommand}" />
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="Documentation" Command="{Binding OpenDocsCommand}" />
+                <MenuItem Header="About My3DApp" Command="{Binding ShowAboutCommand}" />
+            </MenuItem>
+        </Menu>
+
+        <!-- Top Toolbar -->
+        <Border DockPanel.Dock="Top" Background="#0F3460" Padding="4,2">
+            <StackPanel Orientation="Horizontal" Spacing="2">
+                <Button Content="⬜ Sketch"     Command="{Binding NewSketchCommand}"   ToolTip.Tip="New Sketch (S)"    Classes="toolbar-btn" />
+                <Button Content="⬆ Extrude"    Command="{Binding ExtrudeCommand}"     ToolTip.Tip="Extrude (E)"       Classes="toolbar-btn" />
+                <Button Content="↻ Revolve"    Command="{Binding RevolveCommand}"     ToolTip.Tip="Revolve (R)"       Classes="toolbar-btn" />
+                <Button Content="⤵ Loft"       Command="{Binding LoftCommand}"        ToolTip.Tip="Loft (L)"          Classes="toolbar-btn" />
+                <Button Content="⚙ Shell"      Command="{Binding ShellCommand}"       ToolTip.Tip="Shell"             Classes="toolbar-btn" />
+                <Separator />
+                <Button Content="⊕ Boolean Union"    Command="{Binding BooleanUnionCommand}"    Classes="toolbar-btn" />
+                <Button Content="⊖ Boolean Subtract" Command="{Binding BooleanSubtractCommand}" Classes="toolbar-btn" />
+                <Button Content="⊗ Boolean Intersect" Command="{Binding BooleanIntersectCommand}" Classes="toolbar-btn" />
+                <Separator />
+                <Button Content="✦ AI Generate" Command="{Binding AiGenerateCommand}" Classes="toolbar-btn ai-btn" ToolTip.Tip="Generate geometry with AI" />
+            </StackPanel>
+        </Border>
+
+        <!-- Status Bar -->
+        <Border DockPanel.Dock="Bottom" Background="#16213E" Padding="8,3">
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" Foreground="#8899AA" FontSize="12" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{Binding CursorPosition}" Foreground="#8899AA" FontSize="12" VerticalAlignment="Center" Margin="0,0,16,0" />
+                <TextBlock Grid.Column="2" Text="{Binding SelectionInfo}" Foreground="#8899AA" FontSize="12" VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <!-- Main Content: Feature Tree | 3D Viewport | AI Panel -->
+        <Grid ColumnDefinitions="260,4,*,4,300">
+
+            <!-- Left: Feature Tree -->
+            <Border Grid.Column="0" Background="#16213E" BorderThickness="0,0,1,0" BorderBrush="#2A3F5F">
+                <DockPanel>
+                    <Border DockPanel.Dock="Top" Background="#0F3460" Padding="8,6">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="Feature Tree" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Content="+" Command="{Binding AddFeatureCommand}" Classes="icon-btn" />
+                        </Grid>
+                    </Border>
+                    <TreeView ItemsSource="{Binding FeatureNodes}" Margin="0" Background="Transparent">
+                        <TreeView.ItemTemplate>
+                            <TreeDataTemplate ItemsSource="{Binding Children}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="{Binding Icon}" FontSize="13" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Name}" Foreground="#D0E0F0" FontSize="13" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </TreeDataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+                </DockPanel>
+            </Border>
+
+            <!-- Resize handle -->
+            <GridSplitter Grid.Column="1" Background="#2A3F5F" ResizeDirection="Columns" />
+
+            <!-- Center: 3D Viewport host -->
+            <Border Grid.Column="2" Background="#0D0D1A" Name="ViewportHost" ClipToBounds="True">
+                <Grid>
+                    <!-- Viewport placeholder until WebView2 attaches -->
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Foreground="#334455" FontSize="18"
+                               IsVisible="{Binding IsViewportLoading}"
+                               Text="Loading 3D Viewport..." />
+
+                    <!-- Viewport overlay controls -->
+                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8" Spacing="4">
+                        <Button Content="⊞" ToolTip.Tip="Fit to screen"  Command="{Binding FitViewCommand}"  Classes="viewport-btn" />
+                        <Button Content="⌖" ToolTip.Tip="Reset view"     Command="{Binding ResetViewCommand}" Classes="viewport-btn" />
+                        <Button Content="□" ToolTip.Tip="Wireframe"      Command="{Binding WireframeCommand}" Classes="viewport-btn" />
+                        <Button Content="◼" ToolTip.Tip="Solid view"     Command="{Binding SolidViewCommand}" Classes="viewport-btn" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Resize handle -->
+            <GridSplitter Grid.Column="3" Background="#2A3F5F" ResizeDirection="Columns" />
+
+            <!-- Right: AI Chat Panel -->
+            <Border Grid.Column="4" Background="#16213E" BorderThickness="1,0,0,0" BorderBrush="#2A3F5F">
+                <DockPanel>
+                    <Border DockPanel.Dock="Top" Background="#0F3460" Padding="8,6">
+                        <TextBlock Text="✦ AI Design Assistant" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center" />
+                    </Border>
+
+                    <!-- Input area at bottom -->
+                    <Grid DockPanel.Dock="Bottom" RowDefinitions="Auto,Auto" Margin="8">
+                        <Border Grid.Row="0" Background="#0D1B2A" CornerRadius="6" Padding="8" Margin="0,0,0,6">
+                            <TextBox Name="AiInputBox"
+                                     Text="{Binding AiPrompt}"
+                                     Watermark="Ask AI to design, modify, or explain..."
+                                     AcceptsReturn="True"
+                                     MaxLines="4"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Foreground="White"
+                                     CaretBrush="White" />
+                        </Border>
+                        <Button Grid.Row="1" Content="✦ Send"
+                                Command="{Binding AiSendCommand}"
+                                HorizontalAlignment="Stretch"
+                                Classes="ai-send-btn" />
+                    </Grid>
+
+                    <!-- Chat history -->
+                    <ScrollViewer Margin="8,0" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding AiMessages}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,4" Padding="10,8" CornerRadius="8"
+                                            Background="{Binding Background}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Role}" FontWeight="Bold" FontSize="11"
+                                                       Foreground="{Binding RoleColor}" Margin="0,0,0,3" />
+                                            <TextBlock Text="{Binding Content}" TextWrapping="Wrap"
+                                                       Foreground="#C8D8E8" FontSize="13" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+
+        </Grid>
+    </DockPanel>
+</Window>

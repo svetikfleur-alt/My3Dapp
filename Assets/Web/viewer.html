@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My3DApp Viewport</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #0D0D1A; }
+  #canvas-container { width: 100%; height: 100%; }
+  #status { position: fixed; bottom: 4px; left: 8px; color: #445566; font: 11px monospace; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+<div id="status">Loading Three.js...</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+
+// ── Scene setup ───────────────────────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const statusEl  = document.getElementById('status');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0D0D1A);
+scene.fog = new THREE.Fog(0x0D0D1A, 500, 2000);
+
+const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 5000);
+camera.position.set(200, 150, 300);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.07;
+controls.minDistance = 5;
+controls.maxDistance = 2000;
+
+// ── Lighting ──────────────────────────────────────────────────────────────────
+const ambientLight = new THREE.AmbientLight(0x404060, 0.8);
+scene.add(ambientLight);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+dirLight.position.set(300, 400, 200);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(2048, 2048);
+scene.add(dirLight);
+
+const fillLight = new THREE.DirectionalLight(0x6090cc, 0.4);
+fillLight.position.set(-200, -100, -200);
+scene.add(fillLight);
+
+// ── Grid & origin ─────────────────────────────────────────────────────────────
+const grid = new THREE.GridHelper(400, 40, 0x1A2A3A, 0x1A2A3A);
+scene.add(grid);
+
+function addAxisLine(dir, color) {
+  const mat = new THREE.LineBasicMaterial({ color });
+  const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), dir]);
+  scene.add(new THREE.Line(geo, mat));
+}
+addAxisLine(new THREE.Vector3(60, 0, 0), 0xff3333);
+addAxisLine(new THREE.Vector3(0, 60, 0), 0x33ff33);
+addAxisLine(new THREE.Vector3(0, 0, 60), 0x3366ff);
+
+// ── Default part material ─────────────────────────────────────────────────────
+const defaultMaterial = new THREE.MeshStandardMaterial({
+  color: 0x4488cc,
+  roughness: 0.35,
+  metalness: 0.55,
+  envMapIntensity: 0.8,
+});
+const wireframeMaterial = new THREE.MeshBasicMaterial({ color: 0x88aacc, wireframe: true });
+
+let isWireframe = false;
+const meshObjects = {};
+
+// ── Viewer API (called by C# via ExecuteScriptAsync) ──────────────────────────
+window.viewer = {
+
+  addBox(name, w = 100, h = 50, d = 30) {
+    const geo = new THREE.BoxGeometry(w, h, d);
+    const mesh = new THREE.Mesh(geo, isWireframe ? wireframeMaterial.clone() : defaultMaterial.clone());
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.name = name;
+    scene.add(mesh);
+    meshObjects[name] = mesh;
+    this.fitView();
+    setStatus(`Added box "${name}" [${w}×${h}×${d}]`);
+  },
+
+  addCylinder(name, radius = 30, height = 60, segments = 32) {
+    const geo = new THREE.CylinderGeometry(radius, radius, height, segments);
+    const mesh = new THREE.Mesh(geo, isWireframe ? wireframeMaterial.clone() : defaultMaterial.clone());
+    mesh.castShadow = true;
+    mesh.name = name;
+    scene.add(mesh);
+    meshObjects[name] = mesh;
+    this.fitView();
+    setStatus(`Added cylinder "${name}" r=${radius} h=${height}`);
+  },
+
+  addSphere(name, radius = 40, segments = 32) {
+    const geo = new THREE.SphereGeometry(radius, segments, segments);
+    const mesh = new THREE.Mesh(geo, isWireframe ? wireframeMaterial.clone() : defaultMaterial.clone());
+    mesh.castShadow = true;
+    mesh.name = name;
+    scene.add(mesh);
+    meshObjects[name] = mesh;
+    this.fitView();
+    setStatus(`Added sphere "${name}" r=${radius}`);
+  },
+
+  removeObject(name) {
+    const obj = meshObjects[name];
+    if (obj) { scene.remove(obj); delete meshObjects[name]; }
+  },
+
+  clearScene() {
+    Object.keys(meshObjects).forEach(k => {
+      scene.remove(meshObjects[k]);
+      delete meshObjects[k];
+    });
+    setStatus('Scene cleared');
+  },
+
+  fitView() {
+    const objects = Object.values(meshObjects);
+    if (objects.length === 0) return;
+    const box = new THREE.Box3();
+    objects.forEach(o => box.expandByObject(o));
+    const size   = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const dist   = maxDim / (2 * Math.tan((camera.fov * Math.PI / 180) / 2)) * 1.5;
+    camera.position.set(center.x + dist * 0.6, center.y + dist * 0.5, center.z + dist * 0.8);
+    controls.target.copy(center);
+    controls.update();
+  },
+
+  resetView() {
+    camera.position.set(200, 150, 300);
+    controls.target.set(0, 0, 0);
+    controls.update();
+  },
+
+  setView(preset) {
+    const d = 250;
+    const views = {
+      front:  [0,    0,    d],
+      back:   [0,    0,   -d],
+      top:    [0,    d,    0.001],
+      bottom: [0,   -d,    0.001],
+      right:  [d,    0,    0],
+      left:   [-d,   0,    0],
+      iso:    [d*0.6, d*0.5, d*0.8],
+    };
+    const pos = views[preset] ?? views.iso;
+    camera.position.set(...pos);
+    controls.update();
+    setStatus(`View: ${preset}`);
+  },
+
+  setWireframe(on) {
+    isWireframe = on;
+    Object.values(meshObjects).forEach(mesh => {
+      mesh.material = on ? wireframeMaterial.clone() : defaultMaterial.clone();
+    });
+    setStatus(on ? 'Wireframe on' : 'Solid view');
+  },
+
+  loadSTL(base64Data, name) {
+    const binary = atob(base64Data);
+    const buffer = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) buffer[i] = binary.charCodeAt(i);
+    const geo = new STLLoader().parse(buffer.buffer);
+    geo.computeVertexNormals();
+    const mesh = new THREE.Mesh(geo, defaultMaterial.clone());
+    mesh.name = name;
+    scene.add(mesh);
+    meshObjects[name] = mesh;
+    this.fitView();
+    setStatus(`Loaded STL "${name}"`);
+  },
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function setStatus(msg) {
+  statusEl.textContent = msg;
+}
+
+// ── Resize ────────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  const w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+
+// ── Render loop ───────────────────────────────────────────────────────────────
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+setStatus('Ready');
+</script>
+</body>
+</html>
