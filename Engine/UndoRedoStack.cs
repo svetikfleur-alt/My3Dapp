@@ -116,5 +116,5 @@ public class RemoveSceneObjectAction : IUndoableAction
     }
 
     public void Execute() => _scene.Remove(_object.Id);
-    public void Undo()    => _scene.Add(_object.Name, _object.Type);
+    public void Undo()    => _scene.AddExisting(_object);
 }

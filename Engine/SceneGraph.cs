@@ -60,4 +60,13 @@ public class SceneGraph
     }
 
     public SceneObject? Find(Guid id) => _objects.FirstOrDefault(o => o.Id == id);
+
+    // Re-inserts a previously removed SceneObject, preserving its original Id.
+    public void AddExisting(SceneObject obj)
+    {
+        if (_objects.Any(o => o.Id == obj.Id)) return; // already present
+        _objects.Add(obj);
+        ObjectAdded?.Invoke(obj);
+        RuntimeLog.Info("Scene", $"Restored '{obj.Name}' ({obj.Type}) id={obj.Id}");
+    }
 }

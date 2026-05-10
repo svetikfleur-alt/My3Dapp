@@ -183,23 +183,12 @@
 
             <GridSplitter Grid.Column="1" Background="#1A304D" ResizeDirection="Columns" />
 
-            <!-- Center: 3D Viewport host -->
+            <!-- Center: 3D Viewport host — WebView2 native HWND is positioned here at runtime -->
             <Border Grid.Column="2" Background="#0D0D1A" Name="ViewportHost" ClipToBounds="True">
-                <Grid>
-                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
-                               Foreground="#1E3050" FontSize="16"
-                               IsVisible="{Binding IsViewportLoading}"
-                               Text="Loading 3D Viewport…" />
-
-                    <!-- View controls — top right -->
-                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top"
-                                Margin="8,90,8,0" Spacing="4">
-                        <Button Content="⊞" ToolTip.Tip="Fit to screen  [F]" Command="{Binding FitViewCommand}"   Classes="viewport-btn" />
-                        <Button Content="⌖" ToolTip.Tip="Reset view"         Command="{Binding ResetViewCommand}" Classes="viewport-btn" />
-                        <Button Content="□" ToolTip.Tip="Wireframe"          Command="{Binding WireframeCommand}" Classes="viewport-btn" />
-                        <Button Content="◼" ToolTip.Tip="Solid view"         Command="{Binding SolidViewCommand}" Classes="viewport-btn" />
-                    </StackPanel>
-                </Grid>
+                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="#1E3050" FontSize="16"
+                           IsVisible="{Binding IsViewportLoading}"
+                           Text="Loading 3D Viewport…" />
             </Border>
 
             <GridSplitter Grid.Column="3" Background="#1A304D" ResizeDirection="Columns" />

@@ -10,12 +10,38 @@
   #canvas-container { width: 100%; height: 100%; }
   #status { position: fixed; bottom: 4px; left: 8px; color: #445566; font: 11px monospace; pointer-events: none; }
   #viewcube { position: fixed; top: 8px; left: 8px; width: 76px; height: 76px; cursor: pointer; border-radius: 6px; }
+  #vp-controls {
+    position: fixed; top: 8px; right: 8px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .vp-btn {
+    width: 28px; height: 28px;
+    background: rgba(13,27,42,0.82);
+    color: #6b8cae;
+    border: 1px solid #1e3050;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, color 0.15s;
+  }
+  .vp-btn:hover { background: #1e3a5f; color: #a0bcd8; }
 </style>
 </head>
 <body>
 <div id="canvas-container"></div>
 <div id="status">Loading Three.js...</div>
 <canvas id="viewcube" width="76" height="76" title="Click to reset view"></canvas>
+
+<div id="vp-controls">
+  <button class="vp-btn" title="Fit to scene"  onclick="viewer.fitView()">⊞</button>
+  <button class="vp-btn" title="Reset view"    onclick="viewer.resetView()">⌖</button>
+  <button class="vp-btn" title="Wireframe"     onclick="viewer.setWireframe(true)">□</button>
+  <button class="vp-btn" title="Solid view"    onclick="viewer.setWireframe(false)">◼</button>
+  <button class="vp-btn" title="Front view"    onclick="viewer.setView('front')">F</button>
+  <button class="vp-btn" title="Top view"      onclick="viewer.setView('top')">T</button>
+  <button class="vp-btn" title="Isometric"     onclick="viewer.setView('iso')">⬡</button>
+</div>
 
 <script type="importmap">
 {

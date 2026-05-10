@@ -320,23 +320,34 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         // Load geometry into viewport and record the add script for delete-undo
         var safeName = node.Name.Replace("'", "");
-        if (path.EndsWith(".stl", StringComparison.OrdinalIgnoreCase) && ViewportService != null)
+        var lowerExt = Path.GetExtension(path).ToLowerInvariant();
+        string finalStatus;
+
+        if (lowerExt == ".stl" && ViewportService != null)
         {
-            var bytes = await File.ReadAllBytesAsync(path);
-            var b64   = Convert.ToBase64String(bytes);
+            var bytes  = await File.ReadAllBytesAsync(path);
+            var b64    = Convert.ToBase64String(bytes);
             var script = $"viewer.loadSTL('{b64}', '{safeName}');";
             node.ViewportAddScript = script;
             await ViewportService.ExecuteScriptAsync(script);
+            finalStatus = $"Imported: {Path.GetFileName(path)}";
         }
         else if (ViewportService != null)
         {
+            // OBJ / STEP / 3MF: geometry not parsed — show a placeholder box
             var script = $"viewer.addBox('{safeName}', 100, 100, 100); viewer.fitView();";
             node.ViewportAddScript = script;
             await ViewportService.ExecuteScriptAsync(script);
+            var fmt = lowerExt.TrimStart('.').ToUpperInvariant();
+            finalStatus = $"Imported {Path.GetFileName(path)} ({fmt} shown as placeholder box — full geometry parsing not yet supported)";
+        }
+        else
+        {
+            finalStatus = $"Imported: {Path.GetFileName(path)}";
         }
 
         WindowTitle = $"My3DApp — {Path.GetFileName(path)}";
-        StatusMessage = $"Imported: {Path.GetFileName(path)}";
+        StatusMessage = finalStatus;
     }
 
     private async Task ExportAsync()
@@ -401,7 +412,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             "viewer.addBox('{name}', 80, 120, 80); viewer.fitView();",
             "{name} added — select profiles to define the loft.");
 
-    private void Shell()         => StatusMessage = "Shell: select faces to remove.";
+    private void Shell()
+        => PushFeatureNode("⚙", "shell", "Shell",
+            null, "{name} — select a solid body and set wall thickness in the AI panel.");
 
     private void BooleanUnion()
         => PushFeatureNode("⊕", "boolean-union", "Union",
@@ -414,9 +427,14 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private void BooleanIntersect()
         => PushFeatureNode("⊗", "boolean-intersect", "Intersect",
             null, "{name} — select bodies to intersect.");
-    private void AiGenerate()    => StatusMessage = "AI: enter a description in the AI panel →";
+    private void AiGenerate()
+    {
+        AiPrompt = "Generate a practical 3D part with geometry — describe what you want to model and include a geometry-script to visualise it.";
+        StatusMessage = "AI Generate: type your description and press Send →";
+    }
+
     private void FocusAiPanel()  => StatusMessage = "AI panel focused.";
-    private void AddFeature()    => StatusMessage = "Select feature type to add.";
+    private void AddFeature()    => NewSketch();
     private void Exit()          => Environment.Exit(0);
     private void Undo()
     {
