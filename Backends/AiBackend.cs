@@ -61,14 +61,20 @@ public class AiBackend : IDisposable
         _http.Timeout = TimeSpan.FromSeconds(60);
     }
 
-    public async Task<string> ChatAsync(string userMessage)
+    /// <summary>
+    /// Sends a chat message to the AI.
+    /// <paramref name="userMessage"/> is shown in chat history.
+    /// If <paramref name="contextPrefix"/> is provided it is prepended to the API request
+    /// only (not stored in history), keeping context fresh without inflating past turns.
+    /// </summary>
+    public async Task<string> ChatAsync(string userMessage, string? contextPrefix = null)
     {
         CancelCurrentRequest(); // cancel any prior in-flight request
         _cts = new CancellationTokenSource();
         var ct = _cts.Token;
 
         LastGeometryScript = null;
-        _history.Add(new ChatMessage("user", userMessage));
+        _history.Add(new ChatMessage("user", userMessage)); // plain message in history
 
         var apiKey = GetApiKey();
         if (string.IsNullOrEmpty(apiKey))
@@ -78,15 +84,23 @@ public class AiBackend : IDisposable
         {
             // Trim to the most recent MaxTurns pairs to stay within context limits
             var window = _history.Count > MaxTurns * 2
-                ? _history.TakeLast(MaxTurns * 2).ToArray()
-                : _history.ToArray();
+                ? _history.TakeLast(MaxTurns * 2).ToList()
+                : _history.ToList();
+
+            // Inject context prefix into the last user message for this request only
+            var apiMessages = window.Select((m, i) =>
+            {
+                if (i == window.Count - 1 && m.Role == "user" && contextPrefix != null)
+                    return new { role = m.Role, content = contextPrefix + "\n\n" + m.Content };
+                return new { role = m.Role, content = m.Content };
+            }).ToArray();
 
             var request = new
             {
                 model = Model,
                 max_tokens = 1024,
                 system = SystemPrompt,
-                messages = window.Select(m => new { role = m.Role, content = m.Content }).ToArray()
+                messages = apiMessages
             };
 
             var json = JsonSerializer.Serialize(request);

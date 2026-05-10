@@ -228,13 +228,18 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         if (FeatureNodes.Count > 0)
             FeatureNodes[0].Children.Add(node);
 
-        // Load STL into viewport if applicable
+        // Load geometry into viewport
+        var safeName = node.Name.Replace("'", "");
         if (path.EndsWith(".stl", StringComparison.OrdinalIgnoreCase) && ViewportService != null)
         {
             var bytes = await File.ReadAllBytesAsync(path);
             var b64 = Convert.ToBase64String(bytes);
-            await ViewportService.ExecuteScriptAsync(
-                $"viewer.loadSTL('{b64}', '{node.Name.Replace("'", "")}');");
+            await ViewportService.ExecuteScriptAsync($"viewer.loadSTL('{b64}', '{safeName}');");
+        }
+        else if (ViewportService != null)
+        {
+            // Non-STL formats: show a placeholder box so the viewport isn't empty
+            await ViewportService.ExecuteScriptAsync($"viewer.addBox('{safeName}', 100, 100, 100); viewer.fitView();");
         }
 
         WindowTitle = $"My3DApp — {Path.GetFileName(path)}";
@@ -286,12 +291,34 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         node.SceneObjectId = _scene.Objects.FirstOrDefault(o => o.Name == name)?.Id;
         FeatureNodes[0].Children.Add(node);
         // Push a default box to the viewport as a placeholder for the extrude
-        _ = ViewportService?.ExecuteScriptAsync($"viewer.addBox('{name.Replace("'", "")}', 100, 50, 30);");
+        _ = ViewportService?.ExecuteScriptAsync($"viewer.addBox('{name.Replace("'", "")}', 100, 50, 30); viewer.fitView();");
         StatusMessage = $"{name} added. Adjust dimensions in the properties panel.";
     }
 
-    private void Revolve()       => StatusMessage = "Revolve: select profile and axis.";
-    private void Loft()          => StatusMessage = "Loft: select profiles.";
+    private void Revolve()
+    {
+        if (FeatureNodes.Count == 0) return;
+        var name = $"Revolve {FeatureNodes[0].Children.Count + 1}";
+        _history.Push(new AddSceneObjectAction(_scene, name, "revolve"));
+        var node = MakeNode("↻", name, "revolve");
+        node.SceneObjectId = _scene.Objects.FirstOrDefault(o => o.Name == name)?.Id;
+        FeatureNodes[0].Children.Add(node);
+        _ = ViewportService?.ExecuteScriptAsync($"viewer.addCylinder('{name.Replace("'", "")}', 40, 80, 32); viewer.fitView();");
+        StatusMessage = $"{name} added — select profile and axis to refine.";
+    }
+
+    private void Loft()
+    {
+        if (FeatureNodes.Count == 0) return;
+        var name = $"Loft {FeatureNodes[0].Children.Count + 1}";
+        _history.Push(new AddSceneObjectAction(_scene, name, "loft"));
+        var node = MakeNode("⤵", name, "loft");
+        node.SceneObjectId = _scene.Objects.FirstOrDefault(o => o.Name == name)?.Id;
+        FeatureNodes[0].Children.Add(node);
+        _ = ViewportService?.ExecuteScriptAsync($"viewer.addBox('{name.Replace("'", "")}', 80, 120, 80); viewer.fitView();");
+        StatusMessage = $"{name} added — select profiles to define the loft.";
+    }
+
     private void Shell()         => StatusMessage = "Shell: select faces to remove.";
     private void BooleanUnion()     => StatusMessage = "Boolean Union: select bodies.";
     private void BooleanSubtract()  => StatusMessage = "Boolean Subtract: select target and tool bodies.";
@@ -389,9 +416,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         try
         {
-            // Include current feature tree as context
-            var contextualPrompt = BuildContextualPrompt(prompt);
-            var reply = await _ai.ChatAsync(contextualPrompt);
+            var context = BuildFeatureTreeContext();
+            var reply = await _ai.ChatAsync(prompt, context);
             AiMessages.Add(new AiMessage { Role = "AI", Content = reply });
 
             if (_ai.LastGeometryScript is { } script)
@@ -411,14 +437,14 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     private async Task AiGenerateSketchAsync()
     {
-        var prompt = BuildContextualPrompt(
-            "Generate a parametric sketch with dimensions. Describe the profile and provide a geometry-script to visualise it.");
+        const string prompt = "Generate a parametric sketch with dimensions. Describe the profile and provide a geometry-script to visualise it.";
         AiMessages.Add(new AiMessage { Role = "You", Content = "(Generate Sketch)" });
         AiIsThinking = true;
         StatusMessage = "AI generating sketch…";
         try
         {
-            var reply = await _ai.ChatAsync(prompt);
+            var context = BuildFeatureTreeContext();
+            var reply = await _ai.ChatAsync(prompt, context);
             AiMessages.Add(new AiMessage { Role = "AI", Content = reply });
             if (_ai.LastGeometryScript is { } script)
                 await (ViewportService?.ExecuteScriptAsync(script) ?? Task.CompletedTask);
@@ -438,13 +464,14 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     private async Task AiSuggestFeatureAsync()
     {
+        const string prompt = "Based on my current feature tree, what should I model next?";
         AiMessages.Add(new AiMessage { Role = "You", Content = "(Suggest next feature)" });
         AiIsThinking = true;
         StatusMessage = "AI analyzing part...";
         try
         {
-            var prompt = BuildContextualPrompt("Based on my current feature tree, what should I model next?");
-            var reply = await _ai.ChatAsync(prompt);
+            var context = BuildFeatureTreeContext();
+            var reply = await _ai.ChatAsync(prompt, context);
             AiMessages.Add(new AiMessage { Role = "AI", Content = reply });
             if (_ai.LastGeometryScript is { } script)
                 await (ViewportService?.ExecuteScriptAsync(script) ?? Task.CompletedTask);
@@ -456,17 +483,16 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
-    // Attaches the feature tree summary to every AI prompt for context-aware responses
-    private string BuildContextualPrompt(string userPrompt)
+    // Returns the feature tree as a context prefix string.
+    // Passed to AiBackend.ChatAsync as contextPrefix so it's sent to the API for the
+    // current turn only — not stored in history, preventing token bloat across turns.
+    private string? BuildFeatureTreeContext()
     {
-        if (FeatureNodes.Count == 0) return userPrompt;
-
+        if (FeatureNodes.Count == 0) return null;
         var sb = new StringBuilder();
         sb.AppendLine("[Current part studio feature tree]");
         foreach (var root in FeatureNodes)
             AppendFeatureNode(sb, root, 0);
-        sb.AppendLine();
-        sb.Append(userPrompt);
         return sb.ToString();
     }
 
