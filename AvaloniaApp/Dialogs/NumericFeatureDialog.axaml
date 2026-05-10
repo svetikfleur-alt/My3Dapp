@@ -1,0 +1,82 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="My3DApp.AvaloniaApp.Dialogs.NumericFeatureDialog"
+        Width="360"
+        Height="220"
+        MinWidth="340"
+        MinHeight="200"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Classes="FeatureDialogWindow"
+        Title="Feature">
+  <Border Classes="FeatureDialogPanel" Margin="0">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock x:Name="TitleTextBlock"
+                     Classes="FeatureDialogTitle"
+                     Text="Feature" />
+          <TextBlock x:Name="SubtitleTextBlock"
+                     Margin="0,6,0,0"
+                     Classes="FeatureDialogSubtitle"
+                     Text="Adjust the feature parameter, then confirm." />
+        </StackPanel>
+        <Border Grid.Column="1"
+                Classes="FeatureDialogTag"
+                VerticalAlignment="Top">
+          <TextBlock Text="EDIT"
+                     Classes="FeatureDialogTagText" />
+        </Border>
+      </Grid>
+
+      <Border Grid.Row="2"
+              Margin="0,16,0,16"
+              Classes="FeatureDialogSectionCard">
+        <Grid ColumnDefinitions="*,84" RowDefinitions="Auto,Auto,Auto">
+          <TextBlock x:Name="ValueLabelTextBlock"
+                     Text="Value"
+                     Classes="FeatureDialogFieldLabel" />
+          <NumericUpDown x:Name="ValueInput"
+                         Classes="FeatureDialogInput"
+                         Grid.Row="1"
+                         Width="150"
+                         HorizontalAlignment="Left"
+                         Margin="0,8,0,0"
+                         Increment="1"
+                         Minimum="0"
+                         Maximum="1000"
+                         FormatString="0.###" />
+          <Border Grid.Column="1"
+                  Grid.Row="1"
+                  Classes="FeatureDialogUnitChip"
+                  Margin="8,8,0,0"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Top">
+            <TextBlock x:Name="UnitTextBlock"
+                       HorizontalAlignment="Center"
+                       Text="mm" />
+          </Border>
+          <TextBlock Grid.Row="2"
+                     Grid.ColumnSpan="2"
+                     Margin="0,10,0,0"
+                     TextWrapping="Wrap"
+                     Classes="FeatureDialogHelpText"
+                     Text="Apply updates the existing feature with the new value." />
+        </Grid>
+      </Border>
+
+      <StackPanel Grid.Row="3"
+                  Orientation="Horizontal"
+                  HorizontalAlignment="Right"
+                  Spacing="8">
+        <Button Content="Cancel"
+                Classes="FeatureDialogButtonSecondary"
+                Click="OnCancelClick" />
+        <Button Content="Apply"
+                Classes="FeatureDialogButtonPrimary"
+                Click="OnConfirmClick" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>

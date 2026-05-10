@@ -1,0 +1,135 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="My3DApp.AvaloniaApp.Dialogs.CommandPaletteDialog"
+        Width="560"
+        Height="360"
+        MinWidth="520"
+        MinHeight="320"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Classes="FeatureDialogWindow"
+        Title="CAD Commands">
+  <Border Classes="FeatureDialogPanel" Margin="0">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="18">
+      <TextBlock Text="CAD Commands"
+                 Classes="FeatureDialogTitle" />
+      <TextBlock Grid.Row="1"
+                 Margin="0,6,0,0"
+                 TextWrapping="Wrap"
+                 Classes="FeatureDialogSubtitle"
+                 Text="Run one local CAD command or a short sequence. Separate steps with Enter, semicolon, or then." />
+
+      <Border Grid.Row="2"
+              Margin="0,16,0,0"
+              Background="{DynamicResource Studio.PanelInsetBrush}"
+              BorderBrush="{DynamicResource Studio.BorderBrush}"
+              BorderThickness="1"
+              Padding="10">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBox x:Name="CommandInput"
+                   MinHeight="34"
+                   Watermark="Example: start sketch on top plane; rectangle 0 0 20 10; finish sketch; extrude 8"
+                   Classes="AssistantInputBox"
+                   KeyDown="OnCommandInputKeyDown" />
+          <Button x:Name="RunButton"
+                  Grid.Column="1"
+                  Margin="8,0,0,0"
+                  Content="Run"
+                  Classes="FeatureDialogButtonPrimary"
+                  Click="OnRunClick" />
+        </Grid>
+      </Border>
+
+      <Grid Grid.Row="3"
+            Margin="0,14,0,14"
+            ColumnDefinitions="*,*">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Quick commands"
+                     FontSize="11"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource Studio.TextSecondaryBrush}" />
+          <WrapPanel>
+            <Button Content="add box"
+                    Tag="add box"
+                    Margin="0,0,6,6"
+                    Classes="AssistantSecondaryButton"
+                    Click="OnQuickCommandClick" />
+            <Button Content="add cylinder"
+                    Tag="add cylinder"
+                    Margin="0,0,6,6"
+                    Classes="AssistantSecondaryButton"
+                    Click="OnQuickCommandClick" />
+            <Button Content="add sphere"
+                    Tag="add sphere"
+                    Margin="0,0,6,6"
+                    Classes="AssistantSecondaryButton"
+                    Click="OnQuickCommandClick" />
+            <Button Content="make cylinder then move"
+                    Tag="make a cylinder then move 10 x"
+                    Margin="0,0,6,6"
+                    Classes="AssistantSecondaryButton"
+                    Click="OnQuickCommandClick" />
+            <Button Content="sketch rectangle -> extrude"
+                    Tag="start sketch on top plane; rectangle 0 0 20 10; finish sketch; extrude 8"
+                    Margin="0,0,6,6"
+                    Classes="AssistantSecondaryButton"
+                    Click="OnQuickCommandClick" />
+            <Button Content="sketch circle -> extrude"
+                    Tag="start sketch on top plane; circle 0 0 6; finish sketch; extrude 8"
+                    Margin="0,0,6,6"
+                    Classes="AssistantSecondaryButton"
+                    Click="OnQuickCommandClick" />
+            <Button Content="select top plane"
+                    Tag="select top plane"
+                    Margin="0,0,6,6"
+                    Classes="AssistantSecondaryButton"
+                    Click="OnQuickCommandClick" />
+            <Button Content="start sketch on top"
+                    Tag="start sketch on top plane"
+                    Margin="0,0,6,6"
+                    Classes="AssistantSecondaryButton"
+                    Click="OnQuickCommandClick" />
+            <Button Content="extrude 8"
+                    Tag="extrude 8"
+                    Margin="0,0,6,6"
+                    Classes="AssistantSecondaryButton"
+                    Click="OnQuickCommandClick" />
+          </WrapPanel>
+        </StackPanel>
+
+        <Border Grid.Column="1"
+                Margin="12,0,0,0"
+                Background="{DynamicResource Studio.PanelInsetBrush}"
+                BorderBrush="{DynamicResource Studio.BorderBrush}"
+                BorderThickness="1"
+                Padding="10">
+          <StackPanel Spacing="6">
+            <TextBlock Text="Status"
+                       FontSize="11"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource Studio.TextSecondaryBrush}" />
+            <TextBlock x:Name="StatusTextBlock"
+                       Text="Ready. Enter one step or a short sequence, then press Enter."
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource Studio.TextPrimaryBrush}" />
+            <TextBlock Text="Tip: sequence execution stops at the first invalid or unsafe step."
+                       TextWrapping="Wrap"
+                       FontSize="11"
+                       Foreground="{DynamicResource Studio.TextMutedBrush}" />
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <StackPanel Grid.Row="4"
+                  Orientation="Horizontal"
+                  HorizontalAlignment="Right"
+                  Spacing="8">
+        <Button Content="Close"
+                Classes="FeatureDialogButtonSecondary"
+                IsCancel="True"
+                Click="OnCloseClick" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>
