@@ -2,12 +2,15 @@ using System.Collections.ObjectModel;
 using System.Windows.Input;
 using My3DApp.AvaloniaApp.Services;
 using My3DApp.Backends;
+using My3DApp.Engine;
 
 namespace My3DApp.AvaloniaApp.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase
 {
     private readonly AiBackend _ai = new();
+    private readonly SceneGraph _scene = new();
+    private readonly UndoRedoStack _history = new();
 
     // ── Viewport ─────────────────────────────────────────────────────────────
     public ViewportService? ViewportService { get; set; }
@@ -113,12 +116,14 @@ public class MainWindowViewModel : ViewModelBase
 
     public MainWindowViewModel()
     {
+        _history.StackChanged += OnHistoryChanged;
+
         NewPartStudioCommand   = new RelayCommand(NewPartStudio);
         OpenCommand            = new RelayCommand(Open);
         ExportCommand          = new RelayCommand(Export);
         ExitCommand            = new RelayCommand(Exit);
-        UndoCommand            = new RelayCommand(Undo);
-        RedoCommand            = new RelayCommand(Redo);
+        UndoCommand            = new RelayCommand(Undo, () => _history.CanUndo);
+        RedoCommand            = new RelayCommand(Redo, () => _history.CanRedo);
         SetViewCommand         = new RelayCommand(p => SetView(p as string ?? "iso"));
         NewSketchCommand       = new RelayCommand(NewSketch);
         ExtrudeCommand         = new RelayCommand(Extrude);
@@ -129,32 +134,49 @@ public class MainWindowViewModel : ViewModelBase
         BooleanSubtractCommand = new RelayCommand(BooleanSubtract);
         BooleanIntersectCommand = new RelayCommand(BooleanIntersect);
         AiGenerateCommand      = new RelayCommand(AiGenerate);
-        AiSendCommand          = new RelayCommand(async () => await AiSendAsync());
+        AiSendCommand          = new AsyncRelayCommand(AiSendAsync);
         FocusAiPanelCommand    = new RelayCommand(FocusAiPanel);
-        AiGenerateSketchCommand = new RelayCommand(async () => await AiGenerateSketchAsync());
-        AiSuggestFeatureCommand = new RelayCommand(async () => await AiSuggestFeatureAsync());
+        AiGenerateSketchCommand = new AsyncRelayCommand(AiGenerateSketchAsync);
+        AiSuggestFeatureCommand = new AsyncRelayCommand(AiSuggestFeatureAsync);
         AddFeatureCommand      = new RelayCommand(AddFeature);
-        FitViewCommand         = new RelayCommand(async () => await ViewportService?.FitViewAsync()!);
-        ResetViewCommand       = new RelayCommand(async () => await ViewportService?.ResetViewAsync()!);
-        WireframeCommand       = new RelayCommand(async () => await ViewportService?.SetWireframeAsync(true)!);
-        SolidViewCommand       = new RelayCommand(async () => await ViewportService?.SetWireframeAsync(false)!);
+        FitViewCommand         = new AsyncRelayCommand(() => ViewportService?.FitViewAsync() ?? Task.CompletedTask);
+        ResetViewCommand       = new AsyncRelayCommand(() => ViewportService?.ResetViewAsync() ?? Task.CompletedTask);
+        WireframeCommand       = new AsyncRelayCommand(() => ViewportService?.SetWireframeAsync(true) ?? Task.CompletedTask);
+        SolidViewCommand       = new AsyncRelayCommand(() => ViewportService?.SetWireframeAsync(false) ?? Task.CompletedTask);
         OpenDocsCommand        = new RelayCommand(() => OpenUrl("https://github.com/svetikfleur-alt/my3dapp"));
         ShowAboutCommand       = new RelayCommand(ShowAbout);
+    }
+
+    // ── History ───────────────────────────────────────────────────────────────
+    private void OnHistoryChanged()
+    {
+        ((RelayCommand)UndoCommand).NotifyCanExecuteChanged();
+        ((RelayCommand)RedoCommand).NotifyCanExecuteChanged();
+        var undoDesc = _history.NextUndoDescription;
+        var redoDesc = _history.NextRedoDescription;
+        StatusMessage = undoDesc is null ? "Ready" : $"Undo: {undoDesc}";
+        _ = redoDesc; // available for future tooltip binding
     }
 
     // ── Toolbar handlers ──────────────────────────────────────────────────────
     private void NewSketch()
     {
-        StatusMessage = "Creating new sketch...";
-        var node = new FeatureNode { Icon = "⬜", Name = $"Sketch {FeatureNodes[0].Children.Count + 1}", FeatureType = "sketch" };
+        var sketchNum = FeatureNodes[0].Children.Count + 1;
+        var name = $"Sketch {sketchNum}";
+        var action = new AddSceneObjectAction(_scene, name, "sketch");
+        _history.Push(action);
+
+        var node = new FeatureNode { Icon = "⬜", Name = name, FeatureType = "sketch" };
         FeatureNodes[0].Children.Add(node);
         StatusMessage = "Sketch ready. Select a plane to begin.";
-        RuntimeLog.Info("VM", "New sketch created.");
+        RuntimeLog.Info("VM", $"New sketch '{name}' created.");
     }
 
     private void Extrude()
     {
         StatusMessage = "Extrude: select sketch to extrude.";
+        var action = new AddSceneObjectAction(_scene, "Extrude", "extrude");
+        _history.Push(action);
         var node = new FeatureNode { Icon = "⬆", Name = "Extrude", FeatureType = "extrude" };
         FeatureNodes[0].Children.Add(node);
     }
@@ -173,17 +195,20 @@ public class MainWindowViewModel : ViewModelBase
 
     private void NewPartStudio()
     {
+        _scene.Clear();
+        _history.Clear();
         FeatureNodes.Clear();
         FeatureNodes.Add(new FeatureNode { Icon = "📦", Name = "Part Studio 1", FeatureType = "root" });
         WindowTitle = "My3DApp — New Part Studio";
         StatusMessage = "New Part Studio created.";
+        _ = ViewportService?.ExecuteScriptAsync("viewer.clearScene();");
     }
 
     private void Open()    => StatusMessage = "Open: not yet implemented.";
     private void Export()  => StatusMessage = "Export: not yet implemented.";
     private void Exit()    => Environment.Exit(0);
-    private void Undo()    => StatusMessage = "Undo.";
-    private void Redo()    => StatusMessage = "Redo.";
+    private void Undo()    { if (_history.Undo()) StatusMessage = "Undo complete."; }
+    private void Redo()    { if (_history.Redo()) StatusMessage = "Redo complete."; }
 
     private void SetView(string view)
     {
