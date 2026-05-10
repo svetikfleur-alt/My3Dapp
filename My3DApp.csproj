@@ -1,0 +1,93 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
+    <StudioUiHost>Avalonia</StudioUiHost>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <NuGetAudit>false</NuGetAudit>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(StudioUiHost)' == 'WinForms'">
+    <DefineConstants>$(DefineConstants);STUDIO_UI_WINFORMS</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(StudioUiHost)' == 'Avalonia'">
+    <DefineConstants>$(DefineConstants);STUDIO_UI_AVALONIA</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="temp_*\**\*.cs" />
+    <Compile Remove="ThirdParty\**\*.cs" />
+    <EmbeddedResource Remove="temp_*\**\*" />
+    <None Remove="temp_*\**\*" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(StudioUiHost)' == 'WinForms'">
+    <Compile Remove="AvaloniaApp\**\*.cs" />
+    <AvaloniaXaml Remove="AvaloniaApp\**\*.axaml" />
+    <Content Include="Assets\Icons\**\*.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(StudioUiHost)' == 'Avalonia'">
+    <Compile Remove="Studio\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(StudioUiHost)' == 'Avalonia'">
+    <PackageReference Include="Avalonia" Version="11.2.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.0" />
+    <PackageReference Include="Avalonia.Svg.Skia" Version="11.2.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.0" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" ExcludeAssets="build;buildTransitive" />
+    <PackageReference Include="PicoGK" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(StudioUiHost)' == 'Avalonia'">
+    <AvaloniaXaml Update="AvaloniaApp\**\*.axaml" />
+    <AvaloniaResource Include="Assets\**\*" />
+    <Content Include="Assets\Web\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(StudioUiHost)' == 'Avalonia'">
+    <Reference Include="Microsoft.Web.WebView2.Core">
+      <HintPath>$(PkgMicrosoft_Web_WebView2)\lib_manual\netcoreapp3.0\Microsoft.Web.WebView2.Core.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="Microsoft.Web.WebView2.WinForms">
+      <HintPath>$(PkgMicrosoft_Web_WebView2)\lib_manual\netcoreapp3.0\Microsoft.Web.WebView2.WinForms.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+
+    <Content Include="$(PkgMicrosoft_Web_WebView2)\runtimes\win-x86\native\WebView2Loader.dll">
+      <Link>runtimes\win-x86\native\WebView2Loader.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Pack>false</Pack>
+    </Content>
+    <Content Include="$(PkgMicrosoft_Web_WebView2)\runtimes\win-x64\native\WebView2Loader.dll">
+      <Link>runtimes\win-x64\native\WebView2Loader.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Pack>false</Pack>
+    </Content>
+    <Content Include="$(PkgMicrosoft_Web_WebView2)\runtimes\win-arm64\native\WebView2Loader.dll">
+      <Link>runtimes\win-arm64\native\WebView2Loader.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Pack>false</Pack>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-xrw6-gwf8-vvr9" />
+  </ItemGroup>
+
+</Project>
