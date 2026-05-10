@@ -1239,14 +1239,8 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        // No plane pre-selected: show modal plane picker then enter sketch directly.
-        var planes = _wiredViewModel.GetAvailablePlanes();
-        var dialog = new SelectPlaneDialog(planes);
-        var result = await dialog.ShowDialog<SelectPlaneDialogResult?>(this);
-        if (result is null)
-            return;
-
-        await _wiredViewModel.StartSketchOnPlaneAsync(result.PlaneId, result.PlaneName);
+        _wiredViewModel.BeginSketchPlaneSelection();
+        ReturnFocusToViewport();
         ApplySketchToolHint("Rectangle");
     }
 
@@ -1264,6 +1258,60 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             LogHandlerFailure(nameof(OnSketchStartClick), ex);
+        }
+
+        e.Handled = true;
+    }
+
+    private async void OnWorkspace3DClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (_wiredViewModel.IsSelectingSketchPlane)
+            {
+                _wiredViewModel.CancelSketchPlaneSelection();
+            }
+            else if (_wiredViewModel.IsSketchMode)
+            {
+                await _wiredViewModel.FinishSketchAsync();
+            }
+
+            ReturnFocusToViewport();
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnWorkspace3DClick), ex);
+        }
+
+        e.Handled = true;
+    }
+
+    private async void OnWorkspaceSketchClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (_wiredViewModel.IsSketchMode)
+            {
+                ReturnFocusToViewport();
+            }
+            else
+            {
+                await StartSketchFromCurrentSelectionOrPlanePick();
+            }
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnWorkspaceSketchClick), ex);
         }
 
         e.Handled = true;
@@ -1669,8 +1717,7 @@ public sealed partial class MainWindow : Window
         try
         {
             var dialog = new FilletFeatureDialog(_wiredViewModel.AssistantSelectionSummary, 2d);
-            var result = await dialog.ShowDialog<FilletFeatureDialogResult?>(this);
-            ReturnFocusToViewport();
+            var result = await ShowAnchoredDialogAsync<FilletFeatureDialogResult?>(dialog);
             if (result is null)
             {
                 e.Handled = true;
@@ -1765,8 +1812,7 @@ public sealed partial class MainWindow : Window
         try
         {
             var dialog = new LinearPatternDialog(3, 20d, "x");
-            var result = await dialog.ShowDialog<LinearPatternDialogResult?>(this);
-            ReturnFocusToViewport();
+            var result = await ShowAnchoredDialogAsync<LinearPatternDialogResult?>(dialog);
             if (result is null)
             {
                 e.Handled = true;
@@ -1793,8 +1839,7 @@ public sealed partial class MainWindow : Window
         try
         {
             var dialog = new CircularPatternDialog(4, 360d, "y");
-            var result = await dialog.ShowDialog<CircularPatternDialogResult?>(this);
-            ReturnFocusToViewport();
+            var result = await ShowAnchoredDialogAsync<CircularPatternDialogResult?>(dialog);
             if (result is null)
             {
                 e.Handled = true;
@@ -1821,8 +1866,7 @@ public sealed partial class MainWindow : Window
         try
         {
             var dialog = new HoleFeatureDialog(10d, "Blind", 20d, 0d, 0d);
-            var result = await dialog.ShowDialog<HoleFeatureDialogResult?>(this);
-            ReturnFocusToViewport();
+            var result = await ShowAnchoredDialogAsync<HoleFeatureDialogResult?>(dialog);
             if (result is null)
             {
                 e.Handled = true;
@@ -1888,7 +1932,7 @@ public sealed partial class MainWindow : Window
             }
 
             var dialog = new BooleanBodyDialog(bodies, bodyAId, bodyBId, initialOperation);
-            var result = await dialog.ShowDialog<BooleanBodyDialogResult?>(this);
+            var result = await ShowAnchoredDialogAsync<BooleanBodyDialogResult?>(dialog);
             if (result is null)
             {
                 return;
@@ -1912,8 +1956,7 @@ public sealed partial class MainWindow : Window
         try
         {
             var dialog = new MirrorFeatureDialog("x");
-            var result = await dialog.ShowDialog<MirrorFeatureDialogResult?>(this);
-            ReturnFocusToViewport();
+            var result = await ShowAnchoredDialogAsync<MirrorFeatureDialogResult?>(dialog);
             if (result is null)
             {
                 e.Handled = true;
@@ -1936,7 +1979,7 @@ public sealed partial class MainWindow : Window
         try
         {
             var dialog = new DatumPlaneDialog();
-            await dialog.ShowDialog(this);
+            await ShowAnchoredDialogAsync(dialog);
             if (dialog.Confirmed)
             {
                 _wiredViewModel.CreateDatumPlane(
@@ -1969,9 +2012,7 @@ public sealed partial class MainWindow : Window
             minimum,
             maximum,
             unit);
-        AnchorDialogToViewport(dialog);
-
-        var result = await dialog.ShowDialog<string?>(this);
+        var result = await ShowAnchoredDialogAsync<string?>(dialog);
         return double.TryParse(result, out var parsed)
             ? parsed
             : null;
@@ -1992,9 +2033,7 @@ public sealed partial class MainWindow : Window
             8d,
             bodies,
             preferredBodyId);
-        AnchorDialogToViewport(dialog);
-
-        var result = await dialog.ShowDialog<ExtrudeFeatureDialogResult?>(this);
+        var result = await ShowAnchoredDialogAsync<ExtrudeFeatureDialogResult?>(dialog);
         if (result is null)
         {
             return null;
@@ -2015,9 +2054,7 @@ public sealed partial class MainWindow : Window
             _wiredViewModel.SelectedProfilePlaneSummary,
             360d,
             "y");
-        AnchorDialogToViewport(dialog);
-
-        var result = await dialog.ShowDialog<RevolveFeatureDialogResult?>(this);
+        var result = await ShowAnchoredDialogAsync<RevolveFeatureDialogResult?>(dialog);
         if (result is null)
         {
             return null;
@@ -2062,8 +2099,7 @@ public sealed partial class MainWindow : Window
 
         var sketches = _wiredViewModel.GetClosedSketchProfiles();
         var dialog = new LoftFeatureDialog(sketches, Guid.Empty, Guid.Empty, 20d);
-        AnchorDialogToViewport(dialog);
-        return await dialog.ShowDialog<LoftFeatureDialogResult?>(this);
+        return await ShowAnchoredDialogAsync<LoftFeatureDialogResult?>(dialog);
     }
 
     private async Task<(double Distance, double TwistDegrees)?> ShowSweepFeatureDialogAsync()
@@ -2078,9 +2114,7 @@ public sealed partial class MainWindow : Window
             _wiredViewModel.SelectedProfilePlaneSummary,
             20d,
             0d);
-        AnchorDialogToViewport(dialog);
-
-        var result = await dialog.ShowDialog<SweepFeatureDialogResult?>(this);
+        var result = await ShowAnchoredDialogAsync<SweepFeatureDialogResult?>(dialog);
         if (result is null)
         {
             return null;
@@ -2151,8 +2185,30 @@ public sealed partial class MainWindow : Window
         Avalonia.Controls.Control body)
     {
         var dialog = new ToolDialogWindow(title, subtitle, body);
-        var result = await dialog.ShowDialog<bool?>(this);
+        var result = await ShowAnchoredDialogAsync<bool?>(dialog, returnFocus: false);
         return result == true;
+    }
+
+    private async Task<TResult> ShowAnchoredDialogAsync<TResult>(Window dialog, bool returnFocus = true)
+    {
+        AnchorDialogToViewport(dialog);
+        var result = await dialog.ShowDialog<TResult>(this);
+        if (returnFocus)
+        {
+            ReturnFocusToViewport();
+        }
+
+        return result;
+    }
+
+    private async Task ShowAnchoredDialogAsync(Window dialog, bool returnFocus = true)
+    {
+        AnchorDialogToViewport(dialog);
+        await dialog.ShowDialog(this);
+        if (returnFocus)
+        {
+            ReturnFocusToViewport();
+        }
     }
 
     private void AnchorDialogToViewport(Window dialog)
