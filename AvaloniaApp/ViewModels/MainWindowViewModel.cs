@@ -307,92 +307,56 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     }
 
     // ── Toolbar handlers ──────────────────────────────────────────────────────
-    private void NewSketch()
+    // Creates a FeatureNodeUndoAction, pushes it (Execute is called inside Push), updates status.
+    // viewportScript uses {name} as a placeholder for the safe (single-quote-escaped) node name.
+    private void PushFeatureNode(string icon, string featureType, string displayPrefix,
+                                 string? viewportScript, string status)
     {
         if (FeatureNodes.Count == 0) return;
-        var name = $"Sketch {FeatureNodes[0].Children.Count + 1}";
-        var action = new AddSceneObjectAction(_scene, name, "sketch");
-        _history.Push(action);
-        var node = MakeNode("⬜", name, "sketch");
-        node.SceneObjectId = _scene.Objects.FirstOrDefault(o => o.Name == name)?.Id;
-        FeatureNodes[0].Children.Add(node);
-        _ = ViewportService?.ExecuteScriptAsync(
-            $"viewer.addSketchPlane('{name.Replace("'", "")}'); viewer.fitView();");
-        StatusMessage = $"{name} — sketch plane added. Define profile in the AI panel.";
-        RuntimeLog.Info("VM", $"New sketch '{name}' created.");
+        var count = FeatureNodes[0].Children.Count + 1;
+        var name  = $"{displayPrefix} {count}";
+        var node  = MakeNode(icon, name, featureType);
+        var safe  = name.Replace("'", "");
+        var script = viewportScript?.Replace("{name}", safe);
+        _history.Push(new FeatureNodeUndoAction(
+            _scene, FeatureNodes[0].Children, node, ViewportService, script));
+        StatusMessage = status.Replace("{name}", name);
+        RuntimeLog.Info("VM", $"Created '{name}' ({featureType})");
     }
+
+    private void NewSketch()
+        => PushFeatureNode("⬜", "sketch", "Sketch",
+            "viewer.addSketchPlane('{name}'); viewer.fitView();",
+            "{name} — sketch plane added. Define profile in the AI panel.");
 
     private void Extrude()
-    {
-        if (FeatureNodes.Count == 0) return;
-        var name = $"Extrude {FeatureNodes[0].Children.Count + 1}";
-        var action = new AddSceneObjectAction(_scene, name, "extrude");
-        _history.Push(action);
-        var node = MakeNode("⬆", name, "extrude");
-        node.SceneObjectId = _scene.Objects.FirstOrDefault(o => o.Name == name)?.Id;
-        FeatureNodes[0].Children.Add(node);
-        // Push a default box to the viewport as a placeholder for the extrude
-        _ = ViewportService?.ExecuteScriptAsync($"viewer.addBox('{name.Replace("'", "")}', 100, 50, 30); viewer.fitView();");
-        StatusMessage = $"{name} added. Adjust dimensions in the properties panel.";
-    }
+        => PushFeatureNode("⬆", "extrude", "Extrude",
+            "viewer.addBox('{name}', 100, 50, 30); viewer.fitView();",
+            "{name} added. Adjust dimensions in the properties panel.");
 
     private void Revolve()
-    {
-        if (FeatureNodes.Count == 0) return;
-        var name = $"Revolve {FeatureNodes[0].Children.Count + 1}";
-        _history.Push(new AddSceneObjectAction(_scene, name, "revolve"));
-        var node = MakeNode("↻", name, "revolve");
-        node.SceneObjectId = _scene.Objects.FirstOrDefault(o => o.Name == name)?.Id;
-        FeatureNodes[0].Children.Add(node);
-        _ = ViewportService?.ExecuteScriptAsync($"viewer.addCylinder('{name.Replace("'", "")}', 40, 80, 32); viewer.fitView();");
-        StatusMessage = $"{name} added — select profile and axis to refine.";
-    }
+        => PushFeatureNode("↻", "revolve", "Revolve",
+            "viewer.addCylinder('{name}', 40, 80, 32); viewer.fitView();",
+            "{name} added — select profile and axis to refine.");
 
     private void Loft()
-    {
-        if (FeatureNodes.Count == 0) return;
-        var name = $"Loft {FeatureNodes[0].Children.Count + 1}";
-        _history.Push(new AddSceneObjectAction(_scene, name, "loft"));
-        var node = MakeNode("⤵", name, "loft");
-        node.SceneObjectId = _scene.Objects.FirstOrDefault(o => o.Name == name)?.Id;
-        FeatureNodes[0].Children.Add(node);
-        _ = ViewportService?.ExecuteScriptAsync($"viewer.addBox('{name.Replace("'", "")}', 80, 120, 80); viewer.fitView();");
-        StatusMessage = $"{name} added — select profiles to define the loft.";
-    }
+        => PushFeatureNode("⤵", "loft", "Loft",
+            "viewer.addBox('{name}', 80, 120, 80); viewer.fitView();",
+            "{name} added — select profiles to define the loft.");
 
     private void Shell()         => StatusMessage = "Shell: select faces to remove.";
+
     private void BooleanUnion()
-    {
-        if (FeatureNodes.Count == 0) return;
-        var name = $"Union {FeatureNodes[0].Children.Count + 1}";
-        _history.Push(new AddSceneObjectAction(_scene, name, "boolean-union"));
-        var node = MakeNode("⊕", name, "boolean-union");
-        node.SceneObjectId = _scene.Objects.FirstOrDefault(o => o.Name == name)?.Id;
-        FeatureNodes[0].Children.Add(node);
-        StatusMessage = $"{name} — select two bodies to merge.";
-    }
+        => PushFeatureNode("⊕", "boolean-union", "Union",
+            null, "{name} — select two bodies to merge.");
 
     private void BooleanSubtract()
-    {
-        if (FeatureNodes.Count == 0) return;
-        var name = $"Subtract {FeatureNodes[0].Children.Count + 1}";
-        _history.Push(new AddSceneObjectAction(_scene, name, "boolean-subtract"));
-        var node = MakeNode("⊖", name, "boolean-subtract");
-        node.SceneObjectId = _scene.Objects.FirstOrDefault(o => o.Name == name)?.Id;
-        FeatureNodes[0].Children.Add(node);
-        StatusMessage = $"{name} — select target body, then tool body.";
-    }
+        => PushFeatureNode("⊖", "boolean-subtract", "Subtract",
+            null, "{name} — select target body, then tool body.");
 
     private void BooleanIntersect()
-    {
-        if (FeatureNodes.Count == 0) return;
-        var name = $"Intersect {FeatureNodes[0].Children.Count + 1}";
-        _history.Push(new AddSceneObjectAction(_scene, name, "boolean-intersect"));
-        var node = MakeNode("⊗", name, "boolean-intersect");
-        node.SceneObjectId = _scene.Objects.FirstOrDefault(o => o.Name == name)?.Id;
-        FeatureNodes[0].Children.Add(node);
-        StatusMessage = $"{name} — select bodies to intersect.";
-    }
+        => PushFeatureNode("⊗", "boolean-intersect", "Intersect",
+            null, "{name} — select bodies to intersect.");
     private void AiGenerate()    => StatusMessage = "AI: enter a description in the AI panel →";
     private void FocusAiPanel()  => StatusMessage = "AI panel focused.";
     private void AddFeature()    => StatusMessage = "Select feature type to add.";
