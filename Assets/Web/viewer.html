@@ -220,7 +220,7 @@ window.viewer = {
     const orphans = [];
     scene.traverse(obj => { if (obj.name.endsWith('_edges')) orphans.push(obj); });
     orphans.forEach(obj => scene.remove(obj));
-    if (_selectedMesh) { _selectedMesh.material.emissive?.set(0x000000); _selectedMesh = null; }
+    if (_selectedMesh) { _applyHighlight(_selectedMesh, false); _selectedMesh = null; }
     setStatus('Scene cleared');
   },
 
@@ -266,11 +266,8 @@ window.viewer = {
     Object.values(meshObjects).forEach(mesh => {
       mesh.material = on ? wireframeMaterial.clone() : defaultMaterial.clone();
     });
-    // Re-apply selection highlight on the selected mesh after material swap
-    // (MeshBasicMaterial used in wireframe mode has no emissive property)
-    if (_selectedMesh && !on && _selectedMesh.material?.emissive) {
-      _selectedMesh.material.emissive.set(0x224488);
-    }
+    // Re-apply selection highlight after material swap
+    _applyHighlight(_selectedMesh, true);
     setStatus(on ? 'Wireframe on' : 'Solid view');
   },
 
@@ -294,6 +291,29 @@ function setStatus(msg) {
   statusEl.textContent = msg;
 }
 
+// ── Shared raycaster + cursor state ──────────────────────────────────────────
+const _raycaster   = new THREE.Raycaster();
+const _groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // XZ at y=0
+const _hitPoint    = new THREE.Vector3();
+let _lastCursorMsg = 0;
+
+// Applies or clears a selection highlight. Works in both solid (emissive) and
+// wireframe (color shift) modes.
+function _applyHighlight(mesh, on) {
+  if (!mesh) return;
+  if (mesh.material?.emissive) {
+    mesh.material.emissive.set(on ? 0x224488 : 0x000000);
+  } else if (mesh.material?.color) {
+    if (on) {
+      mesh.material._origHex = mesh.material.color.getHex();
+      mesh.material.color.set(0x88aaff);
+    } else if (mesh.material._origHex !== undefined) {
+      mesh.material.color.set(mesh.material._origHex);
+      delete mesh.material._origHex;
+    }
+  }
+}
+
 // ── Click-to-select → host app ────────────────────────────────────────────────
 renderer.domElement.addEventListener('click', (e) => {
   const rect = renderer.domElement.getBoundingClientRect();
@@ -301,30 +321,20 @@ renderer.domElement.addEventListener('click', (e) => {
      ((e.clientX - rect.left) / rect.width)  * 2 - 1,
     -((e.clientY - rect.top)  / rect.height) * 2 + 1
   );
-  _raycaster.setFromCamera(ndc, camera); // reuse shared raycaster
+  _raycaster.setFromCamera(ndc, camera);
   const hits = _raycaster.intersectObjects(Object.values(meshObjects), false);
   const hit = hits.length > 0 ? hits[0].object : null;
 
-  // Clear previous selection highlight
-  if (_selectedMesh && _selectedMesh !== hit) {
-    if (_selectedMesh.material.emissive) _selectedMesh.material.emissive.set(0x000000);
-  }
-  // Apply selection highlight
-  _selectedMesh = hit;
-  if (_selectedMesh?.material?.emissive) {
-    _selectedMesh.material.emissive.set(0x224488);
+  if (_selectedMesh !== hit) {
+    _applyHighlight(_selectedMesh, false); // clear old
+    _selectedMesh = hit;
+    _applyHighlight(_selectedMesh, true);  // apply new
   }
 
   if (window.chrome?.webview) {
     window.chrome.webview.postMessage(JSON.stringify({ type: 'select', name: hit?.name ?? null }));
   }
 });
-
-// ── Cursor position → host app (WebView2 postMessage, throttled ~10 Hz) ──────
-const _raycaster   = new THREE.Raycaster();
-const _groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // XZ at y=0
-const _hitPoint    = new THREE.Vector3();
-let _lastCursorMsg = 0;
 renderer.domElement.addEventListener('mousemove', (e) => {
   if (!window.chrome?.webview) return; // only in WebView2 host
   const now = Date.now();

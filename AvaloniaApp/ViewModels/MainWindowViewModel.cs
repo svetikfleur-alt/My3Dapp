@@ -304,10 +304,13 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         if (path is null) return;
 
         StatusMessage = $"Exporting to {Path.GetFileName(path)}...";
-        var first = _scene.Objects.FirstOrDefault();
-        if (first is null) { StatusMessage = "Nothing to export."; return; }
 
-        await _models.ExportAsync(first.Id, path);
+        // Prefer the selected feature node's scene object; fall back to first in scene
+        Guid? exportId = SelectedFeatureNode?.SceneObjectId
+            ?? _scene.Objects.FirstOrDefault()?.Id;
+        if (exportId is null) { StatusMessage = "Nothing to export."; return; }
+
+        await _models.ExportAsync(exportId.Value, path);
         StatusMessage = $"Exported: {Path.GetFileName(path)}";
     }
 

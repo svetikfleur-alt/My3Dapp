@@ -21,34 +21,26 @@ public partial class MainWindow : Window
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
     }
 
-    protected override void OnApplyTemplate(Avalonia.Controls.Primitives.TemplateAppliedEventArgs e)
-    {
-        base.OnApplyTemplate(e);
-        // Enter (without Shift) sends the AI prompt; Shift+Enter inserts a newline
-        var inputBox = this.FindControl<TextBox>("AiInputBox");
-        if (inputBox != null)
-            inputBox.KeyDown += OnAiInputKeyDown;
-    }
-
-    private void OnAiInputKeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
-    {
-        if (e.Key == Avalonia.Input.Key.Enter &&
-            e.KeyModifiers == Avalonia.Input.KeyModifiers.None)
-        {
-            if (DataContext is MainWindowViewModel vm && vm.AiSendCommand.CanExecute(null))
-            {
-                vm.AiSendCommand.Execute(null);
-                e.Handled = true;
-            }
-        }
-    }
-
     private async void OnOpened(object? sender, EventArgs e)
     {
         if (DataContext is not MainWindowViewModel vm) return;
 
         // Inject dialog service so VM can open file pickers without referencing Avalonia directly
         vm.FileDialogs = new FileDialogService(this);
+
+        // Enter (no modifiers) submits AI prompt; Shift+Enter inserts newline.
+        // Tunnel phase intercepts before TextBox's own AcceptsReturn handler.
+        var inputBox = this.FindControl<TextBox>("AiInputBox");
+        if (inputBox != null)
+            inputBox.AddHandler(TextBox.KeyDownEvent, OnAiInputKeyDown,
+                Avalonia.Interactivity.RoutingStrategies.Tunnel);
+
+        // Auto-scroll AI chat to newest message whenever the collection changes
+        var scroll = this.FindControl<Avalonia.Controls.ScrollViewer>("AiScrollViewer");
+        if (scroll != null)
+            vm.AiMessages.CollectionChanged += (_, _) =>
+                Avalonia.Threading.Dispatcher.UIThread.Post(
+                    () => scroll.ScrollToEnd(), Avalonia.Threading.DispatcherPriority.Background);
 
         var host = this.FindControl<Border>("ViewportHost");
         if (host is null) return;
@@ -64,6 +56,17 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             RuntimeLog.Error("MainWindow", "Failed to initialize viewport.", ex);
+        }
+    }
+
+    private void OnAiInputKeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
+    {
+        if (e.Key != Avalonia.Input.Key.Enter) return;
+        if (e.KeyModifiers != Avalonia.Input.KeyModifiers.None) return; // Shift+Enter → newline
+        if (DataContext is MainWindowViewModel vm && vm.AiSendCommand.CanExecute(null))
+        {
+            vm.AiSendCommand.Execute(null);
+            e.Handled = true;
         }
     }
 

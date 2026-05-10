@@ -196,7 +196,7 @@
                     </Grid>
 
                     <!-- Chat history — x:DataType on DataTemplate for compiled bindings -->
-                    <ScrollViewer Margin="8,0" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer Name="AiScrollViewer" Margin="8,0" VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding AiMessages}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:AiMessage">
