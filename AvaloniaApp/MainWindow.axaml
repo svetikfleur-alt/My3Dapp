@@ -937,7 +937,8 @@
             <TreeView.ItemTemplate>
               <TreeDataTemplate DataType="vm:FeatureNodeViewModel" ItemsSource="{Binding Children}">
                 <Grid ColumnDefinitions="20,*" RowDefinitions="Auto,Auto" Margin="0,1,0,1"
-                      Opacity="{Binding BodyOpacity}">
+                      Opacity="{Binding BodyOpacity}"
+                      ToolTip.Tip="{Binding TooltipText}">
                   <Grid.ContextMenu>
                     <ContextMenu IsVisible="{Binding IsSelectable}">
                       <MenuItem Header="Start Sketch"

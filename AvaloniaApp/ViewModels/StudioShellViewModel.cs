@@ -2251,7 +2251,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         {
             foreach (var feature in body.Features)
             {
-                var node = BuildFeatureNode(body, feature, editingSketchId, body.Visible);
+                var node = BuildFeatureNode(project, body, feature, editingSketchId, body.Visible);
                 if (feature.Kind == CadFeatureKind.Sketch)
                 {
                     sketchRoot.Children.Add(node);
@@ -2501,7 +2501,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         return isActive ? "Selected reference plane" : "Primary sketch plane";
     }
 
-    private static FeatureNodeViewModel BuildFeatureNode(CadBody body, CadFeature feature, Guid editingSketchId = default, bool isBodyVisible = true)
+    private static FeatureNodeViewModel BuildFeatureNode(CadProject project, CadBody body, CadFeature feature, Guid editingSketchId = default, bool isBodyVisible = true)
     {
         var iconKind = feature.Kind switch
         {
@@ -2549,12 +2549,22 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
         var selectionKind = feature.Kind == CadFeatureKind.Sketch ? CadEntityKind.Sketch : CadEntityKind.Feature;
         var isEditing = feature.Kind == CadFeatureKind.Sketch && feature.Id == editingSketchId;
+        var tooltipText = string.Empty;
+        var secondaryText = isEditing ? "editing…" : $"{body.Name} | {BuildFeatureSummary(feature)}";
+        if (feature is SketchFeature sketchFeature)
+        {
+            tooltipText = BuildSketchDefinitionTooltip(project, sketchFeature, isEditing);
+            secondaryText = isEditing
+                ? $"editing… | {tooltipText}"
+                : $"{body.Name} | {BuildFeatureSummary(feature)} | {tooltipText}";
+        }
 
         var node = new FeatureNodeViewModel(
             feature.Name,
             iconKind,
             typeLabel,
-            isEditing ? "editing…" : $"{body.Name} | {BuildFeatureSummary(feature)}",
+            secondaryText,
+            tooltipText,
             selectionKind,
             feature.Id,
             isSelectable: true,
@@ -2575,6 +2585,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                     "sketch-entity",
                     entity.IsConstruction ? "Reference" : "Entity",
                     BuildSketchEntitySummary(entity),
+                    BuildSketchEntitySummary(entity),
                     CadEntityKind.SketchEntity,
                     entity.Id,
                     isSelectable: true));
@@ -2586,6 +2597,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                     dimension.Label,
                     "dimension",
                     "Dimension",
+                    BuildSketchDimensionSummary(dimension),
                     BuildSketchDimensionSummary(dimension)));
             }
 
@@ -2595,6 +2607,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                     constraint.Kind.ToString(),
                     "constraint",
                     "Constraint",
+                    constraint.Description,
                     constraint.Description));
             }
         }
@@ -2658,6 +2671,28 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             BooleanFeature boolean => $"{boolean.Operation} | {boolean.BodyAName} + {boolean.BodyBName}",
             PlaceholderFeature placeholder => $"Planned | {placeholder.PlaceholderKind}",
             _ => "CAD feature"
+        };
+    }
+
+    private static string BuildSketchDefinitionTooltip(CadProject project, SketchFeature sketch, bool isEditing)
+    {
+        var session = isEditing && project.ActiveSketchSession is not null
+            ? project.ActiveSketchSession
+            : new CadSketchSession
+            {
+                PlaneId = sketch.Id,
+                PlaneName = sketch.PlaneName,
+                DraftEntities = sketch.Entities.ToList(),
+                ManualConstraints = sketch.Constraints.ToList(),
+                ManualDimensions = sketch.Dimensions.ToList()
+            };
+
+        var dof = CadProjectStore.ComputeSketchDof(session);
+        return dof switch
+        {
+            0 => "Sketch fully defined.",
+            < 0 => "Sketch overdefined.",
+            _ => "Sketch not fully defined."
         };
     }
 

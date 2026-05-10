@@ -1184,23 +1184,23 @@ public sealed class WebViewportHost : NativeControlHost
     }
     #vcube {
       position: fixed;
-      top: 10px;
-      right: 10px;
-      width: 120px;
-      height: 120px;
+      top: 12px;
+      right: 12px;
+      width: 92px;
+      height: 92px;
       z-index: 16;
       cursor: pointer;
-      border-radius: 6px;
+      border-radius: 8px;
       overflow: hidden;
       touch-action: none;
     }
     #view-nav {
       position: fixed;
-      top: 138px;
-      right: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
+      top: 110px;
+      right: 12px;
+      display: grid;
+      grid-template-columns: repeat(2, 42px);
+      gap: 4px;
       z-index: 15;
       pointer-events: auto;
     }
@@ -1234,9 +1234,13 @@ public sealed class WebViewportHost : NativeControlHost
   <div id="hud">Reference planes: Top / Front / Right</div>
   <div id="view-nav">
     <button type="button" data-view="iso">Iso</button>
+    <button type="button" data-view="iso-ne">NE</button>
+    <button type="button" data-view="iso-nw">NW</button>
     <button type="button" data-view="top">Top</button>
     <button type="button" data-view="front">Front</button>
     <button type="button" data-view="right">Right</button>
+    <button type="button" data-view="iso-se">SE</button>
+    <button type="button" data-view="iso-sw">SW</button>
     <button type="button" data-view="bottom">Bot</button>
     <button type="button" data-view="back">Back</button>
     <button type="button" data-view="left">Left</button>
@@ -1775,15 +1779,39 @@ public sealed class WebViewportHost : NativeControlHost
           return currentTheme === 'Dark' ? 0xd4e8ff : 0x79a8e4;
         }
 
-        if (selected) {
-          return currentTheme === 'Dark' ? 0x5aaaff : 0x0078d4;
-        }
-
         if (sketch?.isDraft) {
           return currentTheme === 'Dark' ? 0xa5cdff : 0x3e7ac4;
         }
 
         return currentTheme === 'Dark' ? 0xb8c4d6 : 0x5f708b;
+      }
+
+      function constrainedSketchColor(selected = false) {
+        return currentTheme === 'Dark'
+          ? (selected ? 0xf2f6fb : 0xe4ebf2)
+          : 0x182029;
+      }
+
+      function unconstrainedSketchColor(selected = false) {
+        return currentTheme === 'Dark'
+          ? (selected ? 0x9ed0ff : 0x78b0ff)
+          : (selected ? 0x0f75d8 : 0x2660d6);
+      }
+
+      function sketchCurveColor(sketch, curve, selected = false) {
+        if (curve?.isConstruction === true) {
+          return currentTheme === 'Dark' ? 0x7ab8e0 : 0x3a7bbf;
+        }
+
+        if (sketch?.isPreview) {
+          return sketchColor(sketch, selected);
+        }
+
+        if (sketch?.isFullyDefined === true || curve?.isConstrained === true) {
+          return constrainedSketchColor(selected);
+        }
+
+        return unconstrainedSketchColor(selected);
       }
 
       function orientPlane(mesh, kind) {
@@ -1981,9 +2009,7 @@ public sealed class WebViewportHost : NativeControlHost
               const pointGeometry = new THREE.BufferGeometry();
               pointGeometry.setAttribute('position', new THREE.Float32BufferAttribute(curve.points, 3));
               const pointMaterial = new THREE.PointsMaterial({
-                color: isConstructionPoint
-                  ? (currentTheme === 'Dark' ? 0x7ab8e0 : 0x3a7bbf)
-                  : sketchColor(sketch, false),
+                color: sketchCurveColor(sketch, curve, false),
                 map: createSketchPointTexture(sketch.isPreview),
                 size: sketch.isPreview ? 6 : 4,
                 sizeAttenuation: false,
@@ -1995,6 +2021,7 @@ public sealed class WebViewportHost : NativeControlHost
               });
               const points = new THREE.Points(pointGeometry, pointMaterial);
               points.userData.isConstruction = isConstructionPoint;
+              points.userData.isConstrained = curve.isConstrained === true;
               points.userData.isPreview = sketch.isPreview === true;
               points.renderOrder = 9;
               points.frustumCulled = false;
@@ -2019,13 +2046,14 @@ public sealed class WebViewportHost : NativeControlHost
                   toneMapped: false
                 })
               : new THREE.LineBasicMaterial({
-                  color: sketchColor(sketch, false),
+                  color: sketchCurveColor(sketch, curve, false),
                   transparent: true,
                   opacity: sketch.isPreview ? 0.72 : (sketch.isDraft ? 0.96 : 0.82),
                   toneMapped: false
                 });
             const line = new THREE.Line(geometry, material);
             line.userData.isConstruction = isConstructionCurve;
+            line.userData.isConstrained = curve.isConstrained === true;
             line.userData.isPreview = sketch.isPreview === true;
             if (isConstructionCurve) {
               line.computeLineDistances();
@@ -2039,6 +2067,7 @@ public sealed class WebViewportHost : NativeControlHost
             continue;
           }
 
+          group.userData.isFullyDefined = sketch.isFullyDefined === true;
           sketchMap.set(sketch.sketchId, group);
           scene.add(group);
         }
@@ -2357,7 +2386,9 @@ public sealed class WebViewportHost : NativeControlHost
             const isConstructionChild = child.userData?.isConstruction === true;
             child.material.color.setHex(isConstructionChild
               ? (currentTheme === 'Dark' ? 0x7ab8e0 : 0x3a7bbf)
-              : sketchColor(sketchGroup.userData, isSelected));
+              : (sketchGroup.userData.isFullyDefined === true || child.userData?.isConstrained === true
+                  ? constrainedSketchColor(isSelected)
+                  : unconstrainedSketchColor(isSelected)));
             child.material.opacity = sketchGroup.userData.isPreview
               ? 0.72
               : (isConstructionChild ? 0.65 : (sketchGroup.userData.isDraft ? 0.96 : (isSelected ? 1.0 : 0.82)));

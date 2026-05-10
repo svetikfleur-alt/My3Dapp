@@ -762,7 +762,10 @@ public sealed class StudioWorkspaceController
         {
             foreach (var sketch in body.Features.OfType<SketchFeature>())
             {
-                var curves = BuildSketchCurves(sketch.PlaneName, sketch.Entities);
+                var probe = BuildSketchDefinitionProbe(sketch);
+                var displayConstraints = MergeDisplayConstraints(sketch.GetBasicConstraints(), sketch.Constraints);
+                var constrainedIds = BuildConstrainedEntityIds(displayConstraints, sketch.Dimensions);
+                var curves = BuildSketchCurves(sketch.PlaneName, sketch.Entities, constrainedIds);
                 if (curves.Count == 0)
                 {
                     continue;
@@ -776,6 +779,7 @@ public sealed class StudioWorkspaceController
                     IsDraft = false,
                     IsPreview = false,
                     IsClosed = sketch.IsClosedProfile,
+                    IsFullyDefined = CadProjectStore.ComputeSketchDof(probe) <= 0,
                     Curves = curves,
                     AngleDimensions = BuildAngleDimensions(sketch.PlaneName, sketch.Entities, sketch.Dimensions),
                     LinearDimensions = BuildLinearDimensions(sketch.PlaneName, sketch.Entities, sketch.Dimensions),
@@ -786,7 +790,9 @@ public sealed class StudioWorkspaceController
 
         if (project.ActiveSketchSession is { } session)
         {
-            var curves = BuildSketchCurves(session.PlaneName, session.DraftEntities);
+            var draftConstraints = MergeDisplayConstraints(new SketchFeature { Entities = session.DraftEntities.ToList() }.GetBasicConstraints(), session.ManualConstraints);
+            var draftConstrainedIds = BuildConstrainedEntityIds(draftConstraints, session.ManualDimensions);
+            var curves = BuildSketchCurves(session.PlaneName, session.DraftEntities, draftConstrainedIds);
             if (curves.Count > 0)
             {
                 sketches.Add(new ViewportRenderSketch
@@ -797,6 +803,7 @@ public sealed class StudioWorkspaceController
                     IsDraft = true,
                     IsPreview = false,
                     IsClosed = IsClosedDraft(session.DraftEntities),
+                    IsFullyDefined = CadProjectStore.ComputeSketchDof(session) <= 0,
                     Curves = curves,
                     AngleDimensions = BuildAngleDimensions(session.PlaneName, session.DraftEntities, session.ManualDimensions),
                     LinearDimensions = BuildLinearDimensions(session.PlaneName, session.DraftEntities, session.ManualDimensions),
@@ -804,7 +811,7 @@ public sealed class StudioWorkspaceController
                 });
             }
 
-            var previewCurves = BuildSketchCurves(session.PlaneName, session.PreviewEntities);
+            var previewCurves = BuildSketchCurves(session.PlaneName, session.PreviewEntities, []);
             if (previewCurves.Count > 0)
             {
                 sketches.Add(new ViewportRenderSketch
@@ -815,6 +822,7 @@ public sealed class StudioWorkspaceController
                     IsDraft = false,
                     IsPreview = true,
                     IsClosed = IsClosedDraft(session.PreviewEntities),
+                    IsFullyDefined = false,
                     Curves = previewCurves
                 });
             }
@@ -823,7 +831,10 @@ public sealed class StudioWorkspaceController
         return sketches;
     }
 
-    private static IReadOnlyList<ViewportRenderSketchCurve> BuildSketchCurves(string planeName, IReadOnlyList<CadSketchEntity> entities)
+    private static IReadOnlyList<ViewportRenderSketchCurve> BuildSketchCurves(
+        string planeName,
+        IReadOnlyList<CadSketchEntity> entities,
+        IReadOnlySet<Guid> constrainedIds)
     {
         var curves = new List<ViewportRenderSketchCurve>();
         foreach (var entity in entities)
@@ -852,12 +863,80 @@ public sealed class StudioWorkspaceController
                 Kind = entity is CadSketchPoint ? "point" : "polyline",
                 Closed = entity is CadSketchCircle or CadSketchRectangle or CadSketchPolygon or CadSketchSlot or CadSketchPoint,
                 IsConstruction = entity.IsConstruction,
+                IsConstrained = constrainedIds.Contains(entity.Id),
                 EntityId = entity.Id,
                 EntityType = entity.EntityType
             });
         }
 
         return curves;
+    }
+
+    private static CadSketchSession BuildSketchDefinitionProbe(SketchFeature sketch)
+    {
+        return new CadSketchSession
+        {
+            PlaneId = sketch.Id,
+            PlaneName = sketch.PlaneName,
+            DraftEntities = sketch.Entities.ToList(),
+            ManualConstraints = sketch.Constraints.ToList(),
+            ManualDimensions = sketch.Dimensions.ToList()
+        };
+    }
+
+    private static IReadOnlySet<Guid> BuildConstrainedEntityIds(
+        IReadOnlyList<CadSketchConstraint> constraints,
+        IReadOnlyList<CadSketchDimension> dimensions)
+    {
+        var ids = new HashSet<Guid>();
+        foreach (var constraint in constraints)
+        {
+            foreach (var id in constraint.EntityIds)
+            {
+                ids.Add(id);
+            }
+        }
+
+        foreach (var dimension in dimensions)
+        {
+            if (dimension.IsDriven)
+            {
+                continue;
+            }
+
+            foreach (var id in dimension.EntityIds)
+            {
+                ids.Add(id);
+            }
+        }
+
+        return ids;
+    }
+
+    private static IReadOnlyList<CadSketchConstraint> MergeDisplayConstraints(
+        IReadOnlyList<CadSketchConstraint> inferred,
+        IReadOnlyList<CadSketchConstraint> manual)
+    {
+        var merged = new List<CadSketchConstraint>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var constraint in inferred.Concat(manual))
+        {
+            var key = ConstraintDisplayKey(constraint);
+            if (seen.Add(key))
+            {
+                merged.Add(constraint);
+            }
+        }
+
+        return merged;
+    }
+
+    private static string ConstraintDisplayKey(CadSketchConstraint constraint)
+    {
+        var ids = constraint.EntityIds
+            .OrderBy(id => id)
+            .Select(id => id.ToString("N"));
+        return $"{constraint.Kind}:{string.Join(",", ids)}";
     }
 
     private static bool IsClosedDraft(IReadOnlyList<CadSketchEntity> entities)

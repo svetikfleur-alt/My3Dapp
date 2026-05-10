@@ -10,6 +10,7 @@ public sealed class FeatureNodeViewModel
         string iconKind = "group",
         string typeLabel = "",
         string secondaryText = "",
+        string tooltipText = "",
         CadEntityKind entityKind = CadEntityKind.None,
         Guid entityId = default,
         bool isSelectable = false,
@@ -20,6 +21,7 @@ public sealed class FeatureNodeViewModel
         IconKind = iconKind;
         TypeLabel = typeLabel;
         SecondaryText = secondaryText;
+        TooltipText = tooltipText;
         EntityKind = entityKind;
         EntityId = entityId;
         IsSelectable = isSelectable;
@@ -34,6 +36,8 @@ public sealed class FeatureNodeViewModel
     public string TypeLabel { get; }
 
     public string SecondaryText { get; }
+
+    public string TooltipText { get; }
 
     public bool IsEditingSketch { get; init; }
 

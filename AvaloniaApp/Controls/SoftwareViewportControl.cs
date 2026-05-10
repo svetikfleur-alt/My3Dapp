@@ -586,7 +586,7 @@ internal sealed class SoftwareViewportControl : Control
                 : Color.FromArgb(170, 58, 123, 191);
         }
 
-        return baseColor;
+        return ResolveNormalSketchEntityColor(sketch, curve, false);
     }
 
     private void DrawOriginMarker(Graphics graphics)
@@ -975,13 +975,6 @@ internal sealed class SoftwareViewportControl : Control
                 : Color.FromArgb(150, 98, 146, 214);
         }
 
-        if (selected)
-        {
-            return _themeMode == StudioThemeMode.Dark
-                ? Color.FromArgb(90, 170, 255)
-                : Color.FromArgb(0, 120, 212);
-        }
-
         if (sketch.IsDraft)
         {
             return _themeMode == StudioThemeMode.Dark
@@ -992,6 +985,25 @@ internal sealed class SoftwareViewportControl : Control
         return _themeMode == StudioThemeMode.Dark
             ? Color.FromArgb(184, 196, 214)
             : Color.FromArgb(95, 112, 139);
+    }
+
+    private Color ResolveNormalSketchEntityColor(ViewportRenderSketch sketch, ViewportRenderSketchCurve curve, bool selected)
+    {
+        if (sketch.IsPreview)
+        {
+            return SketchColor(sketch, selected);
+        }
+
+        if (sketch.IsFullyDefined || curve.IsConstrained)
+        {
+            return _themeMode == StudioThemeMode.Dark
+                ? Color.FromArgb(selected ? 238 : 224, 232, 236, 242)
+                : Color.FromArgb(selected ? 255 : 235, 24, 31, 41);
+        }
+
+        return _themeMode == StudioThemeMode.Dark
+            ? Color.FromArgb(selected ? 230 : 210, 120, 176, 255)
+            : Color.FromArgb(selected ? 255 : 235, 38, 96, 214);
     }
 
     private void DrawSketchPoint(Graphics graphics, ViewportRenderSketch sketch, ViewportRenderSketchCurve curve, Color lineColor)

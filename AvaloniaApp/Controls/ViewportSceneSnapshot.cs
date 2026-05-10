@@ -133,6 +133,9 @@ public sealed class ViewportRenderSketch
     [JsonPropertyName("isClosed")]
     public bool IsClosed { get; init; }
 
+    [JsonPropertyName("isFullyDefined")]
+    public bool IsFullyDefined { get; init; }
+
     [JsonPropertyName("curves")]
     public IReadOnlyList<ViewportRenderSketchCurve> Curves { get; init; } = [];
 
@@ -159,6 +162,9 @@ public sealed class ViewportRenderSketchCurve
 
     [JsonPropertyName("isConstruction")]
     public bool IsConstruction { get; init; }
+
+    [JsonPropertyName("isConstrained")]
+    public bool IsConstrained { get; init; }
 
     [JsonPropertyName("entityId")]
     public Guid EntityId { get; init; }
