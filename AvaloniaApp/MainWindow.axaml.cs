@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Threading;
 using My3DApp.AvaloniaApp.Services;
 using My3DApp.AvaloniaApp.ViewModels;
 
@@ -12,13 +11,17 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        Opened += OnOpened;
+        Opened  += OnOpened;
         Closing += OnClosing;
+        KeyDown += OnKeyDown;
     }
 
     private async void OnOpened(object? sender, EventArgs e)
     {
         if (DataContext is not MainWindowViewModel vm) return;
+
+        // Inject dialog service so VM can open file pickers without referencing Avalonia directly
+        vm.FileDialogs = new FileDialogService(this);
 
         var host = this.FindControl<Border>("ViewportHost");
         if (host is null) return;
@@ -41,5 +44,27 @@ public partial class MainWindow : Window
     {
         _viewport?.Dispose();
         RuntimeLog.Info("MainWindow", "Window closing.");
+    }
+
+    private void OnKeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel vm) return;
+        if (e.KeyModifiers != Avalonia.Input.KeyModifiers.None) return; // let Ctrl+Z etc. go to menu
+
+        switch (e.Key)
+        {
+            case Avalonia.Input.Key.S when vm.NewSketchCommand.CanExecute(null):
+                vm.NewSketchCommand.Execute(null);
+                e.Handled = true;
+                break;
+            case Avalonia.Input.Key.E when vm.ExtrudeCommand.CanExecute(null):
+                vm.ExtrudeCommand.Execute(null);
+                e.Handled = true;
+                break;
+            case Avalonia.Input.Key.Escape:
+                vm.StatusMessage = "Ready";
+                e.Handled = true;
+                break;
+        }
     }
 }

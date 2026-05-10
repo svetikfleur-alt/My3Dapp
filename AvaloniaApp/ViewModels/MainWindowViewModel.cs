@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Text;
 using System.Windows.Input;
 using My3DApp.AvaloniaApp.Services;
 using My3DApp.Backends;
@@ -11,10 +13,12 @@ public class MainWindowViewModel : ViewModelBase
     private readonly AiBackend _ai = new();
     private readonly SceneGraph _scene = new();
     private readonly UndoRedoStack _history = new();
+    private readonly ModelManager _models;
 
-    // ── Viewport ─────────────────────────────────────────────────────────────
+    public IFileDialogService? FileDialogs { get; set; }
     public ViewportService? ViewportService { get; set; }
 
+    // ── Bindable state ────────────────────────────────────────────────────────
     private bool _isViewportLoading = true;
     public bool IsViewportLoading
     {
@@ -22,7 +26,6 @@ public class MainWindowViewModel : ViewModelBase
         set => SetField(ref _isViewportLoading, value);
     }
 
-    // ── Window state ──────────────────────────────────────────────────────────
     private string _windowTitle = "My3DApp — AI Native CAD";
     public string WindowTitle
     {
@@ -51,26 +54,6 @@ public class MainWindowViewModel : ViewModelBase
         set => SetField(ref _selectionInfo, value);
     }
 
-    // ── Feature Tree ─────────────────────────────────────────────────────────
-    public ObservableCollection<FeatureNode> FeatureNodes { get; } = new()
-    {
-        new FeatureNode { Icon = "📦", Name = "Part Studio 1", FeatureType = "root", Children =
-        {
-            new FeatureNode { Icon = "⬜", Name = "Sketch 1", FeatureType = "sketch" },
-            new FeatureNode { Icon = "⬆", Name = "Extrude 1", FeatureType = "extrude" },
-        }}
-    };
-
-    // ── AI Panel ─────────────────────────────────────────────────────────────
-    public ObservableCollection<AiMessage> AiMessages { get; } = new()
-    {
-        new AiMessage
-        {
-            Role = "AI",
-            Content = "Hello! I'm your AI Design Assistant. Describe what you'd like to model and I'll help you build it."
-        }
-    };
-
     private string _aiPrompt = string.Empty;
     public string AiPrompt
     {
@@ -85,66 +68,87 @@ public class MainWindowViewModel : ViewModelBase
         set => SetField(ref _aiIsThinking, value);
     }
 
-    // ── Commands ──────────────────────────────────────────────────────────────
-    public ICommand NewPartStudioCommand { get; }
-    public ICommand OpenCommand { get; }
-    public ICommand ExportCommand { get; }
-    public ICommand ExitCommand { get; }
-    public ICommand UndoCommand { get; }
-    public ICommand RedoCommand { get; }
-    public ICommand SetViewCommand { get; }
-    public ICommand NewSketchCommand { get; }
-    public ICommand ExtrudeCommand { get; }
-    public ICommand RevolveCommand { get; }
-    public ICommand LoftCommand { get; }
-    public ICommand ShellCommand { get; }
-    public ICommand BooleanUnionCommand { get; }
-    public ICommand BooleanSubtractCommand { get; }
-    public ICommand BooleanIntersectCommand { get; }
-    public ICommand AiGenerateCommand { get; }
-    public ICommand AiSendCommand { get; }
-    public ICommand FocusAiPanelCommand { get; }
-    public ICommand AiGenerateSketchCommand { get; }
-    public ICommand AiSuggestFeatureCommand { get; }
-    public ICommand AddFeatureCommand { get; }
-    public ICommand FitViewCommand { get; }
-    public ICommand ResetViewCommand { get; }
-    public ICommand WireframeCommand { get; }
-    public ICommand SolidViewCommand { get; }
-    public ICommand OpenDocsCommand { get; }
-    public ICommand ShowAboutCommand { get; }
+    // ── Collections ───────────────────────────────────────────────────────────
+    public ObservableCollection<FeatureNode> FeatureNodes { get; } = new()
+    {
+        new FeatureNode { Icon = "📦", Name = "Part Studio 1", FeatureType = "root", Children =
+        {
+            new FeatureNode { Icon = "⬜", Name = "Sketch 1",   FeatureType = "sketch" },
+            new FeatureNode { Icon = "⬆", Name = "Extrude 1",  FeatureType = "extrude" },
+        }}
+    };
 
+    public ObservableCollection<AiMessage> AiMessages { get; } = new()
+    {
+        new AiMessage
+        {
+            Role    = "AI",
+            Content = "Hello! I'm your AI Design Assistant. Describe what you'd like to model and I'll help you build it."
+        }
+    };
+
+    // ── Commands ──────────────────────────────────────────────────────────────
+    public ICommand NewPartStudioCommand    { get; private set; } = null!;
+    public ICommand OpenCommand             { get; private set; } = null!;
+    public ICommand ExportCommand           { get; private set; } = null!;
+    public ICommand ExitCommand             { get; private set; } = null!;
+    public ICommand UndoCommand             { get; private set; } = null!;
+    public ICommand RedoCommand             { get; private set; } = null!;
+    public ICommand SetViewCommand          { get; private set; } = null!;
+    public ICommand NewSketchCommand        { get; private set; } = null!;
+    public ICommand ExtrudeCommand          { get; private set; } = null!;
+    public ICommand RevolveCommand          { get; private set; } = null!;
+    public ICommand LoftCommand             { get; private set; } = null!;
+    public ICommand ShellCommand            { get; private set; } = null!;
+    public ICommand BooleanUnionCommand     { get; private set; } = null!;
+    public ICommand BooleanSubtractCommand  { get; private set; } = null!;
+    public ICommand BooleanIntersectCommand { get; private set; } = null!;
+    public ICommand AiGenerateCommand       { get; private set; } = null!;
+    public ICommand AiSendCommand           { get; private set; } = null!;
+    public ICommand FocusAiPanelCommand     { get; private set; } = null!;
+    public ICommand AiGenerateSketchCommand { get; private set; } = null!;
+    public ICommand AiSuggestFeatureCommand { get; private set; } = null!;
+    public ICommand AddFeatureCommand       { get; private set; } = null!;
+    public ICommand FitViewCommand          { get; private set; } = null!;
+    public ICommand ResetViewCommand        { get; private set; } = null!;
+    public ICommand WireframeCommand        { get; private set; } = null!;
+    public ICommand SolidViewCommand        { get; private set; } = null!;
+    public ICommand OpenDocsCommand         { get; private set; } = null!;
+    public ICommand ShowAboutCommand        { get; private set; } = null!;
+
+    // ── Constructor ───────────────────────────────────────────────────────────
     public MainWindowViewModel()
     {
+        _models = new ModelManager(_scene);
         _history.StackChanged += OnHistoryChanged;
 
-        NewPartStudioCommand   = new RelayCommand(NewPartStudio);
-        OpenCommand            = new RelayCommand(Open);
-        ExportCommand          = new RelayCommand(Export);
-        ExitCommand            = new RelayCommand(Exit);
-        UndoCommand            = new RelayCommand(Undo, () => _history.CanUndo);
-        RedoCommand            = new RelayCommand(Redo, () => _history.CanRedo);
-        SetViewCommand         = new RelayCommand(p => SetView(p as string ?? "iso"));
-        NewSketchCommand       = new RelayCommand(NewSketch);
-        ExtrudeCommand         = new RelayCommand(Extrude);
-        RevolveCommand         = new RelayCommand(Revolve);
-        LoftCommand            = new RelayCommand(Loft);
-        ShellCommand           = new RelayCommand(Shell);
-        BooleanUnionCommand    = new RelayCommand(BooleanUnion);
-        BooleanSubtractCommand = new RelayCommand(BooleanSubtract);
+        NewPartStudioCommand    = new RelayCommand(NewPartStudio);
+        OpenCommand             = new AsyncRelayCommand(OpenAsync);
+        ExportCommand           = new AsyncRelayCommand(ExportAsync);
+        ExitCommand             = new RelayCommand(Exit);
+        UndoCommand             = new RelayCommand(Undo, () => _history.CanUndo);
+        RedoCommand             = new RelayCommand(Redo, () => _history.CanRedo);
+        SetViewCommand          = new RelayCommand(p => SetView(p as string ?? "iso"));
+        NewSketchCommand        = new RelayCommand(NewSketch);
+        ExtrudeCommand          = new RelayCommand(Extrude);
+        RevolveCommand          = new RelayCommand(Revolve);
+        LoftCommand             = new RelayCommand(Loft);
+        ShellCommand            = new RelayCommand(Shell);
+        BooleanUnionCommand     = new RelayCommand(BooleanUnion);
+        BooleanSubtractCommand  = new RelayCommand(BooleanSubtract);
         BooleanIntersectCommand = new RelayCommand(BooleanIntersect);
-        AiGenerateCommand      = new RelayCommand(AiGenerate);
-        AiSendCommand          = new AsyncRelayCommand(AiSendAsync);
-        FocusAiPanelCommand    = new RelayCommand(FocusAiPanel);
+        AiGenerateCommand       = new RelayCommand(AiGenerate);
+        AiSendCommand           = new AsyncRelayCommand(AiSendAsync);
+        FocusAiPanelCommand     = new RelayCommand(FocusAiPanel);
         AiGenerateSketchCommand = new AsyncRelayCommand(AiGenerateSketchAsync);
         AiSuggestFeatureCommand = new AsyncRelayCommand(AiSuggestFeatureAsync);
-        AddFeatureCommand      = new RelayCommand(AddFeature);
-        FitViewCommand         = new AsyncRelayCommand(() => ViewportService?.FitViewAsync() ?? Task.CompletedTask);
-        ResetViewCommand       = new AsyncRelayCommand(() => ViewportService?.ResetViewAsync() ?? Task.CompletedTask);
-        WireframeCommand       = new AsyncRelayCommand(() => ViewportService?.SetWireframeAsync(true) ?? Task.CompletedTask);
-        SolidViewCommand       = new AsyncRelayCommand(() => ViewportService?.SetWireframeAsync(false) ?? Task.CompletedTask);
-        OpenDocsCommand        = new RelayCommand(() => OpenUrl("https://github.com/svetikfleur-alt/my3dapp"));
-        ShowAboutCommand       = new RelayCommand(ShowAbout);
+        AddFeatureCommand       = new RelayCommand(AddFeature);
+        FitViewCommand          = new AsyncRelayCommand(() => ViewportService?.FitViewAsync()   ?? Task.CompletedTask);
+        ResetViewCommand        = new AsyncRelayCommand(() => ViewportService?.ResetViewAsync() ?? Task.CompletedTask);
+        WireframeCommand        = new AsyncRelayCommand(() => ViewportService?.SetWireframeAsync(true)  ?? Task.CompletedTask);
+        SolidViewCommand        = new AsyncRelayCommand(() => ViewportService?.SetWireframeAsync(false) ?? Task.CompletedTask);
+        OpenDocsCommand         = new RelayCommand(() => OpenUrl("https://github.com/svetikfleur-alt/my3dapp"));
+        ShowAboutCommand        = new RelayCommand(ShowAbout);
     }
 
     // ── History ───────────────────────────────────────────────────────────────
@@ -152,47 +156,9 @@ public class MainWindowViewModel : ViewModelBase
     {
         ((RelayCommand)UndoCommand).NotifyCanExecuteChanged();
         ((RelayCommand)RedoCommand).NotifyCanExecuteChanged();
-        var undoDesc = _history.NextUndoDescription;
-        var redoDesc = _history.NextRedoDescription;
-        StatusMessage = undoDesc is null ? "Ready" : $"Undo: {undoDesc}";
-        _ = redoDesc; // available for future tooltip binding
     }
 
-    // ── Toolbar handlers ──────────────────────────────────────────────────────
-    private void NewSketch()
-    {
-        var sketchNum = FeatureNodes[0].Children.Count + 1;
-        var name = $"Sketch {sketchNum}";
-        var action = new AddSceneObjectAction(_scene, name, "sketch");
-        _history.Push(action);
-
-        var node = new FeatureNode { Icon = "⬜", Name = name, FeatureType = "sketch" };
-        FeatureNodes[0].Children.Add(node);
-        StatusMessage = "Sketch ready. Select a plane to begin.";
-        RuntimeLog.Info("VM", $"New sketch '{name}' created.");
-    }
-
-    private void Extrude()
-    {
-        StatusMessage = "Extrude: select sketch to extrude.";
-        var action = new AddSceneObjectAction(_scene, "Extrude", "extrude");
-        _history.Push(action);
-        var node = new FeatureNode { Icon = "⬆", Name = "Extrude", FeatureType = "extrude" };
-        FeatureNodes[0].Children.Add(node);
-    }
-
-    private void Revolve() => StatusMessage = "Revolve: select profile and axis.";
-    private void Loft()    => StatusMessage = "Loft: select profiles.";
-    private void Shell()   => StatusMessage = "Shell: select faces to remove.";
-
-    private void BooleanUnion()     => StatusMessage = "Boolean Union: select bodies.";
-    private void BooleanSubtract()  => StatusMessage = "Boolean Subtract: select target and tool bodies.";
-    private void BooleanIntersect() => StatusMessage = "Boolean Intersect: select bodies.";
-
-    private void AiGenerate()   => StatusMessage = "AI: Enter a description in the AI panel.";
-    private void FocusAiPanel() => StatusMessage = "AI panel focused.";
-    private void AddFeature()   => StatusMessage = "Select feature type to add.";
-
+    // ── Part Studio ───────────────────────────────────────────────────────────
     private void NewPartStudio()
     {
         _scene.Clear();
@@ -204,20 +170,102 @@ public class MainWindowViewModel : ViewModelBase
         _ = ViewportService?.ExecuteScriptAsync("viewer.clearScene();");
     }
 
-    private void Open()    => StatusMessage = "Open: not yet implemented.";
-    private void Export()  => StatusMessage = "Export: not yet implemented.";
-    private void Exit()    => Environment.Exit(0);
-    private void Undo()    { if (_history.Undo()) StatusMessage = "Undo complete."; }
-    private void Redo()    { if (_history.Redo()) StatusMessage = "Redo complete."; }
-
-    private void SetView(string view)
+    // ── File operations ───────────────────────────────────────────────────────
+    private async Task OpenAsync()
     {
-        StatusMessage = $"View: {view}";
-        _ = ViewportService?.SetViewAsync(view);
+        if (FileDialogs is null) { StatusMessage = "File dialog not ready."; return; }
+
+        var path = await FileDialogs.OpenFileAsync(
+            "Open 3D Model",
+            FileDialogService.AllCad,
+            FileDialogService.Stl,
+            FileDialogService.Obj,
+            FileDialogService.Step,
+            FileDialogService.ThreeMf);
+
+        if (path is null) return;
+
+        StatusMessage = $"Importing {Path.GetFileName(path)}...";
+        var obj = await _models.ImportAsync(path);
+        if (obj is null) { StatusMessage = "Import failed."; return; }
+
+        var node = new FeatureNode
+        {
+            Icon = "📥",
+            Name = Path.GetFileNameWithoutExtension(path),
+            FeatureType = Path.GetExtension(path).TrimStart('.')
+        };
+        if (FeatureNodes.Count > 0)
+            FeatureNodes[0].Children.Add(node);
+
+        // Load STL into viewport if applicable
+        if (path.EndsWith(".stl", StringComparison.OrdinalIgnoreCase) && ViewportService != null)
+        {
+            var bytes = await File.ReadAllBytesAsync(path);
+            var b64 = Convert.ToBase64String(bytes);
+            await ViewportService.ExecuteScriptAsync(
+                $"viewer.loadSTL('{b64}', '{node.Name.Replace("'", "")}');");
+        }
+
+        WindowTitle = $"My3DApp — {Path.GetFileName(path)}";
+        StatusMessage = $"Imported: {Path.GetFileName(path)}";
     }
 
-    private void ShowAbout()  => StatusMessage = "My3DApp — AI Native CAD  |  v0.1.0-alpha";
-    private void OpenUrl(string url) => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+    private async Task ExportAsync()
+    {
+        if (FileDialogs is null) { StatusMessage = "File dialog not ready."; return; }
+
+        var path = await FileDialogs.SaveFileAsync(
+            "Export 3D Model",
+            "export.stl",
+            FileDialogService.Stl,
+            FileDialogService.Obj,
+            FileDialogService.ThreeMf);
+
+        if (path is null) return;
+
+        StatusMessage = $"Exporting to {Path.GetFileName(path)}...";
+        var first = _scene.Objects.FirstOrDefault();
+        if (first is null) { StatusMessage = "Nothing to export."; return; }
+
+        await _models.ExportAsync(first.Id, path);
+        StatusMessage = $"Exported: {Path.GetFileName(path)}";
+    }
+
+    // ── Toolbar handlers ──────────────────────────────────────────────────────
+    private void NewSketch()
+    {
+        var name = $"Sketch {FeatureNodes[0].Children.Count + 1}";
+        _history.Push(new AddSceneObjectAction(_scene, name, "sketch"));
+        FeatureNodes[0].Children.Add(new FeatureNode { Icon = "⬜", Name = name, FeatureType = "sketch" });
+        StatusMessage = $"{name} — select a plane to begin.";
+        RuntimeLog.Info("VM", $"New sketch '{name}' created.");
+    }
+
+    private void Extrude()
+    {
+        var name = $"Extrude {FeatureNodes[0].Children.Count + 1}";
+        _history.Push(new AddSceneObjectAction(_scene, name, "extrude"));
+        FeatureNodes[0].Children.Add(new FeatureNode { Icon = "⬆", Name = name, FeatureType = "extrude" });
+        StatusMessage = "Extrude: set depth in properties panel.";
+    }
+
+    private void Revolve()       => StatusMessage = "Revolve: select profile and axis.";
+    private void Loft()          => StatusMessage = "Loft: select profiles.";
+    private void Shell()         => StatusMessage = "Shell: select faces to remove.";
+    private void BooleanUnion()     => StatusMessage = "Boolean Union: select bodies.";
+    private void BooleanSubtract()  => StatusMessage = "Boolean Subtract: select target and tool bodies.";
+    private void BooleanIntersect() => StatusMessage = "Boolean Intersect: select bodies.";
+    private void AiGenerate()    => StatusMessage = "AI: enter a description in the AI panel →";
+    private void FocusAiPanel()  => StatusMessage = "AI panel focused.";
+    private void AddFeature()    => StatusMessage = "Select feature type to add.";
+    private void Exit()          => Environment.Exit(0);
+    private void Undo()          { if (_history.Undo()) StatusMessage = "Undo complete."; }
+    private void Redo()          { if (_history.Redo()) StatusMessage = "Redo complete."; }
+    private void ShowAbout()     => StatusMessage = "My3DApp — AI Native CAD  |  v0.1.0-alpha";
+    private void SetView(string v) { StatusMessage = $"View: {v}"; _ = ViewportService?.SetViewAsync(v); }
+    private void OpenUrl(string url) =>
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
 
     // ── AI handlers ───────────────────────────────────────────────────────────
     private async Task AiSendAsync()
@@ -232,7 +280,9 @@ public class MainWindowViewModel : ViewModelBase
 
         try
         {
-            var reply = await _ai.ChatAsync(prompt);
+            // Include current feature tree as context
+            var contextualPrompt = BuildContextualPrompt(prompt);
+            var reply = await _ai.ChatAsync(contextualPrompt);
             AiMessages.Add(new AiMessage { Role = "AI", Content = reply });
 
             if (_ai.LastGeometryScript is { } script)
@@ -252,7 +302,7 @@ public class MainWindowViewModel : ViewModelBase
 
     private async Task AiGenerateSketchAsync()
     {
-        AiPrompt = "Generate a sketch for: ";
+        AiPrompt = "Generate a sketch: ";
         StatusMessage = "Describe the sketch you want to generate.";
         await Task.CompletedTask;
     }
@@ -263,7 +313,8 @@ public class MainWindowViewModel : ViewModelBase
         StatusMessage = "AI analyzing part...";
         try
         {
-            var reply = await _ai.ChatAsync("Look at the current feature tree and suggest the next modeling step.");
+            var prompt = BuildContextualPrompt("Based on my current feature tree, what should I model next?");
+            var reply = await _ai.ChatAsync(prompt);
             AiMessages.Add(new AiMessage { Role = "AI", Content = reply });
         }
         finally
@@ -271,5 +322,26 @@ public class MainWindowViewModel : ViewModelBase
             AiIsThinking = false;
             StatusMessage = "Ready";
         }
+    }
+
+    // Attaches the feature tree summary to every AI prompt for context-aware responses
+    private string BuildContextualPrompt(string userPrompt)
+    {
+        if (FeatureNodes.Count == 0) return userPrompt;
+
+        var sb = new StringBuilder();
+        sb.AppendLine("[Current part studio feature tree]");
+        foreach (var root in FeatureNodes)
+            AppendFeatureNode(sb, root, 0);
+        sb.AppendLine();
+        sb.Append(userPrompt);
+        return sb.ToString();
+    }
+
+    private static void AppendFeatureNode(StringBuilder sb, FeatureNode node, int depth)
+    {
+        sb.AppendLine($"{new string(' ', depth * 2)}{node.Icon} {node.Name} ({node.FeatureType})");
+        foreach (var child in node.Children)
+            AppendFeatureNode(sb, child, depth + 1);
     }
 }
