@@ -874,8 +874,7 @@
             <Border Classes="SketchSidePanel"
                     IsVisible="{Binding HasActiveSketchConstraints}">
               <StackPanel Spacing="6">
-                <TextBlock Text="CONSTRAINTS"
-                           Text="{Binding ActiveSketchConstraintCountLabel}"
+                <TextBlock Text="{Binding ActiveSketchConstraintCountLabel}"
                            Classes="SketchSidePanelHeader" />
                 <ItemsControl ItemsSource="{Binding ActiveSketchConstraints}">
                   <ItemsControl.ItemTemplate>
@@ -911,8 +910,7 @@
             <Border Classes="SketchSidePanel"
                     IsVisible="{Binding HasActiveSketchDimensions}">
               <StackPanel Spacing="6">
-                <TextBlock Text="DIMENSIONS"
-                           Text="{Binding ActiveSketchDimensionCountLabel}"
+                <TextBlock Text="{Binding ActiveSketchDimensionCountLabel}"
                            Classes="SketchSidePanelHeader" />
                 <ItemsControl ItemsSource="{Binding ActiveSketchDimensions}">
                   <ItemsControl.ItemTemplate>
@@ -1013,7 +1011,10 @@
                              Text="{Binding Name}"
                              VerticalAlignment="Center"
                              IsVisible="{Binding ShowItemName}"
-                             Classes="TreeNodeNameText" />
+                             Classes="TreeNodeNameText"
+                             Classes.SketchUnderdefined="{Binding IsSketchUnderdefined}"
+                             Classes.SketchFullyDefined="{Binding IsSketchFullyDefined}"
+                             Classes.SketchOverdefined="{Binding IsSketchOverdefined}" />
                   <TextBlock Grid.Column="1"
                              Text="{Binding Name}"
                              VerticalAlignment="Center"
@@ -1025,7 +1026,10 @@
                              Text="{Binding SecondaryText}"
                              TextWrapping="Wrap"
                              IsVisible="{Binding ShowSecondaryText}"
-                             Classes="TreeNodeSecondaryText" />
+                             Classes="TreeNodeSecondaryText"
+                             Classes.SketchUnderdefined="{Binding IsSketchUnderdefined}"
+                             Classes.SketchFullyDefined="{Binding IsSketchFullyDefined}"
+                             Classes.SketchOverdefined="{Binding IsSketchOverdefined}" />
                 </Grid>
               </TreeDataTemplate>
             </TreeView.ItemTemplate>

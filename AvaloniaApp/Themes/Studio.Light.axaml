@@ -778,6 +778,21 @@
     <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
   </Style>
 
+  <Style Selector="TextBlock.TreeNodeNameText.SketchUnderdefined">
+    <Setter Property="Foreground" Value="#0a84d8" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="TextBlock.TreeNodeNameText.SketchFullyDefined">
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="TextBlock.TreeNodeNameText.SketchOverdefined">
+    <Setter Property="Foreground" Value="#b45309" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
   <Style Selector="TextBlock.TreeSectionNameText">
     <Setter Property="FontSize" Value="11.5" />
     <Setter Property="FontWeight" Value="SemiBold" />
@@ -802,6 +817,18 @@
   <Style Selector="TextBlock.TreeNodeSecondaryText">
     <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
     <Setter Property="FontSize" Value="9.75" />
+  </Style>
+
+  <Style Selector="TextBlock.TreeNodeSecondaryText.SketchUnderdefined">
+    <Setter Property="Foreground" Value="#3c7fbe" />
+  </Style>
+
+  <Style Selector="TextBlock.TreeNodeSecondaryText.SketchFullyDefined">
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.TreeNodeSecondaryText.SketchOverdefined">
+    <Setter Property="Foreground" Value="#b66f1f" />
   </Style>
 
   <Style Selector="TextBlock.ViewportHeaderTitle">

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using FormaCore.Engine;
 
@@ -11,6 +12,7 @@ public sealed class FeatureNodeViewModel
         string typeLabel = "",
         string secondaryText = "",
         string tooltipText = "",
+        string sketchStatusClass = "",
         CadEntityKind entityKind = CadEntityKind.None,
         Guid entityId = default,
         bool isSelectable = false,
@@ -22,6 +24,7 @@ public sealed class FeatureNodeViewModel
         TypeLabel = typeLabel;
         SecondaryText = secondaryText;
         TooltipText = tooltipText;
+        SketchStatusClass = sketchStatusClass;
         EntityKind = entityKind;
         EntityId = entityId;
         IsSelectable = isSelectable;
@@ -38,6 +41,14 @@ public sealed class FeatureNodeViewModel
     public string SecondaryText { get; }
 
     public string TooltipText { get; }
+
+    public string SketchStatusClass { get; }
+
+    public bool IsSketchUnderdefined => string.Equals(SketchStatusClass, "SketchUnderdefined", StringComparison.Ordinal);
+
+    public bool IsSketchFullyDefined => string.Equals(SketchStatusClass, "SketchFullyDefined", StringComparison.Ordinal);
+
+    public bool IsSketchOverdefined => string.Equals(SketchStatusClass, "SketchOverdefined", StringComparison.Ordinal);
 
     public bool IsEditingSketch { get; init; }
 

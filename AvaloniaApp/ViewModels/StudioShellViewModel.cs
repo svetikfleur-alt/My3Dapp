@@ -2572,12 +2572,17 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         var isEditing = feature.Kind == CadFeatureKind.Sketch && feature.Id == editingSketchId;
         var tooltipText = string.Empty;
         var secondaryText = isEditing ? "editing…" : $"{body.Name} | {BuildFeatureSummary(feature)}";
+        var sketchStatusClass = string.Empty;
         if (feature is SketchFeature sketchFeature)
         {
             tooltipText = BuildSketchDefinitionTooltip(project, sketchFeature, isEditing);
+            var definitionLabel = BuildSketchDefinitionStateLabel(project, sketchFeature, isEditing);
+            sketchStatusClass = BuildSketchDefinitionClass(project, sketchFeature, isEditing);
+            var entityCount = sketchFeature.Entities.Count;
+            var entityLabel = $"{entityCount.ToString(CultureInfo.InvariantCulture)} entit{(entityCount == 1 ? "y" : "ies")}";
             secondaryText = isEditing
-                ? $"editing… | {tooltipText}"
-                : $"{body.Name} | {BuildFeatureSummary(feature)} | {tooltipText}";
+                ? $"editing… | {definitionLabel} | {entityLabel}"
+                : $"{body.Name} | {definitionLabel} | {entityLabel}";
         }
 
         var node = new FeatureNodeViewModel(
@@ -2586,6 +2591,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             typeLabel,
             secondaryText,
             tooltipText,
+            sketchStatusClass,
             selectionKind,
             feature.Id,
             isSelectable: true,
@@ -2718,6 +2724,50 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         };
     }
 
+    private static string BuildSketchDefinitionStateLabel(CadProject project, SketchFeature sketch, bool isEditing)
+    {
+        var session = isEditing && project.ActiveSketchSession is not null
+            ? project.ActiveSketchSession
+            : new CadSketchSession
+            {
+                PlaneId = sketch.Id,
+                PlaneName = sketch.PlaneName,
+                DraftEntities = sketch.Entities.ToList(),
+                ManualConstraints = sketch.Constraints.ToList(),
+                ManualDimensions = sketch.Dimensions.ToList()
+            };
+
+        var dof = CadProjectStore.ComputeSketchDof(session);
+        return dof switch
+        {
+            0 => "Fully defined",
+            < 0 => "Overdefined",
+            _ => "Underdefined"
+        };
+    }
+
+    private static string BuildSketchDefinitionClass(CadProject project, SketchFeature sketch, bool isEditing)
+    {
+        var session = isEditing && project.ActiveSketchSession is not null
+            ? project.ActiveSketchSession
+            : new CadSketchSession
+            {
+                PlaneId = sketch.Id,
+                PlaneName = sketch.PlaneName,
+                DraftEntities = sketch.Entities.ToList(),
+                ManualConstraints = sketch.Constraints.ToList(),
+                ManualDimensions = sketch.Dimensions.ToList()
+            };
+
+        var dof = CadProjectStore.ComputeSketchDof(session);
+        return dof switch
+        {
+            0 => "SketchFullyDefined",
+            < 0 => "SketchOverdefined",
+            _ => "SketchUnderdefined"
+        };
+    }
+
     private static string BuildExtrudeLabel(ExtrudeFeature extrude)
     {
         var modeLabel = extrude.Operation switch
@@ -2823,6 +2873,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             node.TypeLabel,
             node.SecondaryText,
             node.TooltipText,
+            node.SketchStatusClass,
             node.EntityKind,
             node.EntityId,
             node.IsSelectable,
