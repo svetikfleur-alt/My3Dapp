@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Input;
 using My3DApp.AvaloniaApp.Services;
 using My3DApp.Backends;
@@ -158,7 +159,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         new AiMessage
         {
             Role    = "AI",
-            Content = "Hello! I'm your AI Design Assistant. Describe what you'd like to model and I'll help you build it."
+            Content = "Hello! I'm your AI Design Assistant.\n\nDescribe any practical 3D part — e.g. \"a mounting bracket 80×50mm with two holes\" — and I'll generate the geometry live in the viewport and add it to your feature tree.\n\nTip: use the ✦ AI Generate button for a quick start."
         }
     };
 
@@ -523,7 +524,10 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             AiMessages.Add(new AiMessage { Role = "AI", Content = reply });
 
             if (_ai.LastGeometryScript is { } script)
+            {
                 await (ViewportService?.ExecuteScriptAsync(script) ?? Task.CompletedTask);
+                SyncFeatureTreeFromScript(script);
+            }
         }
         catch (Exception ex)
         {
@@ -549,7 +553,10 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             var reply = await _ai.ChatAsync(prompt, context);
             AiMessages.Add(new AiMessage { Role = "AI", Content = reply });
             if (_ai.LastGeometryScript is { } script)
+            {
                 await (ViewportService?.ExecuteScriptAsync(script) ?? Task.CompletedTask);
+                SyncFeatureTreeFromScript(script);
+            }
         }
         finally { AiIsThinking = false; StatusMessage = "Ready"; }
     }
@@ -558,7 +565,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         _ai.ClearHistory();
         AiMessages.Clear();
-        AiMessages.Add(new AiMessage { Role = "AI", Content = "Chat cleared. How can I help you design?" });
+        AiMessages.Add(new AiMessage { Role = "AI", Content = "Chat cleared. Describe a part to model and I'll generate it in the viewport." });
         StatusMessage = "AI chat cleared.";
     }
 
@@ -580,13 +587,79 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             var reply = await _ai.ChatAsync(prompt, context);
             AiMessages.Add(new AiMessage { Role = "AI", Content = reply });
             if (_ai.LastGeometryScript is { } script)
+            {
                 await (ViewportService?.ExecuteScriptAsync(script) ?? Task.CompletedTask);
+                SyncFeatureTreeFromScript(script);
+            }
         }
         finally
         {
             AiIsThinking = false;
             StatusMessage = "Ready";
         }
+    }
+
+    // ── AI → feature-tree sync ────────────────────────────────────────────────
+    // Parses a viewer geometry script and keeps the feature tree in sync so
+    // AI-generated shapes appear as named, selectable, deletable nodes.
+    private void SyncFeatureTreeFromScript(string script)
+    {
+        if (FeatureNodes.Count == 0) return;
+        var children = FeatureNodes[0].Children;
+
+        // clearScene → remove all children
+        if (Regex.IsMatch(script, @"viewer\.clearScene\s*\("))
+        {
+            foreach (var n in children.ToList())
+            {
+                if (n.SceneObjectId.HasValue) _scene.Remove(n.SceneObjectId.Value);
+            }
+            children.Clear();
+        }
+
+        // removeObject('name') → remove matching node
+        foreach (Match m in Regex.Matches(script, @"viewer\.removeObject\s*\(\s*'([^']+)'"))
+        {
+            var name = m.Groups[1].Value;
+            var node = children.FirstOrDefault(n => n.Name == name);
+            if (node != null)
+            {
+                if (node.SceneObjectId.HasValue) _scene.Remove(node.SceneObjectId.Value);
+                children.Remove(node);
+            }
+        }
+
+        // addBox / addCylinder / addSphere / addSketchPlane → add nodes
+        var addPattern = new Regex(
+            @"viewer\.(addBox|addCylinder|addSphere|addSketchPlane)\s*\(\s*'([^']+)'");
+        foreach (Match m in addPattern.Matches(script))
+        {
+            var call = m.Groups[1].Value;
+            var name = m.Groups[2].Value;
+            if (children.Any(n => n.Name == name)) continue; // already present
+
+            var (icon, type) = call switch
+            {
+                "addBox"          => ("⬆", "extrude"),
+                "addCylinder"     => ("↻", "revolve"),
+                "addSphere"       => ("⚪", "sphere"),
+                "addSketchPlane"  => ("⬜", "sketch"),
+                _                 => ("⚙", "mesh"),
+            };
+
+            // Extract just this one add-call line so ViewportAddScript is precise
+            var lineMatch = Regex.Match(script,
+                $@"viewer\.{call}\s*\(\s*'{Regex.Escape(name)}'[^;]*\);");
+
+            var node = MakeNode(icon, name, type);
+            node.ViewportAddScript = lineMatch.Success ? lineMatch.Value : null;
+            var obj = _scene.Add(name, type);
+            node.SceneObjectId = obj.Id;
+            children.Add(node);
+            RuntimeLog.Info("VM", $"AI synced node '{name}' ({type})");
+        }
+
+        RefreshTreeBindings();
     }
 
     // Returns the feature tree as a context prefix string.
