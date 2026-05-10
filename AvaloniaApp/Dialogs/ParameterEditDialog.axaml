@@ -12,15 +12,28 @@
         Title="Edit Parameters">
   <Border Classes="FeatureDialogPanel" Margin="0">
     <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="18">
-      <TextBlock x:Name="TitleTextBlock"
-                 Classes="FeatureDialogTitle"
-                 Text="Edit Parameters" />
-      <TextBlock x:Name="SubtitleTextBlock"
-                 Grid.Row="1"
-                 Margin="0,6,0,0"
-                 Classes="FeatureDialogSubtitle"
-                 TextWrapping="Wrap"
-                 Text="Adjust feature parameters, then confirm." />
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock x:Name="TitleTextBlock"
+                     Classes="FeatureDialogTitle"
+                     Text="Edit Parameters" />
+          <TextBlock x:Name="SubtitleTextBlock"
+                     Margin="0,6,0,0"
+                     Classes="FeatureDialogSubtitle"
+                     TextWrapping="Wrap"
+                     Text="Adjust feature parameters, then confirm." />
+        </StackPanel>
+        <Border Grid.Column="1"
+                Background="{DynamicResource Studio.PanelInsetBrush}"
+                BorderBrush="{DynamicResource Studio.BorderBrush}"
+                BorderThickness="1"
+                Padding="9,5"
+                VerticalAlignment="Top">
+          <TextBlock Text="FEATURE"
+                     FontSize="10"
+                     FontWeight="SemiBold" />
+        </Border>
+      </Grid>
 
       <Border Grid.Row="2"
               Margin="0,16,0,10"
@@ -50,7 +63,7 @@
                 IsCancel="True"
                 Click="OnCancelClick" />
         <Button x:Name="OkButton"
-                Content="OK"
+                Content="Apply"
                 Classes="FeatureDialogButtonPrimary"
                 IsDefault="True"
                 Click="OnConfirmClick" />

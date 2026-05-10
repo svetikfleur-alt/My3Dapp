@@ -12,14 +12,27 @@
         Title="Feature">
   <Border Classes="FeatureDialogPanel" Margin="0">
     <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
-      <TextBlock x:Name="TitleTextBlock"
-                 Classes="FeatureDialogTitle"
-                 Text="Feature" />
-      <TextBlock x:Name="SubtitleTextBlock"
-                 Grid.Row="1"
-                 Margin="0,6,0,0"
-                 Classes="FeatureDialogSubtitle"
-                 Text="Adjust the feature parameter, then confirm." />
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock x:Name="TitleTextBlock"
+                     Classes="FeatureDialogTitle"
+                     Text="Feature" />
+          <TextBlock x:Name="SubtitleTextBlock"
+                     Margin="0,6,0,0"
+                     Classes="FeatureDialogSubtitle"
+                     Text="Adjust the feature parameter, then confirm." />
+        </StackPanel>
+        <Border Grid.Column="1"
+                Background="{DynamicResource Studio.PanelInsetBrush}"
+                BorderBrush="{DynamicResource Studio.BorderBrush}"
+                BorderThickness="1"
+                Padding="9,5"
+                VerticalAlignment="Top">
+          <TextBlock Text="EDIT"
+                     FontSize="10"
+                     FontWeight="SemiBold" />
+        </Border>
+      </Grid>
 
       <Border Grid.Row="2"
               Margin="0,16,0,16"
@@ -27,7 +40,7 @@
               BorderBrush="{DynamicResource Studio.BorderBrush}"
               BorderThickness="1"
               Padding="12">
-        <Grid ColumnDefinitions="*,84" RowDefinitions="Auto,Auto">
+        <Grid ColumnDefinitions="*,84" RowDefinitions="Auto,Auto,Auto">
           <TextBlock x:Name="ValueLabelTextBlock"
                      Text="Value"
                      FontWeight="SemiBold" />
@@ -53,6 +66,12 @@
                        HorizontalAlignment="Center"
                        Text="mm" />
           </Border>
+          <TextBlock Grid.Row="2"
+                     Grid.ColumnSpan="2"
+                     Margin="0,10,0,0"
+                     TextWrapping="Wrap"
+                     Foreground="{DynamicResource Studio.TextMutedBrush}"
+                     Text="Apply updates the existing feature with the new value." />
         </Grid>
       </Border>
 
@@ -63,7 +82,7 @@
         <Button Content="Cancel"
                 Classes="FeatureDialogButtonSecondary"
                 Click="OnCancelClick" />
-        <Button Content="Confirm"
+        <Button Content="Apply"
                 Classes="FeatureDialogButtonPrimary"
                 Click="OnConfirmClick" />
       </StackPanel>

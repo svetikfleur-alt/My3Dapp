@@ -2505,7 +2505,7 @@ public sealed partial class MainWindow : Window
             if (chamferDist is not null)
             {
                 var dialog = new NumericFeatureDialog("Chamfer", "Edit the chamfer distance.", "Distance", chamferDist.Value, 0.1, 100, "mm");
-                var raw = await dialog.ShowDialog<string?>(this);
+                var raw = await ShowAnchoredDialogAsync<string?>(dialog);
                 if (double.TryParse(raw, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var newDist) && newDist > 0)
                 {
                     await _wiredViewModel.UpdateChamferAsync(selectedNode.EntityId, newDist);
@@ -2518,7 +2518,7 @@ public sealed partial class MainWindow : Window
             if (shellThick is not null)
             {
                 var dialog = new NumericFeatureDialog("Shell", "Edit the shell wall thickness.", "Thickness", shellThick.Value, 0.1, 500, "mm");
-                var raw = await dialog.ShowDialog<string?>(this);
+                var raw = await ShowAnchoredDialogAsync<string?>(dialog);
                 if (double.TryParse(raw, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var newThick) && newThick > 0)
                 {
                     await _wiredViewModel.UpdateShellAsync(selectedNode.EntityId, newThick);
@@ -2533,7 +2533,7 @@ public sealed partial class MainWindow : Window
                 var bodies = _wiredViewModel.GetBodyList();
                 var signedDepth = extrudeParams.Value.ReverseDirection ? -extrudeParams.Value.Depth : extrudeParams.Value.Depth;
                 var extDialog = new ExtrudeFeatureDialog(selectedNode.Name, "", Math.Abs(extrudeParams.Value.Depth), bodies, extrudeParams.Value.TargetBodyId);
-                var extResult = await extDialog.ShowDialog<ExtrudeFeatureDialogResult?>(this);
+                var extResult = await ShowAnchoredDialogAsync<ExtrudeFeatureDialogResult?>(extDialog);
                 if (extResult is not null)
                 {
                     await _wiredViewModel.UpdateExtrudeAsync(selectedNode.EntityId, Math.Abs(extResult.Distance), extResult.ReverseDirection, extResult.Operation, extResult.TargetBodyId);
@@ -2546,7 +2546,7 @@ public sealed partial class MainWindow : Window
             if (revolveParams is not null)
             {
                 var rvDialog = new RevolveFeatureDialog(selectedNode.Name, "", revolveParams.Value.AngleDegrees, revolveParams.Value.Axis);
-                var rvResult = await rvDialog.ShowDialog<RevolveFeatureDialogResult?>(this);
+                var rvResult = await ShowAnchoredDialogAsync<RevolveFeatureDialogResult?>(rvDialog);
                 if (rvResult is not null)
                 {
                     await _wiredViewModel.UpdateRevolveAsync(selectedNode.EntityId, rvResult.Angle, rvResult.Axis);
@@ -2559,7 +2559,7 @@ public sealed partial class MainWindow : Window
             if (sweepParams is not null)
             {
                 var swDialog = new SweepFeatureDialog(selectedNode.Name, "", sweepParams.Value.Distance, sweepParams.Value.TwistDegrees);
-                var swResult = await swDialog.ShowDialog<SweepFeatureDialogResult?>(this);
+                var swResult = await ShowAnchoredDialogAsync<SweepFeatureDialogResult?>(swDialog);
                 if (swResult is not null)
                 {
                     await _wiredViewModel.UpdateSweepAsync(selectedNode.EntityId, swResult.Distance, swResult.TwistDegrees);
@@ -2572,7 +2572,7 @@ public sealed partial class MainWindow : Window
             if (mirrorAxis is not null)
             {
                 var mirrorDialog = new MirrorFeatureDialog(mirrorAxis);
-                var mirrorResult = await mirrorDialog.ShowDialog<MirrorFeatureDialogResult?>(this);
+                var mirrorResult = await ShowAnchoredDialogAsync<MirrorFeatureDialogResult?>(mirrorDialog);
                 if (mirrorResult is not null)
                 {
                     await _wiredViewModel.UpdateMirrorAsync(selectedNode.EntityId, mirrorResult.Axis);
@@ -2586,7 +2586,7 @@ public sealed partial class MainWindow : Window
             {
                 var sketches = _wiredViewModel.GetClosedSketchProfiles();
                 var loftDialog = new LoftFeatureDialog(sketches, loftParams.Value.ProfileAId, loftParams.Value.ProfileBId, loftParams.Value.Distance);
-                var loftResult = await loftDialog.ShowDialog<LoftFeatureDialogResult?>(this);
+                var loftResult = await ShowAnchoredDialogAsync<LoftFeatureDialogResult?>(loftDialog);
                 if (loftResult is not null)
                 {
                     await _wiredViewModel.UpdateLoftAsync(selectedNode.EntityId, loftResult.ProfileAId, loftResult.ProfileBId, loftResult.Distance);
@@ -2690,7 +2690,7 @@ public sealed partial class MainWindow : Window
             $"Edit {node.Name}",
             $"Adjust existing parameters for {node.Name}. OK updates the selected model item.",
             editableParameters);
-        var result = await dialog.ShowDialog<ParameterEditDialogResult?>(this);
+        var result = await ShowAnchoredDialogAsync<ParameterEditDialogResult?>(dialog);
         if (result is null)
         {
             return;

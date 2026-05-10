@@ -1160,7 +1160,15 @@
             </Grid>
           </TabItem>
 
-          <TabItem Header="Assistant">
+          <TabItem>
+            <TabItem.Header>
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/focus.svg"
+                         Width="14"
+                         Height="14" />
+                <TextBlock Text="Copilot" />
+              </StackPanel>
+            </TabItem.Header>
             <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Margin="10,8,10,8">
 
               <!-- Header: title + Refresh + Clear -->
@@ -1325,19 +1333,34 @@
             </Grid>
           </TabItem>
 
-          <TabItem ToolTip.Tip="Model code">
+          <TabItem ToolTip.Tip="Feature recipe">
             <TabItem.Header>
-              <svg:Svg Path="avares://My3DApp/Assets/Icons/line.svg"
-                       Width="15"
-                       Height="15" />
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/line.svg"
+                         Width="15"
+                         Height="15" />
+                <TextBlock Text="Recipe" />
+              </StackPanel>
             </TabItem.Header>
-            <TextBox Margin="10"
-                     Text="{Binding CodeText}"
-                     IsReadOnly="True"
-                     AcceptsReturn="True"
-                     TextWrapping="NoWrap"
-                     FontFamily="Consolas, Cascadia Mono, monospace"
-                     Classes="DocumentTextView" />
+            <Grid RowDefinitions="Auto,*" Margin="10">
+              <Border Classes="RecipeHeaderCard">
+                <StackPanel Spacing="4">
+                  <TextBlock Text="Feature Recipe"
+                             Classes="RecipeHeaderTitle" />
+                  <TextBlock Text="Solid-first command history for the current part studio. Features stay readable, ordered, and ready for AI-assisted editing."
+                             TextWrapping="Wrap"
+                             Classes="RecipeHeaderSummary" />
+                </StackPanel>
+              </Border>
+              <TextBox Grid.Row="1"
+                       Margin="0,10,0,0"
+                       Text="{Binding CodeText}"
+                       IsReadOnly="True"
+                       AcceptsReturn="True"
+                       TextWrapping="NoWrap"
+                       FontFamily="Consolas, Cascadia Mono, monospace"
+                       Classes="DocumentTextView" />
+            </Grid>
           </TabItem>
         </TabControl>
       </Border>
