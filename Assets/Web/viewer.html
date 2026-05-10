@@ -266,6 +266,11 @@ window.viewer = {
     Object.values(meshObjects).forEach(mesh => {
       mesh.material = on ? wireframeMaterial.clone() : defaultMaterial.clone();
     });
+    // Re-apply selection highlight on the selected mesh after material swap
+    // (MeshBasicMaterial used in wireframe mode has no emissive property)
+    if (_selectedMesh && !on && _selectedMesh.material?.emissive) {
+      _selectedMesh.material.emissive.set(0x224488);
+    }
     setStatus(on ? 'Wireframe on' : 'Solid view');
   },
 

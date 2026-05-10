@@ -21,6 +21,28 @@ public partial class MainWindow : Window
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
     }
 
+    protected override void OnApplyTemplate(Avalonia.Controls.Primitives.TemplateAppliedEventArgs e)
+    {
+        base.OnApplyTemplate(e);
+        // Enter (without Shift) sends the AI prompt; Shift+Enter inserts a newline
+        var inputBox = this.FindControl<TextBox>("AiInputBox");
+        if (inputBox != null)
+            inputBox.KeyDown += OnAiInputKeyDown;
+    }
+
+    private void OnAiInputKeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
+    {
+        if (e.Key == Avalonia.Input.Key.Enter &&
+            e.KeyModifiers == Avalonia.Input.KeyModifiers.None)
+        {
+            if (DataContext is MainWindowViewModel vm && vm.AiSendCommand.CanExecute(null))
+            {
+                vm.AiSendCommand.Execute(null);
+                e.Handled = true;
+            }
+        }
+    }
+
     private async void OnOpened(object? sender, EventArgs e)
     {
         if (DataContext is not MainWindowViewModel vm) return;

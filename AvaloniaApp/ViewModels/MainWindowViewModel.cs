@@ -262,23 +262,28 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         var obj = await _models.ImportAsync(path);
         if (obj is null) { StatusMessage = "Import failed."; return; }
 
-        var node = MakeNode("📥", Path.GetFileNameWithoutExtension(path),
-                            Path.GetExtension(path).TrimStart('.'));
+        var ext      = Path.GetExtension(path).TrimStart('.');
+        var node     = MakeNode("📥", Path.GetFileNameWithoutExtension(path), ext);
+        node.SceneObjectId = obj.Id;
+
         if (FeatureNodes.Count > 0)
             FeatureNodes[0].Children.Add(node);
 
-        // Load geometry into viewport
+        // Load geometry into viewport and record the add script for delete-undo
         var safeName = node.Name.Replace("'", "");
         if (path.EndsWith(".stl", StringComparison.OrdinalIgnoreCase) && ViewportService != null)
         {
             var bytes = await File.ReadAllBytesAsync(path);
-            var b64 = Convert.ToBase64String(bytes);
-            await ViewportService.ExecuteScriptAsync($"viewer.loadSTL('{b64}', '{safeName}');");
+            var b64   = Convert.ToBase64String(bytes);
+            var script = $"viewer.loadSTL('{b64}', '{safeName}');";
+            node.ViewportAddScript = script;
+            await ViewportService.ExecuteScriptAsync(script);
         }
         else if (ViewportService != null)
         {
-            // Non-STL formats: show a placeholder box so the viewport isn't empty
-            await ViewportService.ExecuteScriptAsync($"viewer.addBox('{safeName}', 100, 100, 100); viewer.fitView();");
+            var script = $"viewer.addBox('{safeName}', 100, 100, 100); viewer.fitView();";
+            node.ViewportAddScript = script;
+            await ViewportService.ExecuteScriptAsync(script);
         }
 
         WindowTitle = $"My3DApp — {Path.GetFileName(path)}";
