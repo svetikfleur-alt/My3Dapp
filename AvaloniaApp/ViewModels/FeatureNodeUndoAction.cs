@@ -38,6 +38,7 @@ internal sealed class FeatureNodeUndoAction : IUndoableAction
     {
         _sceneObject  = _scene.Add(_node.Name, _node.FeatureType);
         _node.SceneObjectId = _sceneObject.Id;
+        _node.ViewportAddScript = _viewportAddScript; // stored for delete-undo replay
 
         if (!_parent.Contains(_node))
             _parent.Add(_node);

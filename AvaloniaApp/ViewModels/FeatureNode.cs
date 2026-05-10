@@ -45,6 +45,10 @@ public class FeatureNode : ViewModelBase
     // Used by delete and visibility sync to keep the engine scene in sync with the UI tree.
     public Guid? SceneObjectId { get; set; }
 
+    // The viewer script that created this node's geometry. Stored so undo-of-delete
+    // can replay the add script to restore the viewport visual.
+    public string? ViewportAddScript { get; set; }
+
     // Commands set by the ViewModel when the node is created.
     // Keeping commands on the node avoids $parent traversal in compiled bindings.
     public ICommand? DeleteCommand          { get; set; }

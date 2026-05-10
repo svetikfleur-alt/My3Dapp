@@ -381,23 +381,16 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         foreach (var root in FeatureNodes)
         {
-            if (root.Children.Remove(node))
-            {
-                // Sync scene graph and viewport
-                if (node.SceneObjectId is { } id)
-                {
-                    var obj = _scene.Find(id);
-                    if (obj != null)
-                        _history.Push(new RemoveSceneObjectAction(_scene, obj));
-                    else
-                        _scene.Remove(id);
-                }
-                _ = ViewportService?.ExecuteScriptAsync(
-                    $"viewer.removeObject('{node.Name.Replace("'", "")}');");
-                StatusMessage = $"Deleted '{node.Name}'.";
-                RuntimeLog.Info("VM", $"Deleted feature '{node.Name}'");
-                return;
-            }
+            var idx = root.Children.IndexOf(node);
+            if (idx < 0) continue;
+
+            // Use DeleteFeatureNodeAction so delete is undoable and restores node + viewport
+            _history.Push(new DeleteFeatureNodeAction(
+                _scene, root.Children, node, idx, ViewportService));
+
+            StatusMessage = $"Deleted '{node.Name}'.";
+            RuntimeLog.Info("VM", $"Deleted feature '{node.Name}'");
+            return;
         }
         StatusMessage = "Cannot delete root node.";
     }

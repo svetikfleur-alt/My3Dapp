@@ -296,9 +296,8 @@ renderer.domElement.addEventListener('click', (e) => {
      ((e.clientX - rect.left) / rect.width)  * 2 - 1,
     -((e.clientY - rect.top)  / rect.height) * 2 + 1
   );
-  const pickRay = new THREE.Raycaster();
-  pickRay.setFromCamera(ndc, camera);
-  const hits = pickRay.intersectObjects(Object.values(meshObjects), false);
+  _raycaster.setFromCamera(ndc, camera); // reuse shared raycaster
+  const hits = _raycaster.intersectObjects(Object.values(meshObjects), false);
   const hit = hits.length > 0 ? hits[0].object : null;
 
   // Clear previous selection highlight
@@ -316,12 +315,17 @@ renderer.domElement.addEventListener('click', (e) => {
   }
 });
 
-// ── Cursor position → host app (WebView2 postMessage) ────────────────────────
+// ── Cursor position → host app (WebView2 postMessage, throttled ~10 Hz) ──────
 const _raycaster   = new THREE.Raycaster();
 const _groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // XZ at y=0
 const _hitPoint    = new THREE.Vector3();
+let _lastCursorMsg = 0;
 renderer.domElement.addEventListener('mousemove', (e) => {
   if (!window.chrome?.webview) return; // only in WebView2 host
+  const now = Date.now();
+  if (now - _lastCursorMsg < 100) return; // ~10 Hz
+  _lastCursorMsg = now;
+
   const rect = renderer.domElement.getBoundingClientRect();
   const ndc = new THREE.Vector2(
      ((e.clientX - rect.left) / rect.width)  * 2 - 1,
@@ -331,9 +335,9 @@ renderer.domElement.addEventListener('mousemove', (e) => {
   if (_raycaster.ray.intersectPlane(_groundPlane, _hitPoint)) {
     window.chrome.webview.postMessage(JSON.stringify({
       type: 'cursorPos',
-      x: +_hitPoint.x.toFixed(2),
-      y: +_hitPoint.y.toFixed(2),
-      z: +_hitPoint.z.toFixed(2)
+      x: +_hitPoint.x.toFixed(1),
+      y: +_hitPoint.y.toFixed(1),
+      z: +_hitPoint.z.toFixed(1)
     }));
   }
 });
