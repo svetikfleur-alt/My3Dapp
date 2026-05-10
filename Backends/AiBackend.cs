@@ -20,6 +20,15 @@ public class AiBackend : IDisposable
 
     public string? LastGeometryScript { get; private set; }
 
+    private CancellationTokenSource? _cts;
+
+    public void CancelCurrentRequest()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+    }
+
     private static readonly string SystemPrompt = """
         You are an expert 3D CAD design assistant embedded in My3DApp, an AI-native Onshape-style CAD tool.
         You help users design 3D parts using parametric features: sketches, extrudes, revolves, lofts, shells,
@@ -53,6 +62,10 @@ public class AiBackend : IDisposable
 
     public async Task<string> ChatAsync(string userMessage)
     {
+        CancelCurrentRequest(); // cancel any prior in-flight request
+        _cts = new CancellationTokenSource();
+        var ct = _cts.Token;
+
         LastGeometryScript = null;
         _history.Add(new ChatMessage("user", userMessage));
 
@@ -72,7 +85,7 @@ public class AiBackend : IDisposable
 
             var json = JsonSerializer.Serialize(request);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await _http.PostAsync(ApiUrl, content);
+            var response = await _http.PostAsync(ApiUrl, content, ct);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -102,6 +115,11 @@ public class AiBackend : IDisposable
 
             _history.Add(new ChatMessage("assistant", text));
             return text;
+        }
+        catch (OperationCanceledException)
+        {
+            _history.RemoveAt(_history.Count - 1); // remove the unsent user message
+            return "(Request cancelled.)";
         }
         catch (Exception ex)
         {

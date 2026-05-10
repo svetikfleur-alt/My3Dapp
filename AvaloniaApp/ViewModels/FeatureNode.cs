@@ -1,11 +1,24 @@
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 namespace My3DApp.AvaloniaApp.ViewModels;
 
 public class FeatureNode : ViewModelBase
 {
-    public string Icon { get; set; } = "⚙";
-    public string Name { get; set; } = string.Empty;
+    private string _icon = "⚙";
+    public string Icon
+    {
+        get => _icon;
+        set => SetField(ref _icon, value);
+    }
+
+    private string _name = string.Empty;
+    public string Name
+    {
+        get => _name;
+        set => SetField(ref _name, value);
+    }
+
     public string FeatureType { get; set; } = string.Empty;
     public ObservableCollection<FeatureNode> Children { get; } = new();
 
@@ -22,4 +35,10 @@ public class FeatureNode : ViewModelBase
         get => _isSelected;
         set => SetField(ref _isSelected, value);
     }
+
+    // Commands set by the ViewModel when the node is created.
+    // Keeping commands on the node avoids $parent traversal in compiled bindings.
+    public ICommand? DeleteCommand          { get; set; }
+    public ICommand? RenameCommand          { get; set; }
+    public ICommand? ToggleVisibilityCommand { get; set; }
 }

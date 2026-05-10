@@ -89,17 +89,13 @@
                             <TreeDataTemplate x:DataType="vm:FeatureNode" ItemsSource="{Binding Children}">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <StackPanel.ContextMenu>
+                                        <!-- Commands live on the node itself — avoids $parent traversal
+                                             which breaks with AvaloniaUseCompiledBindingsByDefault=true -->
                                         <ContextMenu>
-                                            <MenuItem Header="Rename…"
-                                                      Command="{Binding $parent[TreeView].((vm:MainWindowViewModel)DataContext).RenameFeatureCommand}"
-                                                      CommandParameter="{Binding}" />
-                                            <MenuItem Header="Toggle Visibility"
-                                                      Command="{Binding $parent[TreeView].((vm:MainWindowViewModel)DataContext).ToggleVisibilityCommand}"
-                                                      CommandParameter="{Binding}" />
+                                            <MenuItem Header="Rename…"          Command="{Binding RenameCommand}" />
+                                            <MenuItem Header="Toggle Visibility" Command="{Binding ToggleVisibilityCommand}" />
                                             <Separator />
-                                            <MenuItem Header="Delete"
-                                                      Command="{Binding $parent[TreeView].((vm:MainWindowViewModel)DataContext).DeleteFeatureCommand}"
-                                                      CommandParameter="{Binding}" />
+                                            <MenuItem Header="Delete"            Command="{Binding DeleteCommand}" />
                                         </ContextMenu>
                                     </StackPanel.ContextMenu>
                                     <TextBlock Text="{Binding Icon}" FontSize="13" VerticalAlignment="Center" />
@@ -112,6 +108,30 @@
                             </TreeDataTemplate>
                         </TreeView.ItemTemplate>
                     </TreeView>
+
+                    <!-- Selected node properties strip -->
+                    <Border DockPanel.Dock="Bottom" Background="#0D1B2A"
+                            BorderThickness="0,1,0,0" BorderBrush="#2A3F5F"
+                            Padding="8,6"
+                            IsVisible="{Binding SelectedFeatureNode, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <StackPanel Spacing="3">
+                            <TextBlock Text="Properties" FontWeight="SemiBold" Foreground="#6688AA" FontSize="11" />
+                            <Grid ColumnDefinitions="Auto,8,*" RowDefinitions="Auto,Auto,Auto">
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Name"   Foreground="#445566" FontSize="11" />
+                                <TextBlock Grid.Row="0" Grid.Column="2"
+                                           Text="{Binding SelectedFeatureNode.Name}"
+                                           Foreground="#C8D8E8" FontSize="11" />
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Type"   Foreground="#445566" FontSize="11" />
+                                <TextBlock Grid.Row="1" Grid.Column="2"
+                                           Text="{Binding SelectedFeatureNode.FeatureType}"
+                                           Foreground="#C8D8E8" FontSize="11" />
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Visible" Foreground="#445566" FontSize="11" />
+                                <TextBlock Grid.Row="2" Grid.Column="2"
+                                           Text="{Binding SelectedFeatureNode.IsVisible}"
+                                           Foreground="#C8D8E8" FontSize="11" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
                 </DockPanel>
             </Border>
 
@@ -144,7 +164,7 @@
                     </Border>
 
                     <!-- Input area pinned to bottom -->
-                    <Grid DockPanel.Dock="Bottom" RowDefinitions="Auto,Auto" Margin="8">
+                    <Grid DockPanel.Dock="Bottom" RowDefinitions="Auto,Auto,Auto" Margin="8">
                         <Border Grid.Row="0" Background="#0D1B2A" CornerRadius="6" Padding="8" Margin="0,0,0,6">
                             <TextBox Name="AiInputBox"
                                      Text="{Binding AiPrompt}"
@@ -155,10 +175,20 @@
                                      BorderThickness="0"
                                      Foreground="White" />
                         </Border>
-                        <Button Grid.Row="1" Content="✦ Send"
-                                Command="{Binding AiSendCommand}"
-                                HorizontalAlignment="Stretch"
-                                Classes="ai-send-btn" />
+                        <Grid Grid.Row="1" ColumnDefinitions="*,8,Auto">
+                            <Button Grid.Column="0" Content="✦ Send"
+                                    Command="{Binding AiSendCommand}"
+                                    Classes="ai-send-btn" />
+                            <Button Grid.Column="2" Content="✕"
+                                    Command="{Binding AiCancelCommand}"
+                                    IsVisible="{Binding AiIsThinking}"
+                                    ToolTip.Tip="Cancel request"
+                                    Classes="viewport-btn" />
+                        </Grid>
+                        <!-- Thinking indicator -->
+                        <TextBlock Grid.Row="2" Text="AI is thinking…" Margin="0,4,0,0"
+                                   Foreground="#A78BFA" FontSize="11" FontStyle="Italic"
+                                   IsVisible="{Binding AiIsThinking}" />
                     </Grid>
 
                     <!-- Chat history — x:DataType on DataTemplate for compiled bindings -->

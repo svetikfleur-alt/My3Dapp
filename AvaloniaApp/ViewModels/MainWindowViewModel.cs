@@ -115,17 +115,14 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand SolidViewCommand        { get; private set; } = null!;
     public ICommand OpenDocsCommand         { get; private set; } = null!;
     public ICommand ShowAboutCommand        { get; private set; } = null!;
-    // Feature tree context menu
-    public ICommand DeleteFeatureCommand    { get; private set; } = null!;
-    public ICommand RenameFeatureCommand    { get; private set; } = null!;
-    public ICommand ToggleVisibilityCommand { get; private set; } = null!;
+    public ICommand AiCancelCommand         { get; private set; } = null!;
 
     private FeatureNode? _selectedFeatureNode;
     public FeatureNode? SelectedFeatureNode
     {
         get => _selectedFeatureNode;
         set => SetField(ref _selectedFeatureNode, value);
-    };
+    }
 
     // ── Constructor ───────────────────────────────────────────────────────────
     public MainWindowViewModel()
@@ -158,11 +155,13 @@ public class MainWindowViewModel : ViewModelBase
         ResetViewCommand        = new AsyncRelayCommand(() => ViewportService?.ResetViewAsync() ?? Task.CompletedTask);
         WireframeCommand        = new AsyncRelayCommand(() => ViewportService?.SetWireframeAsync(true)  ?? Task.CompletedTask);
         SolidViewCommand        = new AsyncRelayCommand(() => ViewportService?.SetWireframeAsync(false) ?? Task.CompletedTask);
-        OpenDocsCommand         = new RelayCommand(() => OpenUrl("https://github.com/svetikfleur-alt/my3dapp"));
-        ShowAboutCommand        = new RelayCommand(ShowAbout);
-        DeleteFeatureCommand    = new RelayCommand(p => DeleteFeature(p as FeatureNode));
-        RenameFeatureCommand    = new RelayCommand(p => RenameFeature(p as FeatureNode));
-        ToggleVisibilityCommand = new RelayCommand(p => ToggleVisibility(p as FeatureNode));
+        OpenDocsCommand  = new RelayCommand(() => OpenUrl("https://github.com/svetikfleur-alt/my3dapp"));
+        ShowAboutCommand = new RelayCommand(ShowAbout);
+        AiCancelCommand  = new RelayCommand(() => _ai.CancelCurrentRequest(), () => AiIsThinking);
+
+        // Wire context-menu commands onto initial tree nodes
+        foreach (var root in FeatureNodes)
+            WireNodeCommands(root);
     }
 
     // ── History ───────────────────────────────────────────────────────────────
@@ -173,12 +172,27 @@ public class MainWindowViewModel : ViewModelBase
     }
 
     // ── Part Studio ───────────────────────────────────────────────────────────
+    // ── Node command wiring ───────────────────────────────────────────────────
+    private FeatureNode WireNodeCommands(FeatureNode node)
+    {
+        node.DeleteCommand          = new RelayCommand(() => DeleteFeature(node));
+        node.RenameCommand          = new RelayCommand(() => RenameFeature(node));
+        node.ToggleVisibilityCommand = new RelayCommand(() => ToggleVisibility(node));
+        foreach (var child in node.Children)
+            WireNodeCommands(child);
+        return node;
+    }
+
+    private FeatureNode MakeNode(string icon, string name, string type)
+        => WireNodeCommands(new FeatureNode { Icon = icon, Name = name, FeatureType = type });
+
+    // ── Part Studio ───────────────────────────────────────────────────────────
     private void NewPartStudio()
     {
         _scene.Clear();
         _history.Clear();
         FeatureNodes.Clear();
-        FeatureNodes.Add(new FeatureNode { Icon = "📦", Name = "Part Studio 1", FeatureType = "root" });
+        FeatureNodes.Add(MakeNode("📦", "Part Studio 1", "root"));
         WindowTitle = "My3DApp — New Part Studio";
         StatusMessage = "New Part Studio created.";
         _ = ViewportService?.ExecuteScriptAsync("viewer.clearScene();");
@@ -203,12 +217,8 @@ public class MainWindowViewModel : ViewModelBase
         var obj = await _models.ImportAsync(path);
         if (obj is null) { StatusMessage = "Import failed."; return; }
 
-        var node = new FeatureNode
-        {
-            Icon = "📥",
-            Name = Path.GetFileNameWithoutExtension(path),
-            FeatureType = Path.GetExtension(path).TrimStart('.')
-        };
+        var node = MakeNode("📥", Path.GetFileNameWithoutExtension(path),
+                            Path.GetExtension(path).TrimStart('.'));
         if (FeatureNodes.Count > 0)
             FeatureNodes[0].Children.Add(node);
 
@@ -251,7 +261,7 @@ public class MainWindowViewModel : ViewModelBase
     {
         var name = $"Sketch {FeatureNodes[0].Children.Count + 1}";
         _history.Push(new AddSceneObjectAction(_scene, name, "sketch"));
-        FeatureNodes[0].Children.Add(new FeatureNode { Icon = "⬜", Name = name, FeatureType = "sketch" });
+        FeatureNodes[0].Children.Add(MakeNode("⬜", name, "sketch"));
         StatusMessage = $"{name} — select a plane to begin.";
         RuntimeLog.Info("VM", $"New sketch '{name}' created.");
     }
@@ -260,7 +270,7 @@ public class MainWindowViewModel : ViewModelBase
     {
         var name = $"Extrude {FeatureNodes[0].Children.Count + 1}";
         _history.Push(new AddSceneObjectAction(_scene, name, "extrude"));
-        FeatureNodes[0].Children.Add(new FeatureNode { Icon = "⬆", Name = name, FeatureType = "extrude" });
+        FeatureNodes[0].Children.Add(MakeNode("⬆", name, "extrude"));
         StatusMessage = "Extrude: set depth in properties panel.";
     }
 
@@ -282,40 +292,51 @@ public class MainWindowViewModel : ViewModelBase
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
 
     // ── Feature tree context menu ─────────────────────────────────────────────
-    private void DeleteFeature(FeatureNode? node)
+    private void DeleteFeature(FeatureNode node)
     {
-        if (node is null) return;
-        // Search all roots and their children
         foreach (var root in FeatureNodes)
         {
             if (root.Children.Remove(node))
             {
                 StatusMessage = $"Deleted '{node.Name}'.";
-                RuntimeLog.Info("VM", $"Deleted feature node '{node.Name}'");
+                RuntimeLog.Info("VM", $"Deleted feature '{node.Name}'");
                 return;
             }
         }
-        // Don't delete root nodes
         StatusMessage = "Cannot delete root node.";
     }
 
-    private void RenameFeature(FeatureNode? node)
+    private void RenameFeature(FeatureNode node)
     {
-        if (node is null) return;
-        // Inline rename: append " (renamed)" as a minimal placeholder.
-        // A real dialog would require an InputDialog service — wired separately.
-        var newName = node.Name.EndsWith(" (renamed)", StringComparison.Ordinal)
-            ? node.Name
-            : node.Name + " (renamed)";
-        node.Name = newName;
-        StatusMessage = $"Renamed to '{newName}'. (Full rename dialog coming soon.)";
+        // Appends " (2)", " (3)" … until unique — real input dialog wired later
+        var baseName = node.Name.Contains(" (") ? node.Name[..node.Name.LastIndexOf(" (")] : node.Name;
+        int suffix = 2;
+        string candidate;
+        do { candidate = $"{baseName} ({suffix++})"; }
+        while (AllNodes().Any(n => n != node && n.Name == candidate));
+        node.Name = candidate;
+        StatusMessage = $"Renamed to '{candidate}'.";
     }
 
-    private void ToggleVisibility(FeatureNode? node)
+    private void ToggleVisibility(FeatureNode node)
     {
-        if (node is null) return;
         node.IsVisible = !node.IsVisible;
         StatusMessage = $"'{node.Name}' {(node.IsVisible ? "visible" : "hidden")}.";
+    }
+
+    private IEnumerable<FeatureNode> AllNodes()
+    {
+        foreach (var root in FeatureNodes)
+            foreach (var n in Flatten(root))
+                yield return n;
+
+        static IEnumerable<FeatureNode> Flatten(FeatureNode n)
+        {
+            yield return n;
+            foreach (var child in n.Children)
+                foreach (var desc in Flatten(child))
+                    yield return desc;
+        }
     }
 
     // ── AI handlers ───────────────────────────────────────────────────────────
