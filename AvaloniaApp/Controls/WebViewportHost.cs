@@ -1186,44 +1186,82 @@ public sealed class WebViewportHost : NativeControlHost
       position: fixed;
       top: 12px;
       right: 12px;
-      width: 92px;
-      height: 92px;
+      width: 78px;
+      height: 78px;
       z-index: 16;
       cursor: pointer;
-      border-radius: 8px;
+      border-radius: 12px;
       overflow: hidden;
       touch-action: none;
+      border: 1px solid rgba(160, 176, 198, 0.65);
+      background: rgba(246, 249, 252, 0.78);
+      box-shadow: 0 8px 22px rgba(34, 49, 67, 0.16);
+      backdrop-filter: blur(8px);
+    }
+    #view-dock-actions {
+      position: fixed;
+      top: 96px;
+      right: 12px;
+      display: flex;
+      gap: 6px;
+      z-index: 16;
+      pointer-events: auto;
     }
     #view-nav {
       position: fixed;
-      top: 110px;
+      top: 132px;
       right: 12px;
-      display: grid;
-      grid-template-columns: repeat(2, 42px);
-      gap: 4px;
+      display: none;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
       z-index: 15;
       pointer-events: auto;
+      width: 152px;
+      padding: 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(160, 176, 198, 0.65);
+      background: rgba(246, 249, 252, 0.94);
+      box-shadow: 0 12px 28px rgba(34, 49, 67, 0.2);
+      backdrop-filter: blur(10px);
     }
-    #view-nav button {
-      width: 42px;
-      height: 24px;
+    #view-nav.open {
+      display: grid;
+    }
+    #view-nav button,
+    #view-dock-actions button {
       border: 1px solid #c2cad5;
-      background: rgba(247,250,252,0.88);
+      background: rgba(247,250,252,0.92);
       color: #3a4a5e;
       font: 11px/1 Segoe UI, sans-serif;
       cursor: pointer;
-      border-radius: 3px;
+      border-radius: 8px;
       user-select: none;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    #view-nav button:hover {
-      background: rgba(220, 230, 245, 0.96);
+    #view-nav button {
+      height: 26px;
+      min-width: 0;
+      padding: 0 6px;
+    }
+    #view-dock-actions button {
+      height: 24px;
+      padding: 0 10px;
+      font-weight: 600;
+    }
+    #view-nav button:hover,
+    #view-dock-actions button:hover {
+      background: rgba(220, 230, 245, 0.98);
       border-color: #9ab0cb;
     }
-    #view-nav button:active {
+    #view-nav button:active,
+    #view-dock-actions button:active {
       background: rgba(190, 210, 240, 0.96);
+    }
+    #view-nav-toggle.active {
+      border-color: #4c9ef0;
+      color: #23598a;
     }
   </style>
 </head>
@@ -1232,6 +1270,10 @@ public sealed class WebViewportHost : NativeControlHost
   <canvas id="snap-overlay"></canvas>
   <div id="box-select-overlay"></div>
   <div id="hud">Reference planes: Top / Front / Right</div>
+  <div id="view-dock-actions">
+    <button type="button" id="view-nav-toggle">Views</button>
+    <button type="button" id="wf-toggle" data-wf="0">Shaded</button>
+  </div>
   <div id="view-nav">
     <button type="button" data-view="iso">Iso</button>
     <button type="button" data-view="iso-ne">NE</button>
@@ -1244,7 +1286,6 @@ public sealed class WebViewportHost : NativeControlHost
     <button type="button" data-view="bottom">Bot</button>
     <button type="button" data-view="back">Back</button>
     <button type="button" data-view="left">Left</button>
-    <button type="button" id="wf-toggle" data-wf="0">Shd</button>
   </div>
   <div id="viewport-menu">
     <button type="button" data-action="delete">Delete</button>
@@ -1585,15 +1626,35 @@ public sealed class WebViewportHost : NativeControlHost
           }
         }
 
-        // Re-style view-nav buttons for theme
+        // Re-style orientation dock buttons for theme
         const viewNavEl = document.getElementById('view-nav');
+        const viewDockActionsEl = document.getElementById('view-dock-actions');
         if (viewNavEl) {
           const isDark = currentTheme === 'Dark';
+          viewNavEl.style.background = isDark ? 'rgba(34,41,52,0.96)' : 'rgba(246,249,252,0.94)';
+          viewNavEl.style.borderColor = isDark ? '#495364' : '#c2cad5';
           for (const btn of viewNavEl.querySelectorAll('button')) {
             btn.style.background = isDark ? 'rgba(41,48,60,0.88)' : 'rgba(247,250,252,0.88)';
             btn.style.borderColor = isDark ? '#495364' : '#c2cad5';
             btn.style.color = isDark ? '#d7dfeb' : '#3a4a5e';
           }
+        }
+        if (viewDockActionsEl) {
+          const isDark = currentTheme === 'Dark';
+          for (const btn of viewDockActionsEl.querySelectorAll('button')) {
+            btn.style.background = isDark ? 'rgba(41,48,60,0.9)' : 'rgba(247,250,252,0.92)';
+            btn.style.borderColor = isDark ? '#495364' : '#c2cad5';
+            btn.style.color = isDark ? '#d7dfeb' : '#3a4a5e';
+          }
+        }
+        const viewCubeEl = document.getElementById('vcube');
+        if (viewCubeEl) {
+          const isDark = currentTheme === 'Dark';
+          viewCubeEl.style.borderColor = isDark ? '#495364' : 'rgba(160, 176, 198, 0.65)';
+          viewCubeEl.style.background = isDark ? 'rgba(34,41,52,0.84)' : 'rgba(246,249,252,0.78)';
+          viewCubeEl.style.boxShadow = isDark
+            ? '0 8px 22px rgba(0, 0, 0, 0.32)'
+            : '0 8px 22px rgba(34, 49, 67, 0.16)';
         }
       }
 
@@ -3896,6 +3957,27 @@ public sealed class WebViewportHost : NativeControlHost
 
       // Standard view navigation buttons
       const viewNav = document.getElementById('view-nav');
+      const viewNavToggle = document.getElementById('view-nav-toggle');
+      const closeViewNav = () => {
+        if (viewNav) {
+          viewNav.classList.remove('open');
+        }
+        if (viewNavToggle) {
+          viewNavToggle.classList.remove('active');
+        }
+      };
+      const toggleViewNav = (forceOpen) => {
+        if (!viewNav || !viewNavToggle) return;
+        const shouldOpen = forceOpen ?? !viewNav.classList.contains('open');
+        viewNav.classList.toggle('open', shouldOpen);
+        viewNavToggle.classList.toggle('active', shouldOpen);
+      };
+      if (viewNavToggle) {
+        viewNavToggle.addEventListener('click', (e) => {
+          toggleViewNav();
+          e.stopPropagation();
+        });
+      }
       if (viewNav) {
         viewNav.addEventListener('click', (e) => {
           const btn = e.target.closest('button');
@@ -3920,15 +4002,23 @@ public sealed class WebViewportHost : NativeControlHost
           if (!v) return;
           startCameraSnap(v.pos, v.up);
           setCameraClipping(dist);
+          closeViewNav();
           e.stopPropagation();
         });
       }
+      document.addEventListener('pointerdown', (e) => {
+        const target = e.target;
+        if (viewNav?.contains(target) || viewNavToggle?.contains(target)) {
+          return;
+        }
+        closeViewNav();
+      });
 
       const wfToggle = document.getElementById('wf-toggle');
       if (wfToggle) {
         wfToggle.addEventListener('click', (e) => {
           isWireframeMode = !isWireframeMode;
-          wfToggle.textContent = isWireframeMode ? 'Wfr' : 'Shd';
+          wfToggle.textContent = isWireframeMode ? 'Wire' : 'Shaded';
           wfToggle.style.borderColor = isWireframeMode ? '#7baee0' : '';
           bodyMap.forEach((mesh) => { mesh.material.wireframe = isWireframeMode; });
           edgeMap.forEach((lines) => { lines.visible = !isWireframeMode; });
@@ -3941,7 +4031,7 @@ public sealed class WebViewportHost : NativeControlHost
         const vcCanvas = document.getElementById('vcube');
         if (!vcCanvas) return;
 
-        const sz = 92;
+        const sz = 78;
         vcCanvas.width  = Math.round(sz * window.devicePixelRatio);
         vcCanvas.height = Math.round(sz * window.devicePixelRatio);
         vcCanvas.style.width  = sz + 'px';
