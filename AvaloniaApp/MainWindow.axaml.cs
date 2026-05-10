@@ -94,6 +94,18 @@ public partial class MainWindow : Window
                 vm.ExtrudeCommand.Execute(null);
                 e.Handled = true;
                 break;
+            case Avalonia.Input.Key.R when vm.RevolveCommand.CanExecute(null):
+                vm.RevolveCommand.Execute(null);
+                e.Handled = true;
+                break;
+            case Avalonia.Input.Key.L when vm.LoftCommand.CanExecute(null):
+                vm.LoftCommand.Execute(null);
+                e.Handled = true;
+                break;
+            case Avalonia.Input.Key.H when vm.ShellCommand.CanExecute(null):
+                vm.ShellCommand.Execute(null);
+                e.Handled = true;
+                break;
             case Avalonia.Input.Key.Escape:
                 vm.StatusMessage = "Ready";
                 e.Handled = true;

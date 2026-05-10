@@ -62,8 +62,17 @@ public class ModelManager
         if (ext == ".stl")
         {
             await using var fs = File.OpenRead(filePath);
-            obj.Geometry = Mesh.ReadBinaryStl(fs);
-            RuntimeLog.Info("Model", $"Imported STL '{name}' — {obj.Geometry.Triangles.Count} triangles");
+            if (IsAsciiStl(fs))
+            {
+                // ASCII STL: viewport loads it fine via loadSTL, engine mesh left null
+                RuntimeLog.Info("Model", $"Imported ASCII STL '{name}' — engine geometry not parsed (ASCII format)");
+            }
+            else
+            {
+                fs.Seek(0, SeekOrigin.Begin);
+                obj.Geometry = Mesh.ReadBinaryStl(fs);
+                RuntimeLog.Info("Model", $"Imported binary STL '{name}' — {obj.Geometry.Triangles.Count} triangles");
+            }
         }
         else
         {
@@ -155,5 +164,33 @@ public class ModelManager
 
         static string Vert(System.Numerics.Vector3 v) =>
             $"v {v.X:F6} {v.Y:F6} {v.Z:F6}";
+    }
+
+    // Returns true if the stream contains an ASCII STL file (starts with "solid ").
+    // A binary STL can also start with "solid" by chance, so we cross-check with the
+    // file size: binary size = 84 + triangleCount*50 bytes.
+    private static bool IsAsciiStl(Stream stream)
+    {
+        var header = new byte[80];
+        var read = stream.Read(header, 0, header.Length);
+        if (read < 5) return false;
+
+        var prefix = System.Text.Encoding.ASCII.GetString(header, 0, Math.Min(6, read));
+        if (!prefix.StartsWith("solid", StringComparison.OrdinalIgnoreCase)) return false;
+
+        // Cross-check with binary size formula to avoid false positives
+        if (read >= 80 && stream.CanSeek)
+        {
+            stream.Seek(80, SeekOrigin.Begin);
+            var countBuf = new byte[4];
+            if (stream.Read(countBuf, 0, 4) == 4)
+            {
+                var triCount = BitConverter.ToUInt32(countBuf, 0);
+                var expectedSize = 84L + triCount * 50L;
+                if (stream.Length == expectedSize) return false; // it's binary
+            }
+        }
+
+        return true;
     }
 }

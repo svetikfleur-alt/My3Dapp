@@ -256,6 +256,28 @@ function setStatus(msg) {
   statusEl.textContent = msg;
 }
 
+// ── Cursor position → host app (WebView2 postMessage) ────────────────────────
+const _raycaster   = new THREE.Raycaster();
+const _groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // XZ at y=0
+const _hitPoint    = new THREE.Vector3();
+renderer.domElement.addEventListener('mousemove', (e) => {
+  if (!window.chrome?.webview) return; // only in WebView2 host
+  const rect = renderer.domElement.getBoundingClientRect();
+  const ndc = new THREE.Vector2(
+     ((e.clientX - rect.left) / rect.width)  * 2 - 1,
+    -((e.clientY - rect.top)  / rect.height) * 2 + 1
+  );
+  _raycaster.setFromCamera(ndc, camera);
+  if (_raycaster.ray.intersectPlane(_groundPlane, _hitPoint)) {
+    window.chrome.webview.postMessage(JSON.stringify({
+      type: 'cursorPos',
+      x: +_hitPoint.x.toFixed(2),
+      y: +_hitPoint.y.toFixed(2),
+      z: +_hitPoint.z.toFixed(2)
+    }));
+  }
+});
+
 // ── Resize ────────────────────────────────────────────────────────────────────
 window.addEventListener('resize', () => {
   const w = container.clientWidth, h = container.clientHeight;

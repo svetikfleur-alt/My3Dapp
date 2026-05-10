@@ -16,7 +16,23 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly ModelManager _models;
 
     public IFileDialogService? FileDialogs { get; set; }
-    public ViewportService? ViewportService { get; set; }
+
+    private ViewportService? _viewportService;
+    public ViewportService? ViewportService
+    {
+        get => _viewportService;
+        set
+        {
+            if (_viewportService != null)
+                _viewportService.CursorPositionChanged -= OnCursorPositionChanged;
+            _viewportService = value;
+            if (_viewportService != null)
+                _viewportService.CursorPositionChanged += OnCursorPositionChanged;
+        }
+    }
+
+    private void OnCursorPositionChanged(float x, float y, float z)
+        => CursorPosition = $"X: {x:F1}  Y: {y:F1}  Z: {z:F1}";
 
     // ── Bindable state ────────────────────────────────────────────────────────
     private bool _isViewportLoading = true;
@@ -65,7 +81,11 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     public bool AiIsThinking
     {
         get => _aiIsThinking;
-        set => SetField(ref _aiIsThinking, value);
+        set
+        {
+            if (SetField(ref _aiIsThinking, value))
+                ((RelayCommand)AiCancelCommand).NotifyCanExecuteChanged();
+        }
     }
 
     // ── Collections ───────────────────────────────────────────────────────────
@@ -460,7 +480,11 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         StatusMessage = "AI chat cleared.";
     }
 
-    public void Dispose() => _ai.Dispose();
+    public void Dispose()
+    {
+        ViewportService = null; // unsubscribes CursorPositionChanged
+        _ai.Dispose();
+    }
 
     private async Task AiSuggestFeatureAsync()
     {

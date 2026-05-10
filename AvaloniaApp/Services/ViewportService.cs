@@ -1,5 +1,6 @@
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using Avalonia.Controls;
 
 namespace My3DApp.AvaloniaApp.Services;
@@ -16,6 +17,9 @@ public class ViewportService : IDisposable
 
     // WebView2 COM interop handle — platform only, no-op on non-Windows
     private object? _webView;
+
+    // Fired when the Three.js raycaster reports a new ground-plane cursor position.
+    public event Action<float, float, float>? CursorPositionChanged;
 
     public ViewportService(Border host)
     {
@@ -65,6 +69,58 @@ public class ViewportService : IDisposable
 
         var viewerPath = GetViewerPath();
         NavigateTo($"file:///{viewerPath.Replace('\\', '/')}");
+
+        // Wire WebMessageReceived via reflection to receive cursor position updates
+        SubscribeWebMessages();
+    }
+
+    private void SubscribeWebMessages()
+    {
+        try
+        {
+            var coreWv2Prop = _webView?.GetType().GetProperty("CoreWebView2");
+            var coreWv2 = coreWv2Prop?.GetValue(_webView);
+            if (coreWv2 is null) return;
+
+            var eventInfo = coreWv2.GetType().GetEvent("WebMessageReceived");
+            if (eventInfo is null) return;
+
+            // Build a handler whose signature matches EventHandler<CoreWebView2WebMessageReceivedEventArgs>
+            // by using a helper method with (object, object) params — compatible via reflection invoke
+            var handlerDelegate = Delegate.CreateDelegate(
+                eventInfo.EventHandlerType!,
+                this,
+                typeof(ViewportService).GetMethod(nameof(OnWebMessageReceived),
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            );
+            eventInfo.AddEventHandler(coreWv2, handlerDelegate);
+        }
+        catch (Exception ex)
+        {
+            RuntimeLog.Warn("Viewport", $"WebMessage subscribe failed: {ex.Message}");
+        }
+    }
+
+    private void OnWebMessageReceived(object sender, object e)
+    {
+        try
+        {
+            var method = e.GetType().GetMethod("TryGetWebMessageAsString");
+            if (method?.Invoke(e, null) is not string json) return;
+
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            if (root.TryGetProperty("type", out var typeEl) &&
+                typeEl.GetString() == "cursorPos" &&
+                root.TryGetProperty("x", out var xEl) &&
+                root.TryGetProperty("y", out var yEl) &&
+                root.TryGetProperty("z", out var zEl))
+            {
+                CursorPositionChanged?.Invoke(
+                    xEl.GetSingle(), yEl.GetSingle(), zEl.GetSingle());
+            }
+        }
+        catch { /* never throw from an event handler */ }
     }
 
     private static string GetViewerPath()

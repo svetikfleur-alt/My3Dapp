@@ -44,11 +44,11 @@
         <!-- Top Toolbar -->
         <Border DockPanel.Dock="Top" Background="#0F3460" Padding="4,2">
             <StackPanel Orientation="Horizontal" Spacing="2">
-                <Button Content="⬜ Sketch"   Command="{Binding NewSketchCommand}"       ToolTip.Tip="New Sketch"         Classes="toolbar-btn" />
-                <Button Content="⬆ Extrude"  Command="{Binding ExtrudeCommand}"         ToolTip.Tip="Extrude"            Classes="toolbar-btn" />
-                <Button Content="↻ Revolve"  Command="{Binding RevolveCommand}"         ToolTip.Tip="Revolve"            Classes="toolbar-btn" />
-                <Button Content="⤵ Loft"     Command="{Binding LoftCommand}"            ToolTip.Tip="Loft"               Classes="toolbar-btn" />
-                <Button Content="⚙ Shell"    Command="{Binding ShellCommand}"           ToolTip.Tip="Shell"              Classes="toolbar-btn" />
+                <Button Content="⬜ Sketch"   Command="{Binding NewSketchCommand}"       ToolTip.Tip="New Sketch  [S]"    Classes="toolbar-btn" />
+                <Button Content="⬆ Extrude"  Command="{Binding ExtrudeCommand}"         ToolTip.Tip="Extrude  [E]"       Classes="toolbar-btn" />
+                <Button Content="↻ Revolve"  Command="{Binding RevolveCommand}"         ToolTip.Tip="Revolve  [R]"       Classes="toolbar-btn" />
+                <Button Content="⤵ Loft"     Command="{Binding LoftCommand}"            ToolTip.Tip="Loft  [L]"          Classes="toolbar-btn" />
+                <Button Content="⚙ Shell"    Command="{Binding ShellCommand}"           ToolTip.Tip="Shell  [H]"         Classes="toolbar-btn" />
                 <!-- Visual divider -->
                 <Border Width="1" Margin="4,4" Background="#2A3F5F" />
                 <Button Content="⊕ Union"    Command="{Binding BooleanUnionCommand}"    ToolTip.Tip="Boolean Union"      Classes="toolbar-btn" />
