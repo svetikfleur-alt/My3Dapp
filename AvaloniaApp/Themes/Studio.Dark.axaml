@@ -621,6 +621,42 @@
     <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
   </Style>
 
+  <Style Selector="Border.SketchTaskStatusChip">
+    <Setter Property="Background" Value="#202834" />
+    <Setter Property="BorderBrush" Value="#465266" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="Padding" Value="8,6" />
+  </Style>
+
+  <Style Selector="Border.SketchTaskStatusChip.DofUnderconstrained">
+    <Setter Property="Background" Value="#1a2940" />
+    <Setter Property="BorderBrush" Value="#36567e" />
+  </Style>
+
+  <Style Selector="Border.SketchTaskStatusChip.DofFullyConstrained">
+    <Setter Property="Background" Value="#182d22" />
+    <Setter Property="BorderBrush" Value="#356c46" />
+  </Style>
+
+  <Style Selector="Border.SketchTaskStatusChip.DofOverconstrained">
+    <Setter Property="Background" Value="#3a2818" />
+    <Setter Property="BorderBrush" Value="#8a5a2c" />
+  </Style>
+
+  <Style Selector="TextBlock.SketchTaskStatusText">
+    <Setter Property="FontSize" Value="10.75" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="TextBlock.SketchTaskStatusHelp">
+    <Setter Property="FontSize" Value="10.25" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
   <Style Selector="Button.SketchTaskActionButton">
     <Setter Property="Background" Value="#2a2f38" />
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />

@@ -421,12 +421,12 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             ? "Click a reference plane in the viewport."
             :
         IsSketchMode
-            ? $"{ViewportSketchSessionTitle} | {SelectedSketchTool} tool"
+            ? $"{ViewportSketchSessionTitle} | {SelectedSketchTool} tool | {SketchDefinitionHeadline}"
             : "Select a reference plane, then begin a sketch.";
 
     public string ActiveSketchTaskDetails =>
         IsSketchMode
-            ? $"{SketchConstraintHint} | {SketchDimensionHint}"
+            ? $"{SketchDefinitionDetail} | {SketchConstraintHint} | {SketchDimensionHint}"
             : "Reference geometry stays available in the tree for the next feature.";
 
     public string ViewportSketchEntryLabel =>
@@ -462,10 +462,15 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             }
 
             RaisePropertyChanged(nameof(SketchDofLabel));
+            RaisePropertyChanged(nameof(SketchDefinitionHeadline));
+            RaisePropertyChanged(nameof(SketchDefinitionDetail));
             RaisePropertyChanged(nameof(SketchDofStatusClass));
             RaisePropertyChanged(nameof(SketchDofBrush));
             RaisePropertyChanged(nameof(IsDofFullyConstrained));
             RaisePropertyChanged(nameof(IsDofOverconstrained));
+            RaisePropertyChanged(nameof(IsDofUnderconstrained));
+            RaisePropertyChanged(nameof(ActiveSketchTaskSummary));
+            RaisePropertyChanged(nameof(ActiveSketchTaskDetails));
         }
     }
 
@@ -474,6 +479,20 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         0  => "● Fully constrained",
         < 0 => "⚠ Overconstrained",
         _  => $"○ {SketchDofValue} DOF remaining"
+    };
+
+    public string SketchDefinitionHeadline => SketchDofValue switch
+    {
+        0 => "Fully defined",
+        < 0 => "Overdefined",
+        _ => "Underdefined"
+    };
+
+    public string SketchDefinitionDetail => SketchDofValue switch
+    {
+        0 => "Geometry is locked by dimensions and constraints.",
+        < 0 => "Remove redundant constraints or conflicting driving dimensions.",
+        _ => "Add dimensions or constraints to lock the remaining geometry."
     };
 
     public string SketchDofStatusClass => SketchDofValue switch
@@ -492,6 +511,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public bool IsDofFullyConstrained => IsSketchMode && SketchDofValue == 0;
     public bool IsDofOverconstrained => IsSketchMode && SketchDofValue < 0;
+    public bool IsDofUnderconstrained => IsSketchMode && SketchDofValue > 0;
 
     public string SketchWorkflowHint =>
         IsSelectingSketchPlane
@@ -3031,14 +3051,14 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
         if (project.ActiveSketchSession is not null)
         {
-            SketchConstraintHint = "Constraints: Horizontal · Vertical · Coincident · Equal · Fix";
-            SketchDimensionHint = "Dimensions update as sketch geometry is committed.";
+            SketchConstraintHint = "Constraints: Horizontal · Vertical · Coincident · Equal · Fix · Parallel · Perpendicular · Concentric · Tangent";
+            SketchDimensionHint = "Driving dimensions solve geometry; reference dimensions report it.";
             return;
         }
 
         if (activeSketch is null)
         {
-            SketchConstraintHint = "Constraints: Horizontal · Vertical · Coincident · Equal · Fix";
+            SketchConstraintHint = "Constraints: Horizontal · Vertical · Coincident · Equal · Fix · Parallel · Perpendicular · Concentric · Tangent";
             SketchDimensionHint = "Dimensions appear when a sketch is selected or committed.";
             return;
         }
@@ -3124,7 +3144,13 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
         RaisePropertyChanged(nameof(HasActiveSketchConstraints));
         RaisePropertyChanged(nameof(HasActiveSketchDimensions));
+        RaisePropertyChanged(nameof(ActiveSketchConstraintCountLabel));
+        RaisePropertyChanged(nameof(ActiveSketchDimensionCountLabel));
     }
+
+    public string ActiveSketchConstraintCountLabel => $"CONSTRAINTS ({ActiveSketchConstraints.Count})";
+
+    public string ActiveSketchDimensionCountLabel => $"DIMENSIONS ({ActiveSketchDimensions.Count})";
 
     private static SketchFeature? FindSelectedSketchFeature(CadProject project)
     {
