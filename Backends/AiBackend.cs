@@ -15,7 +15,8 @@ public class AiBackend : IDisposable
     private readonly List<ChatMessage> _history = new();
     private const string ApiUrl     = "https://api.anthropic.com/v1/messages";
     private const string Model      = "claude-sonnet-4-6";
-    private const int    MaxTurns   = 20; // keep last N user+assistant pairs to avoid token overflow
+    private const int    MaxTurns   = 20;   // keep last N user+assistant pairs to avoid token overflow
+    private const int    MaxTokens  = 2048; // enough for geometry scripts + explanations
 
     public string? LastGeometryScript { get; private set; }
 
@@ -74,11 +75,12 @@ public class AiBackend : IDisposable
         var ct = _cts.Token;
 
         LastGeometryScript = null;
-        _history.Add(new ChatMessage("user", userMessage)); // plain message in history
 
         var apiKey = GetApiKey();
         if (string.IsNullOrEmpty(apiKey))
             return "API key not configured. Set ANTHROPIC_API_KEY environment variable.";
+
+        _history.Add(new ChatMessage("user", userMessage)); // plain message in history
 
         try
         {
@@ -98,7 +100,7 @@ public class AiBackend : IDisposable
             var request = new
             {
                 model = Model,
-                max_tokens = 1024,
+                max_tokens = MaxTokens,
                 system = SystemPrompt,
                 messages = apiMessages
             };

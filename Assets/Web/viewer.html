@@ -139,6 +139,30 @@ const meshObjects = {};
 // ── Viewer API (called by C# via ExecuteScriptAsync) ──────────────────────────
 window.viewer = {
 
+  // Adds a semi-transparent sketch plane indicator (flat XZ-plane rectangle).
+  addSketchPlane(name, w = 120, d = 120) {
+    const geo = new THREE.PlaneGeometry(w, d);
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0x4488ff, transparent: true, opacity: 0.18,
+      side: THREE.DoubleSide, depthWrite: false
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.x = -Math.PI / 2; // lie flat on XZ plane
+    mesh.name = name;
+    scene.add(mesh);
+    meshObjects[name] = mesh;
+
+    // Outline border
+    const edgesGeo = new THREE.EdgesGeometry(geo);
+    const edgesMat = new THREE.LineBasicMaterial({ color: 0x6699ff });
+    const edges = new THREE.LineSegments(edgesGeo, edgesMat);
+    edges.rotation.x = -Math.PI / 2;
+    edges.name = name + '_edges';
+    scene.add(edges);
+
+    setStatus(`Sketch plane "${name}" ready`);
+  },
+
   addBox(name, w = 100, h = 50, d = 30) {
     const geo = new THREE.BoxGeometry(w, h, d);
     const mesh = new THREE.Mesh(geo, isWireframe ? wireframeMaterial.clone() : defaultMaterial.clone());
@@ -255,6 +279,21 @@ window.viewer = {
 function setStatus(msg) {
   statusEl.textContent = msg;
 }
+
+// ── Click-to-select → host app ────────────────────────────────────────────────
+renderer.domElement.addEventListener('click', (e) => {
+  if (!window.chrome?.webview) return;
+  const rect = renderer.domElement.getBoundingClientRect();
+  const ndc = new THREE.Vector2(
+     ((e.clientX - rect.left) / rect.width)  * 2 - 1,
+    -((e.clientY - rect.top)  / rect.height) * 2 + 1
+  );
+  const pickRay = new THREE.Raycaster();
+  pickRay.setFromCamera(ndc, camera);
+  const hits = pickRay.intersectObjects(Object.values(meshObjects), false);
+  const name = hits.length > 0 ? hits[0].object.name : null;
+  window.chrome.webview.postMessage(JSON.stringify({ type: 'select', name }));
+});
 
 // ── Cursor position → host app (WebView2 postMessage) ────────────────────────
 const _raycaster   = new THREE.Raycaster();

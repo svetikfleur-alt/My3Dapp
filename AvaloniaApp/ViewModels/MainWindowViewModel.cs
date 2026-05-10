@@ -24,15 +24,34 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         set
         {
             if (_viewportService != null)
+            {
                 _viewportService.CursorPositionChanged -= OnCursorPositionChanged;
+                _viewportService.ObjectSelected        -= OnObjectSelected;
+            }
             _viewportService = value;
             if (_viewportService != null)
+            {
                 _viewportService.CursorPositionChanged += OnCursorPositionChanged;
+                _viewportService.ObjectSelected        += OnObjectSelected;
+            }
         }
     }
 
     private void OnCursorPositionChanged(float x, float y, float z)
         => CursorPosition = $"X: {x:F1}  Y: {y:F1}  Z: {z:F1}";
+
+    private void OnObjectSelected(string? name)
+    {
+        if (name is null)
+        {
+            SelectionInfo = "Nothing selected";
+            return;
+        }
+        SelectionInfo = $"Selected: {name}";
+        // Sync feature tree selection to match viewport click
+        var match = AllNodes().FirstOrDefault(n => n.Name == name);
+        if (match != null) SelectedFeatureNode = match;
+    }
 
     // ── Bindable state ────────────────────────────────────────────────────────
     private bool _isViewportLoading = true;
@@ -297,7 +316,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         var node = MakeNode("⬜", name, "sketch");
         node.SceneObjectId = _scene.Objects.FirstOrDefault(o => o.Name == name)?.Id;
         FeatureNodes[0].Children.Add(node);
-        StatusMessage = $"{name} — select a plane to begin.";
+        _ = ViewportService?.ExecuteScriptAsync(
+            $"viewer.addSketchPlane('{name.Replace("'", "")}'); viewer.fitView();");
+        StatusMessage = $"{name} — sketch plane added. Define profile in the AI panel.";
         RuntimeLog.Info("VM", $"New sketch '{name}' created.");
     }
 

@@ -21,6 +21,9 @@ public class ViewportService : IDisposable
     // Fired when the Three.js raycaster reports a new ground-plane cursor position.
     public event Action<float, float, float>? CursorPositionChanged;
 
+    // Fired when the user clicks in the viewport. Name is null when clicking empty space.
+    public event Action<string?>? ObjectSelected;
+
     public ViewportService(Border host)
     {
         _host = host;
@@ -110,14 +113,23 @@ public class ViewportService : IDisposable
 
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
-            if (root.TryGetProperty("type", out var typeEl) &&
-                typeEl.GetString() == "cursorPos" &&
+            if (!root.TryGetProperty("type", out var typeEl)) return;
+            var msgType = typeEl.GetString();
+
+            if (msgType == "cursorPos" &&
                 root.TryGetProperty("x", out var xEl) &&
                 root.TryGetProperty("y", out var yEl) &&
                 root.TryGetProperty("z", out var zEl))
             {
                 CursorPositionChanged?.Invoke(
                     xEl.GetSingle(), yEl.GetSingle(), zEl.GetSingle());
+            }
+            else if (msgType == "select")
+            {
+                var name = root.TryGetProperty("name", out var nameEl) && nameEl.ValueKind != JsonValueKind.Null
+                    ? nameEl.GetString()
+                    : null;
+                ObjectSelected?.Invoke(name);
             }
         }
         catch { /* never throw from an event handler */ }
@@ -132,9 +144,22 @@ public class ViewportService : IDisposable
     private void NavigateTo(string url)
     {
         if (_webView is null) return;
-        var method = _webView.GetType().GetMethod("Navigate", [typeof(string)])
-            ?? _webView.GetType().GetMethod("Source"); // fallback property setter
-        method?.Invoke(_webView, [url]);
+
+        // Prefer CoreWebView2.Navigate(string) after init, fall back to setting Source property
+        var coreWv2 = _webView.GetType().GetProperty("CoreWebView2")?.GetValue(_webView);
+        if (coreWv2 != null)
+        {
+            coreWv2.GetType().GetMethod("Navigate", [typeof(string)])?.Invoke(coreWv2, [url]);
+            return;
+        }
+
+        // Before CoreWebView2 is available, set Source property (accepts Uri)
+        var sourceProp = _webView.GetType().GetProperty("Source");
+        if (sourceProp != null)
+        {
+            var uri = new Uri(url);
+            sourceProp.SetValue(_webView, uri);
+        }
     }
 
     public async Task ExecuteScriptAsync(string script)
