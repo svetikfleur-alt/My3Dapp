@@ -1,0 +1,137 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="My3DApp.AvaloniaApp.Dialogs.RevolveFeatureDialog"
+        Width="460"
+        Height="410"
+        MinWidth="430"
+        MinHeight="390"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Classes="FeatureDialogWindow"
+        Title="Revolve">
+  <Border Classes="FeatureDialogPanel" Margin="0">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="FeatureDialogTitle"
+                     Text="Revolve" />
+          <TextBlock Classes="FeatureDialogSubtitle"
+                     TextWrapping="Wrap"
+                     Text="Create a solid by revolving a closed sketch profile around a sketch axis." />
+        </StackPanel>
+        <Border Grid.Column="1"
+                Background="{DynamicResource Studio.PanelInsetBrush}"
+                BorderBrush="{DynamicResource Studio.BorderBrush}"
+                BorderThickness="1"
+                Padding="9,5"
+                VerticalAlignment="Top">
+          <TextBlock Text="FEATURE"
+                     FontSize="10"
+                     FontWeight="SemiBold" />
+        </Border>
+      </Grid>
+
+      <StackPanel Grid.Row="2"
+                  Margin="0,16,0,16"
+                  Spacing="12">
+        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
+                BorderBrush="{DynamicResource Studio.BorderBrush}"
+                BorderThickness="1"
+                Padding="12">
+          <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="96,*">
+            <TextBlock Text="Profile"
+                       FontWeight="SemiBold" />
+            <TextBlock Grid.Column="1"
+                       x:Name="ProfileValueTextBlock"
+                       TextWrapping="Wrap"
+                       Text="Closed sketch profile" />
+            <TextBlock Grid.Row="1"
+                       Text="Plane"
+                       Margin="0,10,0,0"
+                       FontWeight="SemiBold" />
+            <TextBlock Grid.Row="1"
+                       Grid.Column="1"
+                       x:Name="PlaneValueTextBlock"
+                       Margin="0,10,0,0"
+                       Text="Top" />
+            <TextBlock Grid.Row="2"
+                       Text="Operation"
+                       Margin="0,10,0,0"
+                       FontWeight="SemiBold" />
+            <ComboBox Grid.Row="2"
+                      Grid.Column="1"
+                      Margin="0,8,0,0"
+                      SelectedIndex="0"
+                      IsEnabled="False">
+              <ComboBoxItem Content="New Body" />
+            </ComboBox>
+          </Grid>
+        </Border>
+
+        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
+                BorderBrush="{DynamicResource Studio.BorderBrush}"
+                BorderThickness="1"
+                Padding="12">
+          <Grid ColumnDefinitions="*,88" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+            <TextBlock Text="Angle"
+                       FontWeight="SemiBold" />
+            <NumericUpDown x:Name="AngleInput"
+                           Grid.Row="1"
+                           Width="160"
+                           HorizontalAlignment="Left"
+                           Margin="0,8,0,0"
+                           Increment="5"
+                           Minimum="1"
+                           Maximum="360"
+                           FormatString="0.###" />
+            <Border Grid.Column="1"
+                    Grid.Row="1"
+                    Margin="8,8,0,0"
+                    Background="{DynamicResource Studio.PanelBackgroundBrush}"
+                    BorderBrush="{DynamicResource Studio.BorderBrush}"
+                    BorderThickness="1"
+                    Padding="10,6"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Top">
+              <TextBlock HorizontalAlignment="Center"
+                         Text="deg" />
+            </Border>
+
+            <TextBlock Grid.Row="2"
+                       Text="Axis"
+                       Margin="0,12,0,0"
+                       FontWeight="SemiBold" />
+            <ComboBox Grid.Row="3"
+                      x:Name="AxisComboBox"
+                      Width="160"
+                      HorizontalAlignment="Left"
+                      Margin="0,8,0,0"
+                      SelectedIndex="1">
+              <ComboBoxItem Content="Sketch X axis" Tag="x" />
+              <ComboBoxItem Content="Sketch Y axis" Tag="y" />
+            </ComboBox>
+            <TextBlock Grid.Row="4"
+                       Grid.ColumnSpan="2"
+                       Margin="0,10,0,0"
+                       Foreground="{DynamicResource Studio.TextMutedBrush}"
+                       TextWrapping="Wrap"
+                       Text="Current minimal revolve supports sketch X/Y axes only." />
+          </Grid>
+        </Border>
+      </StackPanel>
+
+      <StackPanel Grid.Row="3"
+                  Orientation="Horizontal"
+                  HorizontalAlignment="Right"
+                  Spacing="8">
+        <Button Content="Cancel"
+                Classes="FeatureDialogButtonSecondary"
+                Click="OnCancelClick" />
+        <Button Content="OK"
+                Classes="FeatureDialogButtonPrimary"
+                Click="OnConfirmClick" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>

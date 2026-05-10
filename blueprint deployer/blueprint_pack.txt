@@ -1,0 +1,935 @@
+=== FILE: 00_BLUEPRINT_README.md ===
+# Blueprint
+
+This folder is the project contract.
+
+It defines:
+- product identity
+- architecture
+- implementation boundaries
+- current scope
+- execution rules for the coding agent
+
+Blueprint is not a note collection.
+Blueprint is the source of truth for project structure and growth.
+
+If generated code conflicts with Blueprint, the code must be corrected.
+Blueprint must not be silently ignored.
+
+## Current project direction
+
+We are building a desktop-first parametric CAD Studio with an integrated engineering assistant.
+
+The product is intended to grow from:
+- early MVP / toy stage
+to:
+- serious engineering tool
+
+## Core principles
+
+- Desktop-first
+- Local compute first
+- Structured geometry first
+- Assistant as augmentation, not replacement
+- No fake UI
+- No dashboard/SaaS patterns
+- No organic sculpting in the current stage
+
+## Main documents
+
+Start here:
+- Core/01_PRODUCT_CONCEPT.md
+- Architecture/03_ARCHITECTURE_OVERVIEW.md
+- Architecture/04_TECH_DECISIONS.md
+- Execution/09_IMPLEMENTATION_RULES.md
+- Expansion/10_MVP_DEFINITION.md
+- Expansion/12_BLUEPRINT_EXPANSION_PLAN.md
+- Expansion/13_BLUEPRINT_EXECUTION_PROTOCOL.md
+
+=== FILE: Core/01_PRODUCT_CONCEPT.md ===
+# Product Concept
+
+## Product name (working)
+
+Parametric CAD Studio with Engineering Assistant
+
+## Product essence
+
+This product is a desktop-first engineering studio for structured geometric modeling.
+
+It is not:
+- a browser-first SaaS tool
+- a generic 3D editor
+- a casual AI chat app
+- an organic sculpting tool
+
+It is:
+- a local desktop engineering workspace
+- a parametric CAD environment
+- a feature-based modeling system
+- an assistant-augmented design tool
+
+## Product evolution
+
+Stage 1:
+- toy / MVP / controlled prototype
+
+Stage 2:
+- reliable engineering tool for real tasks
+
+Stage 3:
+- serious assistant-enabled system for complex engineering reasoning, modeling, and structured generation
+
+## Main promise
+
+The studio must help the user:
+- model structured geometry
+- handle repeatable patterns
+- work with features and parameters
+- receive engineering help
+- gradually trust the system on harder and harder tasks
+
+## Current design focus
+
+Current focus is:
+- shell
+- layout
+- toolbar
+- sidebar
+- viewport
+- assistant panel
+- feature workflow concept
+
+The current stage does NOT attempt to solve all CAD complexity.
+
+## Long-term aspiration
+
+The system should eventually support:
+- serious modeling work
+- structured engineering decision support
+- think-and-do workflows
+- complex patterned and parameterized forms
+- stable growth without architectural collapse
+
+=== FILE: Core/02_PRODUCT_SCOPE.md ===
+# Product Scope
+
+## In scope now
+
+- Desktop-first application shell
+- Parametric CAD direction
+- Sketch mode
+- 3D mode
+- Basic feature tree
+- Basic tool groups
+- Assistant panel concept
+- Structured geometry
+- Repeatable patterns
+- Local compute first
+- Blueprint-driven implementation
+
+## Explicitly out of scope now
+
+- Organic sculpting
+- Artistic freeform modeling
+- Browser-first architecture
+- Cloud-first dependency
+- Enterprise collaboration
+- Team workflow systems
+- Full manufacturing stack
+- Full simulation stack
+- Deep assembly workflows
+- Advanced CAM workflows
+- PDM/PLM
+
+## Scope boundary rule
+
+If a feature introduces major architectural weight but does not improve the current MVP path, it must be postponed.
+
+The current stage values:
+- clarity
+- stability
+- architectural correctness
+over
+- feature count
+
+=== FILE: Architecture/03_ARCHITECTURE_OVERVIEW.md ===
+# Architecture Overview
+
+## High-level architecture
+
+The system must be separated into layers.
+
+### Layer 1: UI Shell
+Contains:
+- top toolbar
+- left sidebar
+- center viewport container
+- right assistant panel
+- bottom tabs
+
+This layer manages interface structure, not geometry.
+
+### Layer 2: Viewport / Rendering Layer
+Contains:
+- viewport rendering area
+- axes / grid / planes visualization
+- future camera/navigation integration
+
+This layer is visual and interactive, but not the owner of product logic.
+
+### Layer 3: Model / Feature Layer
+Contains:
+- sketches
+- features
+- parameters
+- model tree
+- feature history / graph
+
+This layer is the source of truth for modeling state.
+
+### Layer 4: Assistant Layer
+Contains:
+- assistant modes
+- prompt/task handling
+- structured responses
+- future intent support
+- future action suggestions
+
+This layer must not directly become the source of truth for geometry.
+
+### Layer 5: Event / Context Layer
+Contains:
+- user actions
+- selection state
+- current mode
+- current task
+- current feature context
+
+This layer feeds assistant reasoning.
+
+## Architecture principle
+
+UI must not directly own modeling truth.
+Model data must not be embedded inside visual widgets.
+Assistant must react to context, not replace product architecture.
+
+=== FILE: Architecture/04_TECH_DECISIONS.md ===
+# Technical Decisions
+
+## Decision 1: Desktop-first
+
+The product is desktop-first.
+
+Reason:
+- local compute
+- reduced network dependency
+- better alignment with engineering workflows
+- better fit for heavy future tasks
+
+## Decision 2: Not browser-first
+
+Browser-first and cloud-first are not the current baseline.
+
+Reason:
+- local hardware should be used directly
+- internet dependency is undesirable
+- the product should remain useful under weak connectivity
+
+## Decision 3: WinForms is not the target shell technology
+
+WinForms may be tolerated as a temporary experiment only.
+It is not the target architectural foundation.
+
+Reason:
+- poor fit for modern dense engineering UI
+- poor long-term fit for custom viewport-heavy studio design
+- poor visual and structural ceiling for the intended product
+
+## Decision 4: Modern desktop shell required
+
+The target shell direction is:
+- WPF
+or
+- Avalonia
+
+Final choice may be made later, but the project must be guided as a modern desktop shell project, not a WinForms final architecture.
+
+## Decision 5: Rendering must be separated
+
+Viewport/rendering concerns must be isolated from standard UI controls.
+
+## Decision 6: Assistant is secondary to model logic
+
+Assistant is an augmentation layer.
+It must not become a substitute for architecture.
+
+## Decision 7: Organic sculpting postponed
+
+Organic modeling is explicitly postponed to a future stage.
+
+Current focus:
+- parametric geometry
+- feature workflows
+- patterned structures
+
+=== FILE: UI/05_UI_PRINCIPLES.md ===
+# UI Principles
+
+## Core UI identity
+
+The UI is an engineering desktop tool.
+
+It is not:
+- a SaaS dashboard
+- a startup app
+- a mobile interface
+- a card-heavy system
+- a playful design system
+
+## Style principles
+
+- dense
+- structured
+- technical
+- neutral
+- controlled
+- hierarchy-first
+
+## Layout hierarchy
+
+1. Viewport is the dominant area
+2. Toolbar is the main action zone
+3. Sidebar is structural
+4. Assistant is supportive
+5. Tabs are secondary
+
+## UI behavior principles
+
+- modes must be clear
+- Sketch and 3D UI states must not be mixed
+- buttons must not pretend to work if they do not
+- empty state must look intentional, not fake
+- assistant must not look like a casual messenger
+
+## Forbidden patterns
+
+- dashboards
+- analytics cards
+- fake data widgets
+- oversized padding
+- mobile spacing
+- chat bubbles as the default assistant style
+- browser visual language
+
+=== FILE: Assistant/06_ASSISTANT_CONCEPT.md ===
+# Assistant Concept
+
+## Assistant identity
+
+The assistant is an engineering co-pilot.
+
+It is not:
+- a casual chatbot
+- a generic AI widget
+- a social conversation interface
+
+It is:
+- a structured engineering helper
+- a reasoning layer
+- an execution helper
+- a context-aware system
+
+## Assistant modes
+
+### Auto
+Analyze task, propose short plan, execute.
+
+### Do
+Execute directly.
+
+### Think
+Analyze, compare, recommend, do not execute.
+
+### Assist
+Suggest next step based on current context and user actions.
+
+### Think & Do
+Analyze, choose best path, briefly explain, then execute.
+
+## Assistant output principles
+
+- concise
+- structured
+- actionable
+- low-noise
+- non-chatty
+
+## Assistant UI principles
+
+The panel should behave like a tool panel with dialog capability.
+
+Allowed:
+- short action summaries
+- short plan blocks
+- recommendations
+- execution progress
+- structured result summaries
+
+Forbidden:
+- casual filler text
+- long chat bubbles
+- avatars
+- emotional fluff
+
+## Long-term direction
+
+The assistant may later support:
+- context-aware intent detection
+- suggestion from user action sequences
+- engineering consulting
+- task planning before execution
+
+=== FILE: Assistant/08_EVENT_AND_CONTEXT_MODEL.md ===
+# Event and Context Model
+
+## Purpose
+
+The assistant cannot reason well without context.
+The system must expose structured context.
+
+## Context sources
+
+- current mode
+- selected object / feature
+- selected plane
+- active tool
+- recent user actions
+- model tree state
+- current task/prompt
+
+## Example action log entries
+
+- Enter Sketch on Top Plane
+- Draw Circle
+- Set Diameter = 20mm
+- Exit Sketch
+- Select Extrude
+
+## Why this exists
+
+This layer allows future assistant behaviors such as:
+- intent suggestion
+- next-step assistance
+- think-and-do workflows
+- error explanation
+- action recovery
+
+## Rule
+
+Assistant reasoning must be context-fed, not hallucination-led.
+
+=== FILE: Execution/09_IMPLEMENTATION_RULES.md ===
+# Implementation Rules
+
+## General rule
+
+The coding agent must implement structure before polish.
+
+## Must do
+
+- respect Blueprint
+- keep UI modular
+- keep viewport dominant
+- keep modes separate
+- keep assistant secondary to model architecture
+- prefer small safe changes
+
+## Must not do
+
+- do not generate fake working features
+- do not create placeholder buttons that look implemented
+- do not redesign the entire app without need
+- do not introduce dashboard patterns
+- do not introduce browser-style UI
+- do not overload the toolbar
+- do not mix Sketch and 3D tools in one undifferentiated block
+- do not silently expand scope
+- do not create unnecessary file explosion
+
+## Code organization principle
+
+UI, model logic, rendering, and assistant concerns must stay separated.
+
+## Increment principle
+
+Implement one clear unit of progress at a time.
+
+## Failure principle
+
+If a requested change conflicts with architecture, stop and report instead of improvising.
+
+=== FILE: Expansion/10_MVP_DEFINITION.md ===
+# MVP Definition
+
+## MVP goal
+
+Deliver a stable, understandable desktop CAD Studio shell that can grow.
+
+## MVP includes
+
+- desktop shell
+- top toolbar
+- left sidebar
+- center viewport container
+- right assistant shell
+- bottom tabs
+- Sketch UI state
+- 3D UI state
+- basic structure tree
+- basic tool grouping
+- no fake complexity
+
+## MVP does not include
+
+- full CAD engine
+- organic modeling
+- deep assistant intelligence
+- advanced assemblies
+- full simulation
+- complete pattern system
+- production rendering
+
+## MVP success
+
+The MVP is successful when:
+- the interface reads as a real engineering tool
+- modes are separated
+- viewport is dominant
+- sidebar reads as structure
+- assistant reads as engineering help, not chat app
+- the project can grow without rewrite
+
+=== FILE: Execution/11_ACCEPTANCE_CRITERIA.md ===
+# Acceptance Criteria
+
+## Layout
+
+- Viewport is the dominant area
+- Top toolbar is compact and tool-based
+- Left panel is structural
+- Right panel is assistant, not messenger
+
+## Style
+
+- No dashboard patterns
+- No cards
+- No SaaS look
+- No mobile spacing
+- Dense and technical UI
+
+## Modes
+
+- Sketch mode is visually distinct
+- 3D mode is visually distinct
+- Toolbars are different per mode
+- No mixing of tool sets
+
+## Assistant
+
+- Not a messenger UI
+- Structured output
+- Supports modes:
+  - Auto
+  - Do
+  - Think
+  - Assist
+  - Think & Do
+
+## Architecture
+
+- UI is separate from model logic
+- Viewport is a real rendering target in architecture
+- No monolithic structure
+
+=== FILE: Expansion/12_BLUEPRINT_EXPANSION_PLAN.md ===
+# Blueprint Expansion Plan
+
+This plan grows the system by segments.
+
+Rule:
+Each segment must be:
+- large enough to matter
+- small enough to control
+- safe enough to debug
+
+---
+
+## S-01 — Desktop Shell Base
+Purpose:
+Create a clean desktop shell layout.
+
+Adds:
+- top toolbar
+- left sidebar
+- center viewport container
+- right assistant placeholder
+- bottom tabs
+
+Does NOT touch:
+- CAD logic
+- assistant intelligence
+- rendering internals
+
+Done when:
+- the app reads as an engineering shell
+- no dashboard artifacts remain
+
+---
+
+## S-02 — Sketch UI State
+Purpose:
+Introduce Sketch mode UI state.
+
+Adds:
+- sketch-oriented toolbar groups
+- sketch mode visual state
+- structure for sketch workflow
+
+Does NOT touch:
+- 3D feature logic
+- assistant intelligence
+
+Done when:
+- Sketch mode is visually distinct
+- toolbar is appropriate to sketch work
+
+---
+
+## S-03 — 3D UI State
+Purpose:
+Introduce 3D feature-oriented UI state.
+
+Adds:
+- 3D toolbar groups
+- 3D mode visual state
+
+Does NOT touch:
+- deep geometry engine
+- assistant intelligence
+
+Done when:
+- 3D mode is visually distinct
+- 3D tools are grouped and readable
+
+---
+
+## S-04 — Assistant Panel Shell
+Purpose:
+Create the structural assistant panel.
+
+Adds:
+- assistant layout
+- mode selector
+- structured response zones
+
+Does NOT touch:
+- real assistant intelligence
+- deep task logic
+
+Done when:
+- assistant panel looks like engineering aid
+- not like a generic chat app
+
+---
+
+## S-05 — Model Tree Structure
+Purpose:
+Introduce proper structure tree behavior.
+
+Adds:
+- tree containers
+- root items
+- structural placeholders
+
+Does NOT touch:
+- full dependency system
+
+Done when:
+- sidebar reads as model structure, not navigation
+
+---
+
+## S-06 — Basic Context Bridge
+Purpose:
+Prepare event/context bridge for assistant support.
+
+Adds:
+- current mode context
+- current selection context
+- user action log skeleton
+
+Does NOT touch:
+- deep LLM logic
+
+Done when:
+- assistant can later be fed structured context
+
+---
+
+## S-07 — Basic Feature Workflow Concept
+Purpose:
+Introduce minimal sketch-to-feature conceptual chain.
+
+Adds:
+- sketch entry point
+- feature placeholder flow
+- tree progression concept
+
+Does NOT touch:
+- advanced geometry internals
+
+Done when:
+- the UI and model structure can express a basic feature workflow
+
+=== FILE: Expansion/13_BLUEPRINT_EXECUTION_PROTOCOL.md ===
+# Blueprint Execution Protocol
+
+## Purpose
+
+This document defines how the coding agent executes Blueprint growth safely.
+
+## Core rule
+
+Blueprint execution is segment-based.
+
+The agent must never attempt to implement the whole future plan at once.
+
+## Command meaning
+
+When the command `run blueprint` is used, the agent must:
+
+1. find the next unfinished segment in `12_BLUEPRINT_EXPANSION_PLAN.md`
+2. implement only that segment
+3. stop after that segment
+4. report what was changed
+
+## Strong constraints
+
+- Only one segment per run
+- No jumping ahead
+- No unrelated redesign
+- No speculative expansion
+- No hidden refactors beyond local necessity
+
+## If conflict appears
+
+If the current segment conflicts with architecture:
+- stop
+- report conflict
+- do not improvise a large redesign silently
+
+## Output format
+
+After execution, the agent should report:
+
+- executed segment ID
+- implemented changes
+- untouched areas
+- risks or conflicts
+- suggested next segment
+
+=== FILE: 14_COMMANDS_AND_SHORTCUTS.md ===
+# Commands and Shortcuts
+
+## Main execution command
+
+### `run blueprint`
+Meaning:
+Execute the next unfinished Blueprint segment.
+
+## Optional explicit version
+
+### `run blueprint:S-03`
+Meaning:
+Execute exactly segment S-03 and nothing else.
+
+## Optional review command
+
+### `review blueprint`
+Meaning:
+Check current implementation against Blueprint and report drift.
+
+## Optional freeze command
+
+### `freeze blueprint`
+Meaning:
+Do not expand features; only stabilize current architecture.
+
+## Optional plan command
+
+### `show next segment`
+Meaning:
+Report the next executable segment without implementing it.
+
+## Command interpretation rule
+
+Commands must be interpreted conservatively.
+If command scope is ambiguous, prefer smaller safe action.
+
+=== FILE: 15_CHANGELOG_AND_DECISIONS.md ===
+# Changelog and Decisions
+
+This file records major project-level decisions.
+
+---
+
+## D-001
+Desktop-first architecture is the baseline.
+
+Status:
+Accepted
+
+---
+
+## D-002
+Browser-first / cloud-first architecture is not the baseline.
+
+Status:
+Accepted
+
+---
+
+## D-003
+WinForms is not the target final UI shell.
+
+Status:
+Accepted
+
+---
+
+## D-004
+The target shell direction is a modern desktop UI stack (WPF or Avalonia).
+
+Status:
+Accepted
+
+---
+
+## D-005
+Organic sculpting is excluded from the current phase.
+
+Status:
+Accepted
+
+---
+
+## D-006
+Assistant is an engineering co-pilot, not a casual chat widget.
+
+Status:
+Accepted
+
+---
+
+## D-007
+Blueprint-driven segmented growth is the default implementation strategy.
+
+Status:
+Accepted
+
+=== FILE: Templates/Segment_Template.md ===
+# Segment Template
+
+Segment ID: S-XX
+Name:
+
+## Purpose
+What this segment is trying to achieve.
+
+## Adds
+-
+
+## Does NOT touch
+-
+
+## Implementation notes
+-
+
+## Done when
+-
+
+## Risks
+-
+
+## Notes for Codex
+- implement only this segment
+- do not expand scope
+- do not redesign system
+
+=== FILE: Templates/Decision_Template.md ===
+# Decision Template
+
+Decision ID: D-XXX
+
+## Title
+
+## Context
+Why this decision is needed.
+
+## Decision
+What is chosen.
+
+## Alternatives considered
+-
+
+## Consequences
+-
+
+## Status
+Accepted / Pending / Rejected
+
+=== FILE: Templates/Feature_Template.md ===
+# Feature Template
+
+Feature Name:
+
+## Purpose
+What user problem it solves.
+
+## User flow
+-
+
+## UI impact
+-
+
+## Model impact
+-
+
+## Assistant impact
+-
+
+## Constraints
+-
+
+=== FILE: Templates/Assistant_Task_Template.md ===
+# Assistant Task Template
+
+Task Name:
+
+## Input
+What the user provides.
+
+## Context required
+-
+
+## Output
+What assistant should return.
+
+## Mode
+Auto / Do / Think / Assist / Think & Do
+
+## Constraints
+- short output
+- structured
+- no chat style

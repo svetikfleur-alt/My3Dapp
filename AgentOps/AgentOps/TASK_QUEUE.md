@@ -1,0 +1,3 @@
+- [x] Fix Point rendering — 2026-05-10
+- [x] Fix Line preview — 2026-05-10
+- [x] Fix Rectangle preview — 2026-05-10

@@ -1,0 +1,37 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="My3DApp.AvaloniaApp.Dialogs.RenameDialog"
+        Width="340"
+        Height="148"
+        MinWidth="300"
+        MinHeight="130"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Classes="FeatureDialogWindow"
+        Title="Rename">
+  <Border Classes="FeatureDialogPanel" Margin="0">
+    <Grid RowDefinitions="Auto,Auto,Auto" Margin="18">
+      <TextBlock Classes="FeatureDialogTitle" Text="Rename" />
+      <TextBox Grid.Row="1"
+               x:Name="NameInput"
+               Margin="0,12,0,0"
+               Classes="AssistantKeyInput"
+               MaxLength="80"
+               KeyDown="OnInputKeyDown" />
+      <StackPanel Grid.Row="2"
+                  Orientation="Horizontal"
+                  HorizontalAlignment="Right"
+                  Margin="0,12,0,0"
+                  Spacing="8">
+        <Button Content="Cancel"
+                Classes="FeatureDialogButtonSecondary"
+                Click="OnCancelClick" />
+        <Button x:Name="OkButton"
+                Content="Rename"
+                Classes="FeatureDialogButtonPrimary"
+                Click="OnConfirmClick" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>
