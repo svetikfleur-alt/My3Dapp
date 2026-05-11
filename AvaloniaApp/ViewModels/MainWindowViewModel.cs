@@ -388,23 +388,34 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        if (solids.Count == 1 && ext != ".stl")
-        {
-            // Single solid, non-STL format: delegate to ModelManager (handles OBJ)
-            await _models.ExportAsync(solids[0].Id, path);
-            StatusMessage = $"Exported: {Path.GetFileName(path)}";
-            return;
-        }
-
         // Merge all solids into one mesh at export time
         var merged = new Mesh();
         foreach (var solid in solids)
             foreach (var tri in solid.Solid!.ToMesh().Triangles)
                 merged.Triangles.Add(tri);
 
-        await using var fs = File.Create(path);
-        merged.WriteBinaryStl(fs);
-        StatusMessage = $"Exported {solids.Count} solids ({merged.Triangles.Count} triangles): {Path.GetFileName(path)}";
+        if (ext == ".obj")
+        {
+            var sb2 = new StringBuilder();
+            sb2.AppendLine("# Exported by My3DApp");
+            sb2.AppendLine("o Merged");
+            int vIdx = 1;
+            foreach (var t in merged.Triangles)
+            {
+                sb2.AppendLine($"v {t.V0.X:F6} {t.V0.Y:F6} {t.V0.Z:F6}");
+                sb2.AppendLine($"v {t.V1.X:F6} {t.V1.Y:F6} {t.V1.Z:F6}");
+                sb2.AppendLine($"v {t.V2.X:F6} {t.V2.Y:F6} {t.V2.Z:F6}");
+                sb2.AppendLine($"f {vIdx} {vIdx+1} {vIdx+2}");
+                vIdx += 3;
+            }
+            await File.WriteAllTextAsync(path, sb2.ToString());
+        }
+        else
+        {
+            await using var fs = File.Create(path);
+            merged.WriteBinaryStl(fs);
+        }
+        StatusMessage = $"Exported {solids.Count} solid{(solids.Count == 1 ? "" : "s")} ({merged.Triangles.Count} triangles): {Path.GetFileName(path)}";
     }
 
     // ── Toolbar handlers ──────────────────────────────────────────────────────
@@ -768,6 +779,53 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             node.SolidDescription = obj.Solid?.ToString();
             children.Add(node);
             RuntimeLog.Info("VM", $"AI synced solid '{name}' ({type}) — {obj.Solid?.ToString() ?? "no solid"}");
+        }
+
+        // booleanUnion/Subtract/Intersect('Result', 'NameA', 'NameB') → add boolean node
+        var boolPattern = new Regex(
+            @"viewer\.(booleanUnion|booleanSubtract|booleanIntersect)\s*\(\s*['""]([^'""]+)['""],\s*['""]([^'""]+)['""],\s*['""]([^'""]+)['""]");
+        foreach (Match m in boolPattern.Matches(script))
+        {
+            var op     = m.Groups[1].Value;
+            var result = m.Groups[2].Value;
+            var nameA  = m.Groups[3].Value;
+            var nameB  = m.Groups[4].Value;
+            if (children.Any(n => n.Name == result)) continue;
+
+            var (icon, type) = op switch
+            {
+                "booleanUnion"     => ("⊕", "boolean-union"),
+                "booleanSubtract"  => ("⊖", "boolean-subtract"),
+                "booleanIntersect" => ("⊗", "boolean-intersect"),
+                _                  => ("⚙", "boolean"),
+            };
+
+            var nodeA = children.FirstOrDefault(n => n.Name == nameA);
+            var nodeB = children.FirstOrDefault(n => n.Name == nameB);
+            var solidA = nodeA?.SceneObjectId.HasValue == true ? _scene.Find(nodeA.SceneObjectId.Value)?.Solid : null;
+            var solidB = nodeB?.SceneObjectId.HasValue == true ? _scene.Find(nodeB.SceneObjectId.Value)?.Solid : null;
+
+            SceneObject boolObj;
+            if (solidA != null && solidB != null)
+            {
+                boolObj = op switch
+                {
+                    "booleanUnion"     => _models.CreateBooleanUnion(result, solidA, solidB),
+                    "booleanSubtract"  => _models.CreateBooleanSubtract(result, solidA, solidB),
+                    "booleanIntersect" => _models.CreateBooleanIntersect(result, solidA, solidB),
+                    _                  => _scene.Add(result, type)
+                };
+            }
+            else
+            {
+                boolObj = _scene.Add(result, type);
+            }
+
+            var boolNode = MakeNode(icon, result, type);
+            boolNode.SceneObjectId = boolObj.Id;
+            boolNode.SolidDescription = boolObj.Solid?.ToString() ?? $"{op}({nameA}, {nameB})";
+            children.Add(boolNode);
+            RuntimeLog.Info("VM", $"AI synced boolean '{result}' ({op})");
         }
 
         RefreshTreeBindings();

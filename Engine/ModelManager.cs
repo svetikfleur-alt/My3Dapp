@@ -56,6 +56,30 @@ public class ModelManager
         return obj;
     }
 
+    public SceneObject CreateBooleanUnion(string name, SolidParams a, SolidParams b)
+    {
+        var obj = _scene.Add(name, "boolean-union");
+        obj.Solid = new BooleanUnionParams(a, b);
+        RuntimeLog.Info("Model", $"Created union '{name}'");
+        return obj;
+    }
+
+    public SceneObject CreateBooleanSubtract(string name, SolidParams target, SolidParams tool)
+    {
+        var obj = _scene.Add(name, "boolean-subtract");
+        obj.Solid = new BooleanSubtractParams(target, tool);
+        RuntimeLog.Info("Model", $"Created subtract '{name}'");
+        return obj;
+    }
+
+    public SceneObject CreateBooleanIntersect(string name, SolidParams a, SolidParams b)
+    {
+        var obj = _scene.Add(name, "boolean-intersect");
+        obj.Solid = new BooleanIntersectParams(a, b);
+        RuntimeLog.Info("Model", $"Created intersect '{name}'");
+        return obj;
+    }
+
     // ── Import ────────────────────────────────────────────────────────────────
 
     public async Task<SceneObject?> ImportAsync(string filePath)

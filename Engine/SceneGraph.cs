@@ -69,12 +69,32 @@ public record ExtrudePolygonParams(float[] Points2D, float Depth,
     public override string ToString() => $"ExtrudePolygon depth={Depth}mm @ ({X},{Y},{Z})";
 }
 
+// Boolean union: merges both meshes into one combined mesh.
+public record BooleanUnionParams(SolidParams A, SolidParams B) : SolidParams
+{
+    public override Mesh ToMesh()
+    {
+        var m = new Mesh();
+        foreach (var t in A.ToMesh().Triangles) m.Triangles.Add(t);
+        foreach (var t in B.ToMesh().Triangles) m.Triangles.Add(t);
+        return m;
+    }
+    public override string ToString() => $"Union ({A}) ∪ ({B})";
+}
+
 // Boolean subtract: result is approximated as the target solid (tool body removed on export).
 // Full CSG requires PicoGK; this stores params for future implementation.
 public record BooleanSubtractParams(SolidParams Target, SolidParams Tool) : SolidParams
 {
     public override Mesh ToMesh() => Target.ToMesh(); // approximation — returns target only
     public override string ToString() => $"Subtract ({Target}) − ({Tool})";
+}
+
+// Boolean intersect: approximated as solid A (intersection requires true CSG via PicoGK).
+public record BooleanIntersectParams(SolidParams A, SolidParams B) : SolidParams
+{
+    public override Mesh ToMesh() => A.ToMesh(); // approximation — returns A only
+    public override string ToString() => $"Intersect ({A}) ∩ ({B})";
 }
 
 // ── Scene object ──────────────────────────────────────────────────────────────
