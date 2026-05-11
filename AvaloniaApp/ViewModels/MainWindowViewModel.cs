@@ -138,7 +138,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         get
         {
-            var n = _scene.Objects.Count(o => o.Solid != null);
+            var n = _scene.Objects.Count(o => o.Solid != null && !o.ConsumedByBoolean);
             return n == 0 ? "No solids yet" : $"{n} solid{(n == 1 ? "" : "s")} — ready to export";
         }
     }
@@ -379,8 +379,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         var ext = Path.GetExtension(path).ToLowerInvariant();
 
-        // Collect all scene objects that have a solid definition
-        var solids = _scene.Objects.Where(o => o.Solid != null).ToList();
+        // Collect solids to export: skip objects consumed by a boolean result to avoid doubling
+        var solids = _scene.Objects.Where(o => o.Solid != null && !o.ConsumedByBoolean).ToList();
 
         if (solids.Count == 0)
         {
@@ -841,6 +841,18 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
                     "booleanIntersect" => _models.CreateBooleanIntersect(result, solidA, solidB),
                     _                  => _scene.Add(result, type)
                 };
+
+                // Mark inputs as consumed so export doesn't double the geometry
+                if (nodeA?.SceneObjectId.HasValue == true)
+                {
+                    var soA = _scene.Find(nodeA.SceneObjectId.Value);
+                    if (soA != null) soA.ConsumedByBoolean = true;
+                }
+                if (nodeB?.SceneObjectId.HasValue == true)
+                {
+                    var soB = _scene.Find(nodeB.SceneObjectId.Value);
+                    if (soB != null) soB.ConsumedByBoolean = true;
+                }
             }
             else
             {

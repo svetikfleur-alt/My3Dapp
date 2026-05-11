@@ -110,6 +110,10 @@ public class SceneObject
     // Parametric solid definition — null for objects with no computable geometry
     public SolidParams? Solid { get; set; }
 
+    // True when this solid's mesh is subsumed into a boolean result node.
+    // Export skips consumed objects to avoid doubling the geometry.
+    public bool ConsumedByBoolean { get; set; }
+
     // Source file path for imported assets
     public string? SourcePath { get; set; }
 
