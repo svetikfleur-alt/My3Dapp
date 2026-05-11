@@ -1,0 +1,108 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="My3DApp.AvaloniaApp.Dialogs.LinearPatternDialog"
+        Width="420"
+        Height="300"
+        MinWidth="400"
+        MinHeight="280"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Classes="FeatureDialogWindow"
+        Title="Linear Pattern">
+  <Border Classes="FeatureDialogPanel" Margin="0">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="FeatureDialogTitle"
+                     Text="Linear Pattern" />
+          <TextBlock Classes="FeatureDialogSubtitle"
+                     Text="Repeat the selected body N times along a coordinate axis." />
+        </StackPanel>
+        <Border Grid.Column="1"
+                Classes="FeatureDialogTag"
+                VerticalAlignment="Top">
+          <TextBlock Text="FEATURE"
+                     Classes="FeatureDialogTagText" />
+        </Border>
+      </Grid>
+
+      <StackPanel Grid.Row="2"
+                  Margin="0,16,0,16"
+                  Spacing="12">
+        <Border Classes="FeatureDialogSectionCard">
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="100,*">
+            <TextBlock Text="Count"
+                       Classes="FeatureDialogFieldLabel" />
+            <NumericUpDown x:Name="CountInput"
+                           Classes="FeatureDialogInput"
+                           Grid.Row="1"
+                           Width="130"
+                           HorizontalAlignment="Left"
+                           Margin="0,6,0,0"
+                           Increment="1"
+                           Minimum="2"
+                           Maximum="100"
+                           FormatString="0" />
+
+            <TextBlock Grid.Row="2"
+                       Text="Spacing"
+                       Margin="0,12,0,0"
+                       Classes="FeatureDialogFieldLabel" />
+            <Grid Grid.Row="3"
+                  Grid.Column="0"
+                  Grid.ColumnSpan="2"
+                  ColumnDefinitions="130,80"
+                  Margin="0,6,0,0">
+              <NumericUpDown x:Name="SpacingInput"
+                             Classes="FeatureDialogInput"
+                             Width="130"
+                             HorizontalAlignment="Left"
+                             Increment="5"
+                             Minimum="0.1"
+                             Maximum="10000"
+                             FormatString="0.###" />
+              <Border Grid.Column="1"
+                      Classes="FeatureDialogUnitChip"
+                      Margin="8,0,0,0"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Top">
+                <TextBlock HorizontalAlignment="Center"
+                           Text="mm" />
+              </Border>
+            </Grid>
+          </Grid>
+        </Border>
+
+        <Border Classes="FeatureDialogSectionCard">
+          <Grid ColumnDefinitions="100,*" RowDefinitions="Auto,Auto">
+            <TextBlock Text="Direction"
+                       Classes="FeatureDialogFieldLabel" />
+            <ComboBox x:Name="AxisComboBox"
+                      Classes="FeatureDialogInput"
+                      Grid.Row="1"
+                      Width="130"
+                      HorizontalAlignment="Left"
+                      Margin="0,6,0,0"
+                      SelectedIndex="0">
+              <ComboBoxItem Content="X axis" Tag="x" />
+              <ComboBoxItem Content="Y axis" Tag="y" />
+              <ComboBoxItem Content="Z axis" Tag="z" />
+            </ComboBox>
+          </Grid>
+        </Border>
+      </StackPanel>
+
+      <StackPanel Grid.Row="3"
+                  Orientation="Horizontal"
+                  HorizontalAlignment="Right"
+                  Spacing="8">
+        <Button Content="Cancel"
+                Classes="FeatureDialogButtonSecondary"
+                Click="OnCancelClick" />
+        <Button Content="Apply"
+                Classes="FeatureDialogButtonPrimary"
+                Click="OnConfirmClick" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>

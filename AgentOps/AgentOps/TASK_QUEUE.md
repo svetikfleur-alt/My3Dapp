@@ -1,0 +1,3 @@
+- Fix Point rendering
+- Fix Line preview
+- Fix Rectangle preview

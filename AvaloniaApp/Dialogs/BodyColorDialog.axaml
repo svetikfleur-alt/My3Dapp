@@ -1,0 +1,53 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="My3DApp.AvaloniaApp.Dialogs.BodyColorDialog"
+        Width="320"
+        Height="230"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Classes="FeatureDialogWindow"
+        Title="Set Body Color">
+  <Border Classes="FeatureDialogPanel" Margin="0">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto" Margin="18">
+      <TextBlock Classes="FeatureDialogTitle" Text="Set Body Color" />
+      <TextBlock Grid.Row="1"
+                 Margin="0,8,0,6"
+                 Text="Choose a preset or enter a hex value:"
+                 FontSize="12"
+                 Opacity="0.75" />
+      <!-- Preset color swatches -->
+      <WrapPanel Grid.Row="2" Orientation="Horizontal" ItemWidth="28" ItemHeight="28">
+        <Button Tag="#5b8cdc" Click="OnSwatchClick" Width="26" Height="26" Margin="2"
+                Background="#5b8cdc" CornerRadius="4" Padding="0" BorderThickness="0" ToolTip.Tip="Blue" />
+        <Button Tag="#4caf7d" Click="OnSwatchClick" Width="26" Height="26" Margin="2"
+                Background="#4caf7d" CornerRadius="4" Padding="0" BorderThickness="0" ToolTip.Tip="Green" />
+        <Button Tag="#e05c5c" Click="OnSwatchClick" Width="26" Height="26" Margin="2"
+                Background="#e05c5c" CornerRadius="4" Padding="0" BorderThickness="0" ToolTip.Tip="Red" />
+        <Button Tag="#e8953a" Click="OnSwatchClick" Width="26" Height="26" Margin="2"
+                Background="#e8953a" CornerRadius="4" Padding="0" BorderThickness="0" ToolTip.Tip="Orange" />
+        <Button Tag="#c8b84a" Click="OnSwatchClick" Width="26" Height="26" Margin="2"
+                Background="#c8b84a" CornerRadius="4" Padding="0" BorderThickness="0" ToolTip.Tip="Yellow" />
+        <Button Tag="#9b6ccd" Click="OnSwatchClick" Width="26" Height="26" Margin="2"
+                Background="#9b6ccd" CornerRadius="4" Padding="0" BorderThickness="0" ToolTip.Tip="Purple" />
+        <Button Tag="#56c0c8" Click="OnSwatchClick" Width="26" Height="26" Margin="2"
+                Background="#56c0c8" CornerRadius="4" Padding="0" BorderThickness="0" ToolTip.Tip="Cyan" />
+        <Button Tag="#c06890" Click="OnSwatchClick" Width="26" Height="26" Margin="2"
+                Background="#c06890" CornerRadius="4" Padding="0" BorderThickness="0" ToolTip.Tip="Pink" />
+        <Button Tag="#a0a0a0" Click="OnSwatchClick" Width="26" Height="26" Margin="2"
+                Background="#a0a0a0" CornerRadius="4" Padding="0" BorderThickness="0" ToolTip.Tip="Gray" />
+        <Button Tag="#607050" Click="OnSwatchClick" Width="26" Height="26" Margin="2"
+                Background="#607050" CornerRadius="4" Padding="0" BorderThickness="0" ToolTip.Tip="Olive" />
+      </WrapPanel>
+      <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right"
+                  Margin="0,12,0,0" Spacing="8">
+        <Button Content="Reset"
+                Classes="FeatureDialogButtonSecondary"
+                Click="OnResetClick" />
+        <Button Content="Cancel"
+                Classes="FeatureDialogButtonSecondary"
+                Click="OnCancelClick" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>

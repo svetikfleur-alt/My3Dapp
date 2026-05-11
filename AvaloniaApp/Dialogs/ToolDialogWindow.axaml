@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="My3DApp.AvaloniaApp.Dialogs.ToolDialogWindow"
+        Width="420"
+        Height="320"
+        MinWidth="380"
+        MinHeight="260"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Classes="FeatureDialogWindow"
+        Title="Tool">
+  <Border Classes="FeatureDialogPanel" Margin="0">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
+      <TextBlock x:Name="TitleTextBlock"
+                 Classes="FeatureDialogTitle"
+                 Text="Tool" />
+      <TextBlock x:Name="SubtitleTextBlock"
+                 Grid.Row="1"
+                 Margin="0,6,0,0"
+                 Classes="FeatureDialogSubtitle"
+                 TextWrapping="Wrap"
+                 Text="Configure tool options, then confirm." />
+
+      <ContentControl x:Name="BodyHost"
+                      Grid.Row="2"
+                      Margin="0,16,0,16" />
+
+      <StackPanel Grid.Row="3"
+                  Orientation="Horizontal"
+                  HorizontalAlignment="Right"
+                  Spacing="8">
+        <Button Content="Cancel"
+                Classes="FeatureDialogButtonSecondary"
+                IsCancel="True"
+                Click="OnCancelClick" />
+        <Button Content="OK"
+                Classes="FeatureDialogButtonPrimary"
+                IsDefault="True"
+                Click="OnConfirmClick" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>
