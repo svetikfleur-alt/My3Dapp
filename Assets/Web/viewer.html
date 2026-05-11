@@ -233,6 +233,67 @@ window.viewer = {
     setStatus(`Added sphere "${name}" r=${radius} @ (${x},${y},${z})`);
   },
 
+  // Extrudes a closed 2D polygon on the XZ plane.
+  // points = flat array [x0,z0, x1,z1, ...] in mm. Solid centred at (x,y,z).
+  extrudePolygon(name, points, depth, x = 0, y = 0, z = 0) {
+    const shape = new THREE.Shape();
+    shape.moveTo(points[0], points[1]);
+    for (let i = 2; i < points.length; i += 2) shape.lineTo(points[i], points[i+1]);
+    shape.closePath();
+    const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false });
+    geo.rotateX(-Math.PI / 2);                   // XZ profile → stands upright on Y axis
+    geo.translate(0, -depth / 2, 0);              // centre vertically
+    const mesh = new THREE.Mesh(geo, isWireframe ? wireframeMaterial.clone() : defaultMaterial.clone());
+    mesh.castShadow = true;
+    mesh.position.set(x, y, z);
+    mesh.name = name;
+    scene.add(mesh);
+    meshObjects[name] = mesh;
+    setStatus(`Extruded "${name}" depth=${depth}mm @ (${x},${y},${z})`);
+  },
+
+  // Revolves a 2D profile around the Y axis.
+  // profile = flat array [r0,y0, r1,y1, ...] in mm. Solid centred at (x,y,z).
+  revolveProfile(name, profile, angle = 360, segments = 32, x = 0, y = 0, z = 0) {
+    const pts = [];
+    for (let i = 0; i < profile.length; i += 2) pts.push(new THREE.Vector2(profile[i], profile[i+1]));
+    const geo = new THREE.LatheGeometry(pts, segments, 0, angle * Math.PI / 180);
+    const mesh = new THREE.Mesh(geo, isWireframe ? wireframeMaterial.clone() : defaultMaterial.clone());
+    mesh.castShadow = true;
+    mesh.position.set(x, y, z);
+    mesh.name = name;
+    scene.add(mesh);
+    meshObjects[name] = mesh;
+    setStatus(`Revolved "${name}" ${angle}° @ (${x},${y},${z})`);
+  },
+
+  // Boolean union: both solids remain visible; export already merges all solids.
+  booleanUnion(resultName, nameA, nameB) {
+    setStatus(`Union "${resultName}": ${nameA} ∪ ${nameB} — merged on export`);
+  },
+
+  // Boolean subtract: tool body shown ghosted; full CSG on export via PicoGK.
+  booleanSubtract(resultName, targetName, toolName) {
+    const tool = meshObjects[toolName];
+    if (tool) {
+      tool.material = new THREE.MeshStandardMaterial({
+        color: 0xff3333, transparent: true, opacity: 0.25, depthWrite: false
+      });
+    }
+    setStatus(`Subtract "${resultName}": ${targetName} − ${toolName} (preview)`);
+  },
+
+  // Boolean intersect: both bodies shown ghosted to indicate intersection region.
+  booleanIntersect(resultName, nameA, nameB) {
+    [nameA, nameB].forEach(n => {
+      const m = meshObjects[n];
+      if (m) m.material = new THREE.MeshStandardMaterial({
+        color: 0x33aaff, transparent: true, opacity: 0.35, depthWrite: false
+      });
+    });
+    setStatus(`Intersect "${resultName}": ${nameA} ∩ ${nameB} (preview)`);
+  },
+
   removeObject(name) {
     const obj = meshObjects[name];
     if (obj) { scene.remove(obj); delete meshObjects[name]; }

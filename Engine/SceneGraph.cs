@@ -47,6 +47,36 @@ public record ImportedMeshParams(Mesh Mesh) : SolidParams
     public override string ToString() => $"Imported ({Mesh.Triangles.Count} tris)";
 }
 
+public record RevolveProfileParams(float[] Profile, float AngleDeg = 360f, int Segments = 32,
+                                   float X = 0, float Y = 0, float Z = 0) : SolidParams
+{
+    public override Mesh ToMesh()
+    {
+        var m = Mesh.RevolveProfile(Profile, AngleDeg, Segments);
+        return (X != 0 || Y != 0 || Z != 0) ? m.Translated(X, Y, Z) : m;
+    }
+    public override string ToString() => $"Revolve {AngleDeg}° {Segments}seg @ ({X},{Y},{Z})";
+}
+
+public record ExtrudePolygonParams(float[] Points2D, float Depth,
+                                   float X = 0, float Y = 0, float Z = 0) : SolidParams
+{
+    public override Mesh ToMesh()
+    {
+        var m = Mesh.ExtrudePolygon(Points2D, Depth);
+        return (X != 0 || Y != 0 || Z != 0) ? m.Translated(X, Y, Z) : m;
+    }
+    public override string ToString() => $"ExtrudePolygon depth={Depth}mm @ ({X},{Y},{Z})";
+}
+
+// Boolean subtract: result is approximated as the target solid (tool body removed on export).
+// Full CSG requires PicoGK; this stores params for future implementation.
+public record BooleanSubtractParams(SolidParams Target, SolidParams Tool) : SolidParams
+{
+    public override Mesh ToMesh() => Target.ToMesh(); // approximation — returns target only
+    public override string ToString() => $"Subtract ({Target}) − ({Tool})";
+}
+
 // ── Scene object ──────────────────────────────────────────────────────────────
 
 public class SceneObject

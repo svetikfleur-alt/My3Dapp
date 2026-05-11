@@ -52,12 +52,33 @@ public class AiBackend : IDisposable
         viewer.addSphere('Name', radius, segments=32, x=0, y=0, z=0)
         viewer.addSketchPlane('Name', width, depth, x=0, y=0, z=0)
         viewer.moveObject('Name', x, y, z)          — reposition an existing solid
+        viewer.extrudePolygon('Name', [x0,z0,x1,z1,...], depth, x=0, y=0, z=0)
+        viewer.revolveProfile('Name', [r0,y0,r1,y1,...], angle=360, segs=32, x=0, y=0, z=0)
+        viewer.booleanUnion('Result', 'NameA', 'NameB')
+        viewer.booleanSubtract('Result', 'Target', 'Tool')
+        viewer.booleanIntersect('Result', 'NameA', 'NameB')
         viewer.removeObject('Name')
         viewer.setObjectVisible('Name', true|false)
         viewer.clearScene()
         viewer.fitView()                    ← ALWAYS LAST
         viewer.setView('front'|'top'|'right'|'iso')
         viewer.setWireframe(true|false)
+
+        ## Example — O-ring / torus (revolve a circle profile)
+        Profile: small circle at r=20 from axis, revolving 360°
+        <geometry-script>
+        viewer.clearScene();
+        viewer.revolveProfile('O-Ring', [17,0, 20,3, 23,0, 20,-3, 17,0], 360, 32, 0, 0, 0);
+        viewer.fitView();
+        </geometry-script>
+
+        ## Example — L-profile extrusion (50mm long, 40×40×4mm L cross-section)
+        L-shape points going CCW: outer rectangle minus inner corner
+        <geometry-script>
+        viewer.clearScene();
+        viewer.extrudePolygon('L-Extrusion', [0,0, 40,0, 40,4, 4,4, 4,40, 0,40], 50, 0, 0, 0);
+        viewer.fitView();
+        </geometry-script>
 
         ## Example — L-bracket (80×60×50 mm)
         Base-Plate 80×8×50 centred at origin → top face at y=4

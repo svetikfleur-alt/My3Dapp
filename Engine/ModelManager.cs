@@ -38,6 +38,24 @@ public class ModelManager
         return obj;
     }
 
+    public SceneObject CreateRevolveProfile(string name, float[] profile,
+        float angleDeg = 360f, int segments = 32, float x = 0, float y = 0, float z = 0)
+    {
+        var obj = _scene.Add(name, "revolve");
+        obj.Solid = new RevolveProfileParams(profile, angleDeg, segments, x, y, z);
+        RuntimeLog.Info("Model", $"Created revolve '{name}' {angleDeg}° @ ({x},{y},{z})");
+        return obj;
+    }
+
+    public SceneObject CreateExtrudePolygon(string name, float[] points2D, float depth,
+        float x = 0, float y = 0, float z = 0)
+    {
+        var obj = _scene.Add(name, "extrude");
+        obj.Solid = new ExtrudePolygonParams(points2D, depth, x, y, z);
+        RuntimeLog.Info("Model", $"Created extrude '{name}' depth={depth}mm @ ({x},{y},{z})");
+        return obj;
+    }
+
     // ── Import ────────────────────────────────────────────────────────────────
 
     public async Task<SceneObject?> ImportAsync(string filePath)

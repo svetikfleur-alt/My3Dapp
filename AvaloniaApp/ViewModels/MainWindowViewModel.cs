@@ -696,9 +696,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             }
         }
 
-        // addBox / addCylinder / addSphere / addSketchPlane → add nodes (single or double quotes)
+        // addBox / addCylinder / addSphere / addSketchPlane / extrudePolygon / revolveProfile → add nodes (single or double quotes)
         var addPattern = new Regex(
-            @"viewer\.(addBox|addCylinder|addSphere|addSketchPlane)\s*\(\s*['""]([^'""]+)['""]");
+            @"viewer\.(addBox|addCylinder|addSphere|addSketchPlane|extrudePolygon|revolveProfile)\s*\(\s*['""]([^'""]+)['""]");
         foreach (Match m in addPattern.Matches(script))
         {
             var call = m.Groups[1].Value;
@@ -711,6 +711,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
                 "addCylinder"     => ("↻", "revolve"),
                 "addSphere"       => ("⚪", "sphere"),
                 "addSketchPlane"  => ("⬜", "sketch"),
+                "extrudePolygon"  => ("⬆", "extrude"),
+                "revolveProfile"  => ("↻", "revolve"),
                 _                 => ("⚙", "mesh"),
             };
 
@@ -749,6 +751,16 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
                     => _models.CreateSphere(name, sr, 32,
                         TryF(sm.Groups[3].Value), TryF(sm.Groups[4].Value), TryF(sm.Groups[5].Value)),
 
+                "extrudePolygon" when Regex.Match(script,
+                    $@"viewer\.extrudePolygon\s*\(\s*[""']{Regex.Escape(name)}[""']\s*,\s*\[([^\]]+)\]\s*,\s*(-?[\d.]+)(?:\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+))?")
+                    is { Success: true } em
+                    => ParseExtrudePolygon(name, em),
+
+                "revolveProfile" when Regex.Match(script,
+                    $@"viewer\.revolveProfile\s*\(\s*[""']{Regex.Escape(name)}[""']\s*,\s*\[([^\]]+)\]\s*,\s*(-?[\d.]+)(?:\s*,\s*(-?[\d.]+))?(?:\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+))?")
+                    is { Success: true } rm
+                    => ParseRevolveProfile(name, rm),
+
                 _ => _scene.Add(name, type)
             };
 
@@ -781,6 +793,28 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         foreach (var child in node.Children)
             AppendFeatureNode(sb, child, depth + 1);
     }
+
+    private SceneObject ParseExtrudePolygon(string name, System.Text.RegularExpressions.Match m)
+    {
+        var pts = ParseFloatArray(m.Groups[1].Value);
+        float depth = TryF(m.Groups[2].Value);
+        float x = TryF(m.Groups[3].Value), y = TryF(m.Groups[4].Value), z = TryF(m.Groups[5].Value);
+        return _models.CreateExtrudePolygon(name, pts, depth, x, y, z);
+    }
+
+    private SceneObject ParseRevolveProfile(string name, System.Text.RegularExpressions.Match m)
+    {
+        var pts = ParseFloatArray(m.Groups[1].Value);
+        float angle = TryF(m.Groups[2].Value);
+        if (angle == 0) angle = 360f;
+        float x = TryF(m.Groups[4].Value), y = TryF(m.Groups[5].Value), z = TryF(m.Groups[6].Value);
+        return _models.CreateRevolveProfile(name, pts, angle, 32, x, y, z);
+    }
+
+    private static float[] ParseFloatArray(string s)
+        => s.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+           .Select(t => float.TryParse(t.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? v : 0f)
+           .ToArray();
 
     // Returns the parsed float or 0 when the regex group didn't match.
     private static float TryF(string s)
