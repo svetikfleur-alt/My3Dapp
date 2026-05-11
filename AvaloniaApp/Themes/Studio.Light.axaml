@@ -1,0 +1,1317 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Styles.Resources>
+    <CornerRadius x:Key="ControlCornerRadius">10</CornerRadius>
+    <CornerRadius x:Key="OverlayCornerRadius">18</CornerRadius>
+
+    <SolidColorBrush x:Key="Studio.WindowBackgroundBrush" Color="#e9eef5" />
+    <SolidColorBrush x:Key="Studio.ToolbarBackgroundBrush" Color="#eef3f9" />
+    <SolidColorBrush x:Key="Studio.PanelBackgroundBrush" Color="#fbfcfe" />
+    <SolidColorBrush x:Key="Studio.PanelInsetBrush" Color="#f2f6fb" />
+    <SolidColorBrush x:Key="Studio.ViewportBackgroundBrush" Color="#dde7f2" />
+    <SolidColorBrush x:Key="Studio.BorderBrush" Color="#cdd7e4" />
+    <SolidColorBrush x:Key="Studio.AccentBrush" Color="#0a84d8" />
+    <SolidColorBrush x:Key="Studio.TextPrimaryBrush" Color="#18212b" />
+    <SolidColorBrush x:Key="Studio.TextSecondaryBrush" Color="#4a596d" />
+    <SolidColorBrush x:Key="Studio.TextMutedBrush" Color="#6d7b8d" />
+  </Styles.Resources>
+
+  <Style Selector="Window">
+    <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI, Inter, Arial" />
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+
+  <Style Selector="TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="Border.StudioTopChrome">
+    <Setter Property="Background" Value="#edf3f9" />
+  </Style>
+
+  <Style Selector="Border.StudioBottomChrome">
+    <Setter Property="Background" Value="#f1f5fa" />
+  </Style>
+
+  <Style Selector="Border.StudioPanelSurface">
+    <Setter Property="CornerRadius" Value="16" />
+  </Style>
+
+  <Style Selector="Border.StudioViewportSurface">
+    <Setter Property="CornerRadius" Value="18" />
+  </Style>
+
+  <Style Selector="TextBlock.ToolbarMetaLabel">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+    <Setter Property="LetterSpacing" Value="0.6" />
+  </Style>
+
+  <Style Selector="TextBlock.ToolbarTitleText">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.ToolbarSubtleText">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.ToolbarButtonLabel">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Border.ModeSwitchShell">
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="4" />
+    <Setter Property="CornerRadius" Value="14" />
+  </Style>
+
+  <Style Selector="Border.StudioBrandMark">
+    <Setter Property="Width" Value="42" />
+    <Setter Property="Height" Value="42" />
+    <Setter Property="CornerRadius" Value="14" />
+    <Setter Property="Background" Value="#17324d" />
+    <Setter Property="BorderBrush" Value="#264b70" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BoxShadow" Value="0 8 20 0 #1c203040" />
+  </Style>
+
+  <Style Selector="TextBlock.StudioBrandMarkText">
+    <Setter Property="Foreground" Value="#ffffff" />
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Border.ToolbarModeChip">
+    <Setter Property="Background" Value="#e5f1fd" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="10,5" />
+    <Setter Property="CornerRadius" Value="999" />
+  </Style>
+
+  <Style Selector="TextBlock.ToolbarModeChipText">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="LetterSpacing" Value="0.5" />
+  </Style>
+
+  <Style Selector="Border.ToolbarCommandStrip">
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelInsetBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="6" />
+    <Setter Property="CornerRadius" Value="16" />
+    <Setter Property="BoxShadow" Value="0 10 26 0 #10203320" />
+  </Style>
+
+  <Style Selector="TextBlock.ToolbarGroupLabel">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Border.ToolbarDivider">
+    <Setter Property="Width" Value="1" />
+    <Setter Property="Height" Value="20" />
+    <Setter Property="Background" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Opacity" Value="0.7" />
+  </Style>
+
+  <Style Selector="Border.ToolbarModeBadge">
+    <Setter Property="Background" Value="#e5f1fd" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="8,3" />
+    <Setter Property="CornerRadius" Value="999" />
+  </Style>
+
+  <Style Selector="TextBlock.ToolbarModeBadgeText">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="LetterSpacing" Value="0.5" />
+  </Style>
+
+  <Style Selector="Button.IconToolButton">
+    <Setter Property="Width" Value="30" />
+    <Setter Property="Height" Value="30" />
+    <Setter Property="Padding" Value="6" />
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style Selector="Border.ToolSplitGroup">
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="CornerRadius" Value="14" />
+  </Style>
+
+  <Style Selector="Button.ToolSplitMainButton">
+    <Setter Property="Width" Value="32" />
+    <Setter Property="Height" Value="30" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="Padding" Value="6" />
+  </Style>
+
+  <Style Selector="Button.ToolSplitChevronButton">
+    <Setter Property="Width" Value="18" />
+    <Setter Property="Height" Value="30" />
+    <Setter Property="BorderThickness" Value="0,0,0,0" />
+    <Setter Property="Padding" Value="3" />
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+  </Style>
+
+  <Style Selector="Button.ToolSplitChevronButton:pointerover, Button.ToolSplitMainButton:pointerover">
+    <Setter Property="Background" Value="#edf3fb" />
+  </Style>
+
+  <Style Selector="Button.ToolSplitChevronButton:pressed, Button.ToolSplitMainButton:pressed">
+    <Setter Property="Background" Value="#ddeaf9" />
+  </Style>
+
+  <Style Selector="ContextMenu.ToolDropdownMenu">
+    <Setter Property="Background" Value="#ffffff" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="2" />
+    <Setter Property="MinWidth" Value="170" />
+    <Setter Property="MaxHeight" Value="220" />
+  </Style>
+
+  <Style Selector="MenuItem.ToolDropdownItem">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="Padding" Value="10,6" />
+  </Style>
+
+  <Style Selector="MenuItem.ToolDropdownItem:pointerover">
+    <Setter Property="Background" Value="#eaf3fe" />
+  </Style>
+
+  <Style Selector="MenuItem.ToolDropdownItem:selected">
+    <Setter Property="Background" Value="#dfeeff" />
+  </Style>
+
+  <Style Selector="Button.CommandButton">
+    <Setter Property="Height" Value="30" />
+    <Setter Property="Padding" Value="14,6" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="Background" Value="#e7f2fd" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style Selector="Button.CommandButton:pointerover">
+    <Setter Property="Background" Value="#dcedfc" />
+  </Style>
+
+  <Style Selector="Button.ToolbarActionButton">
+    <Setter Property="Width" Value="30" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="MinWidth" Value="30" />
+    <Setter Property="Padding" Value="5" />
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Button.ToolbarActionButton:pointerover">
+    <Setter Property="Background" Value="#e8f0f9" />
+  </Style>
+
+  <Style Selector="Button.ToolbarActionButton:pressed">
+    <Setter Property="Background" Value="#d8e8f8" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="Button.ToolbarActionButton:disabled">
+    <Setter Property="Opacity" Value="0.55" />
+  </Style>
+
+  <Style Selector="Button.PrimitiveMenuButton">
+    <Setter Property="Width" Value="40" />
+    <Setter Property="MinWidth" Value="40" />
+  </Style>
+
+  <Style Selector="TabControl.ExplorerCodeTabControl TabItem">
+    <Setter Property="Padding" Value="9,7" />
+  </Style>
+
+  <Style Selector="Border.ViewportFeaturePanel">
+    <Setter Property="Background" Value="rgba(255,255,255,0.97)" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="12" />
+    <Setter Property="MaxWidth" Value="340" />
+  </Style>
+
+  <Style Selector="TextBlock.FeaturePanelTitle">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.FeaturePanelSubtitle">
+    <Setter Property="FontSize" Value="10.75" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+  </Style>
+
+  <Style Selector="Button.FeaturePanelCloseButton">
+    <Setter Property="Width" Value="26" />
+    <Setter Property="Height" Value="26" />
+    <Setter Property="Padding" Value="5" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+
+  <Style Selector="Button.FeaturePanelCloseButton:pointerover">
+    <Setter Property="Background" Value="#eef4fc" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style Selector="Border.FeaturePanelSelectionCard">
+    <Setter Property="Background" Value="#f7f9fc" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="8,7" />
+  </Style>
+
+  <Style Selector="TextBlock.FeaturePanelSectionLabel">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.FeaturePanelSelectionText, TextBlock.FeaturePanelLabel">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+  </Style>
+
+  <Style Selector="NumericUpDown.FeaturePanelInput, ComboBox.FeaturePanelInput">
+    <Setter Property="Height" Value="28" />
+    <Setter Property="FontSize" Value="11.5" />
+    <Setter Property="Background" Value="#ffffff" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="CheckBox.FeaturePanelCheckBox">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.FeaturePanelValidation">
+    <Setter Property="FontSize" Value="10.75" />
+    <Setter Property="Foreground" Value="#b45309" />
+  </Style>
+
+  <Style Selector="TextBlock.SketchDofStatus">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+    <Setter Property="Margin" Value="0,2,0,0" />
+  </Style>
+  <Style Selector="TextBlock.SketchDofStatus.DofFullyConstrained">
+    <Setter Property="Foreground" Value="#2E7D32" />
+  </Style>
+  <Style Selector="TextBlock.SketchDofStatus.DofOverconstrained">
+    <Setter Property="Foreground" Value="#E65100" />
+  </Style>
+
+  <Style Selector="Border.SketchHintPanel">
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="MaxWidth" Value="420" />
+    <Setter Property="CornerRadius" Value="14" />
+  </Style>
+
+  <Style Selector="Window.FeatureDialogWindow">
+    <Setter Property="Background" Value="{DynamicResource Studio.ToolbarBackgroundBrush}" />
+    <Setter Property="TransparencyLevelHint" Value="None" />
+  </Style>
+
+  <Style Selector="Border.FeatureDialogPanel">
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="18" />
+    <Setter Property="BoxShadow" Value="0 18 44 0 #18233a38" />
+  </Style>
+
+  <Style Selector="TextBlock.FeatureDialogTitle">
+    <Setter Property="FontSize" Value="16" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="TextBlock.FeatureDialogSubtitle">
+    <Setter Property="FontSize" Value="11.5" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+  </Style>
+
+  <Style Selector="Border.FeatureDialogTag">
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelInsetBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="9,5" />
+    <Setter Property="CornerRadius" Value="10" />
+  </Style>
+
+  <Style Selector="TextBlock.FeatureDialogTagText">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+    <Setter Property="LetterSpacing" Value="0.45" />
+  </Style>
+
+  <Style Selector="Border.FeatureDialogSectionCard">
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelInsetBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="14" />
+    <Setter Property="Padding" Value="14" />
+  </Style>
+
+  <Style Selector="TextBlock.FeatureDialogFieldLabel">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.FeatureDialogValueText">
+    <Setter Property="FontSize" Value="11.5" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.FeatureDialogHelpText">
+    <Setter Property="FontSize" Value="10.75" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+  </Style>
+
+  <Style Selector="NumericUpDown.FeatureDialogInput, ComboBox.FeatureDialogInput">
+    <Setter Property="Height" Value="30" />
+    <Setter Property="FontSize" Value="11.5" />
+    <Setter Property="Background" Value="#ffffff" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="CheckBox.FeatureDialogCheckBox, RadioButton.FeatureDialogCheckBox">
+    <Setter Property="FontSize" Value="11.5" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+  </Style>
+
+  <Style Selector="Border.FeatureDialogUnitChip">
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="10,6" />
+  </Style>
+
+  <Style Selector="Button.FeatureDialogButtonPrimary">
+    <Setter Property="MinWidth" Value="92" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="Padding" Value="14,6" />
+    <Setter Property="Background" Value="#eef4fc" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="Button.FeatureDialogButtonSecondary">
+    <Setter Property="MinWidth" Value="84" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="Padding" Value="14,6" />
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="Button.ToolbarMiniButton">
+    <Setter Property="Height" Value="30" />
+    <Setter Property="MinWidth" Value="56" />
+    <Setter Property="Padding" Value="10,6" />
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="FontSize" Value="11.5" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="Button.ToolbarMiniButton:pointerover">
+    <Setter Property="Background" Value="#edf3fb" />
+  </Style>
+
+  <Style Selector="ToggleButton.ToolbarMiniToggle">
+    <Setter Property="Height" Value="30" />
+    <Setter Property="MinWidth" Value="64" />
+    <Setter Property="Padding" Value="10,6" />
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="FontSize" Value="11.5" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="ToggleButton.ToolbarMiniToggle:checked">
+    <Setter Property="Background" Value="#eaf3fe" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="ToggleButton.ToolbarIconToggle">
+    <Setter Property="Width" Value="30" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="Padding" Value="5" />
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style Selector="ToggleButton.ToolbarIconToggle:pointerover">
+    <Setter Property="Background" Value="#e8f0f9" />
+  </Style>
+
+  <Style Selector="ToggleButton.ToolbarIconToggle:pressed">
+    <Setter Property="Background" Value="#d8e8f8" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="ToggleButton.ToolbarIconToggle:checked">
+    <Setter Property="Background" Value="#e4f0fd" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="ComboBox.AssistantSelector">
+    <Setter Property="Height" Value="30" />
+    <Setter Property="Padding" Value="8,2" />
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="FontSize" Value="11.5" />
+  </Style>
+
+  <Style Selector="GridSplitter.StudioSplitter">
+    <Setter Property="Background" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="Opacity" Value="0.45" />
+  </Style>
+
+  <Style Selector="GridSplitter.StudioSplitter:pointerover">
+    <Setter Property="Background" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="Opacity" Value="0.8" />
+  </Style>
+
+  <Style Selector="ToggleButton.ModeToggleButton">
+    <Setter Property="MinWidth" Value="72" />
+    <Setter Property="Height" Value="30" />
+    <Setter Property="Padding" Value="12,4" />
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="ToggleButton.ModeToggleButton:checked">
+    <Setter Property="Background" Value="#eaf3fe" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="ToggleButton.ThemeToggleButton">
+    <Setter Property="MinWidth" Value="56" />
+    <Setter Property="Height" Value="26" />
+    <Setter Property="Padding" Value="8,2" />
+    <Setter Property="FontSize" Value="11" />
+  </Style>
+
+  <Style Selector="TextBox.InlineValueEditor">
+    <Setter Property="Height" Value="26" />
+    <Setter Property="Padding" Value="4,2" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBox.InlineValueEditor /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+
+  <Style Selector="TextBox.InlineValueEditor:pointerover /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="#f1f4f9" />
+  </Style>
+
+  <Style Selector="TextBox.InlineValueEditor:focus /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="#ffffff" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+  </Style>
+
+  <Style Selector="TextBlock.SectionHeader">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.PanelSummaryText">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+  </Style>
+
+  <Style Selector="TextBox.TreeFilterTextBox">
+    <Setter Property="Height" Value="34" />
+    <Setter Property="Padding" Value="10,6" />
+    <Setter Property="Background" Value="#ffffff" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="FontSize" Value="11.5" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="Border.TreeFilterIconShell">
+    <Setter Property="Width" Value="34" />
+    <Setter Property="Height" Value="34" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+
+  <Style Selector="TextBlock.FeatureListHeaderText">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.FeatureListMetaText">
+    <Setter Property="FontSize" Value="10.5" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Border.SketchTaskCard">
+    <Setter Property="Background" Value="#f9fbfe" />
+    <Setter Property="BorderBrush" Value="#d9e1ec" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="10" />
+  </Style>
+
+  <Style Selector="TextBlock.SketchTaskTitle">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.SketchTaskSummary">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.SketchTaskDetails">
+    <Setter Property="FontSize" Value="10.5" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+  </Style>
+
+  <Style Selector="Border.SketchTaskStatusChip">
+    <Setter Property="Background" Value="#eef3f8" />
+    <Setter Property="BorderBrush" Value="#d5dde8" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="Padding" Value="8,6" />
+  </Style>
+
+  <Style Selector="Border.SketchTaskStatusChip.DofUnderconstrained">
+    <Setter Property="Background" Value="#edf4ff" />
+    <Setter Property="BorderBrush" Value="#b8cdee" />
+  </Style>
+
+  <Style Selector="Border.SketchTaskStatusChip.DofFullyConstrained">
+    <Setter Property="Background" Value="#edf8ef" />
+    <Setter Property="BorderBrush" Value="#b9dfc2" />
+  </Style>
+
+  <Style Selector="Border.SketchTaskStatusChip.DofOverconstrained">
+    <Setter Property="Background" Value="#fff3e7" />
+    <Setter Property="BorderBrush" Value="#f2c695" />
+  </Style>
+
+  <Style Selector="TextBlock.SketchTaskStatusText">
+    <Setter Property="FontSize" Value="10.75" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="TextBlock.SketchTaskStatusHelp">
+    <Setter Property="FontSize" Value="10.25" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Button.SketchTaskActionButton">
+    <Setter Property="Background" Value="#ffffff" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+
+  <Style Selector="Button.SketchTaskActionButton:pointerover">
+    <Setter Property="Background" Value="#eef4fc" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="TabControl.StudioTabControl, TabControl.SidePanelTabControl">
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+
+  <Style Selector="TabControl.StudioTabControl TabItem, TabControl.SidePanelTabControl TabItem">
+    <Setter Property="Background" Value="#f2f6fb" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="12,7" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+  </Style>
+
+  <Style Selector="TabControl.StudioTabControl TabItem:selected, TabControl.SidePanelTabControl TabItem:selected">
+    <Setter Property="Background" Value="#ffffff" />
+    <Setter Property="BorderBrush" Value="#bfd5eb" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="TabControl.StudioTabControl ContentPresenter#PART_SelectedContentHost, TabControl.SidePanelTabControl ContentPresenter#PART_SelectedContentHost">
+    <Setter Property="Margin" Value="0" />
+  </Style>
+
+  <Style Selector="TreeView.FeatureTree">
+    <Setter Property="Padding" Value="0" />
+  </Style>
+
+  <Style Selector="TreeView.FeatureTree TreeViewItem">
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="MinHeight" Value="24" />
+  </Style>
+
+  <Style Selector="TreeView.FeatureTree TreeViewItem /template/ Border#PART_LayoutRoot">
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="MinHeight" Value="28" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+  </Style>
+
+  <Style Selector="TreeView.FeatureTree TreeViewItem:pointerover /template/ Border#PART_LayoutRoot">
+    <Setter Property="Background" Value="#edf3fa" />
+  </Style>
+
+  <Style Selector="TreeView.FeatureTree TreeViewItem:selected /template/ Border#PART_LayoutRoot">
+    <Setter Property="Background" Value="#dcecfb" />
+  </Style>
+
+  <Style Selector="TreeView.FeatureTree TreeViewItem:selected:focus /template/ Border#PART_LayoutRoot">
+    <Setter Property="Background" Value="#d0e5fa" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="TreeView.FeatureTree TreeViewItem:selected /template/ ContentPresenter#PART_HeaderPresenter">
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="Border.TreeNodeGlyph">
+    <Setter Property="MinWidth" Value="22" />
+    <Setter Property="Height" Value="16" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+
+  <Style Selector="TextBlock.TreeNodeGlyphText">
+    <Setter Property="Foreground" Value="#6c7789" />
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="TextAlignment" Value="Center" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="TextBlock.TreeNodeNameText">
+    <Setter Property="FontSize" Value="11.5" />
+    <Setter Property="FontWeight" Value="Normal" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.TreeNodeNameText.SketchUnderdefined">
+    <Setter Property="Foreground" Value="#0a84d8" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="TextBlock.TreeNodeNameText.SketchFullyDefined">
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="TextBlock.TreeNodeNameText.SketchOverdefined">
+    <Setter Property="Foreground" Value="#b45309" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="TextBlock.TreeSectionNameText">
+    <Setter Property="FontSize" Value="11.5" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="Border.TreeNodeTypeTag">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Margin" Value="8,0,0,0" />
+  </Style>
+
+  <Style Selector="TextBlock.TreeNodeTypeText">
+    <Setter Property="Foreground" Value="#9aa3b2" />
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="Normal" />
+    <Setter Property="LetterSpacing" Value="0.3" />
+  </Style>
+
+  <Style Selector="TextBlock.TreeNodeSecondaryText">
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+    <Setter Property="FontSize" Value="9.75" />
+  </Style>
+
+  <Style Selector="TextBlock.TreeNodeSecondaryText.SketchUnderdefined">
+    <Setter Property="Foreground" Value="#3c7fbe" />
+  </Style>
+
+  <Style Selector="TextBlock.TreeNodeSecondaryText.SketchFullyDefined">
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.TreeNodeSecondaryText.SketchOverdefined">
+    <Setter Property="Foreground" Value="#b66f1f" />
+  </Style>
+
+  <Style Selector="TextBlock.ViewportHeaderTitle">
+    <Setter Property="FontSize" Value="12.5" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="TextBlock.ViewportHeaderSecondary">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+  </Style>
+
+  <Style Selector="Border.ViewportInfoTag">
+    <Setter Property="Background" Value="#f6f9fd" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="9,4" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="CornerRadius" Value="999" />
+  </Style>
+
+  <Style Selector="TextBlock.ViewportInfoTagText">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+  </Style>
+
+  <Style Selector="Button.ViewportCalloutButton">
+    <Setter Property="MinWidth" Value="150" />
+    <Setter Property="Height" Value="34" />
+    <Setter Property="Padding" Value="12,7" />
+    <Setter Property="Background" Value="#ffffff" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="Button.ViewportCalloutButton:pointerover">
+    <Setter Property="Background" Value="#eef4fc" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="Border.ViewportSketchPrompt">
+    <Setter Property="Background" Value="rgba(251,253,255,0.96)" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="12,10" />
+    <Setter Property="MaxWidth" Value="300" />
+    <Setter Property="CornerRadius" Value="14" />
+  </Style>
+
+  <Style Selector="TextBlock.ViewportPromptText">
+    <Setter Property="FontSize" Value="10.8" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+  </Style>
+
+  <Style Selector="Border.ViewportSketchSessionCard">
+    <Setter Property="Background" Value="rgba(251,253,255,0.94)" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="10,9" />
+    <Setter Property="MaxWidth" Value="300" />
+    <Setter Property="CornerRadius" Value="14" />
+  </Style>
+
+  <Style Selector="Border.ViewportPlanePickCard">
+    <Setter Property="Background" Value="rgba(252,254,255,0.98)" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="12,10" />
+    <Setter Property="MaxWidth" Value="560" />
+    <Setter Property="CornerRadius" Value="16" />
+  </Style>
+
+  <Style Selector="Border.ViewportPlanePickBadge">
+    <Setter Property="Background" Value="#e7f2fd" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="8,4" />
+    <Setter Property="CornerRadius" Value="999" />
+  </Style>
+
+  <Style Selector="TextBlock.ViewportPlanePickBadgeText">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.ViewportSessionTitle">
+    <Setter Property="FontSize" Value="11.5" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.ViewportSessionSummary">
+    <Setter Property="FontSize" Value="10.5" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+  </Style>
+
+  <Style Selector="Border.ParameterRow">
+    <Setter Property="BorderBrush" Value="#e6e9ef" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="0,6" />
+  </Style>
+
+  <Style Selector="ListBox.AssistantModePills">
+    <Setter Property="Padding" Value="0" />
+  </Style>
+
+  <Style Selector="ListBox.AssistantModePills ListBoxItem">
+    <Setter Property="Padding" Value="7,3" />
+    <Setter Property="MinHeight" Value="22" />
+    <Setter Property="Background" Value="#edf0f5" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="CornerRadius" Value="11" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Margin" Value="0" />
+  </Style>
+
+  <Style Selector="ListBox.AssistantModePills ListBoxItem /template/ ContentPresenter">
+    <Setter Property="CornerRadius" Value="11" />
+    <Setter Property="Background" Value="#edf0f5" />
+    <Setter Property="Padding" Value="8,3" />
+  </Style>
+
+  <Style Selector="ListBox.AssistantModePills ListBoxItem:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#e1e6ee" />
+  </Style>
+
+  <Style Selector="ListBox.AssistantModePills ListBoxItem:selected /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="TextElement.Foreground" Value="#ffffff" />
+  </Style>
+
+  <Style Selector="ListBox.AssistantModePills ListBoxItem:selected:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#1184dc" />
+    <Setter Property="TextElement.Foreground" Value="#ffffff" />
+  </Style>
+
+  <Style Selector="ListBox.AssistantModePills ListBoxItem:selected:focus /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="TextElement.Foreground" Value="#ffffff" />
+  </Style>
+
+  <Style Selector="TextBox.AssistantOutput">
+    <Setter Property="Background" Value="#f4f6f9" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="Padding" Value="10,8" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBox.AssistantOutput /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="#f4f6f9" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+
+  <Style Selector="TextBox.AssistantOutput:pointerover /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="#f4f6f9" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+
+  <Style Selector="TextBox.AssistantOutput:focus /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="#f4f6f9" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+
+  <Style Selector="Button.AssistantSecondaryButton">
+    <Setter Property="Height" Value="28" />
+    <Setter Property="MinWidth" Value="64" />
+    <Setter Property="Padding" Value="10,4" />
+    <Setter Property="Background" Value="#f1f4f9" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="FontSize" Value="11" />
+  </Style>
+
+  <Style Selector="Button.AssistantSecondaryButton:pointerover">
+    <Setter Property="Background" Value="#e8eef8" />
+  </Style>
+
+  <Style Selector="Button.AssistantLinkButton">
+    <Setter Property="Height" Value="20" />
+    <Setter Property="Padding" Value="2,0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+
+  <Style Selector="Button.AssistantLinkButton /template/ ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+
+  <Style Selector="Button.AssistantLinkButton:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <Style Selector="Button.AssistantLinkButton:pointerover">
+    <Setter Property="Foreground" Value="#1184dc" />
+  </Style>
+
+  <Style Selector="Button.AssistantSendButton">
+    <Setter Property="Height" Value="30" />
+    <Setter Property="MinWidth" Value="76" />
+    <Setter Property="Padding" Value="12,4" />
+    <Setter Property="Background" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="#ffffff" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="Button.AssistantSendButton:pointerover">
+    <Setter Property="Background" Value="#1184dc" />
+    <Setter Property="BorderBrush" Value="#1184dc" />
+  </Style>
+
+  <Style Selector="Button.AssistantSendButton:disabled">
+    <Setter Property="Opacity" Value="0.5" />
+  </Style>
+
+  <Style Selector="Border.AssistantStatusCard">
+    <Setter Property="Background" Value="#f6f8fb" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="8,6" />
+  </Style>
+
+  <Style Selector="Border.AssistantContextCard">
+    <Setter Property="Background" Value="#f7fafe" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="10,9" />
+    <Setter Property="CornerRadius" Value="14" />
+  </Style>
+
+  <Style Selector="TextBlock.AssistantContextPrimary">
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="TextBlock.AssistantContextSecondary">
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+    <Setter Property="FontSize" Value="11" />
+  </Style>
+
+  <Style Selector="Border.AssistantStatusBadge">
+    <Setter Property="Background" Value="#dff0ff" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="7,3" />
+    <Setter Property="CornerRadius" Value="999" />
+  </Style>
+
+  <Style Selector="TextBlock.AssistantModeTag">
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="Border.AssistantPendingCard">
+    <Setter Property="Background" Value="#f7fafe" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="10,8" />
+    <Setter Property="CornerRadius" Value="14" />
+  </Style>
+
+  <Style Selector="Button.AssistantApplyButton">
+    <Setter Property="Height" Value="26" />
+    <Setter Property="MinWidth" Value="60" />
+    <Setter Property="Padding" Value="10,4" />
+    <Setter Property="Background" Value="#edf3fb" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="Button.AssistantApplyButton:pointerover">
+    <Setter Property="Background" Value="#e4eefb" />
+  </Style>
+
+  <Style Selector="TextBox.AssistantConfigText">
+    <Setter Property="IsReadOnly" Value="True" />
+    <Setter Property="Background" Value="#f7f9fc" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="8,6" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="MinHeight" Value="50" />
+  </Style>
+
+  <Style Selector="Border.AssistantInactiveCard">
+    <Setter Property="Background" Value="#f7fafe" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="12,10" />
+    <Setter Property="CornerRadius" Value="14" />
+  </Style>
+
+  <Style Selector="Border.AssistantMessagesHost">
+    <Setter Property="Background" Value="#f4f8fc" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="10" />
+    <Setter Property="CornerRadius" Value="16" />
+  </Style>
+
+  <Style Selector="Border.AssistantMessageRow">
+    <Setter Property="Padding" Value="0,0,0,8" />
+    <Setter Property="Margin" Value="0,0,0,8" />
+    <Setter Property="BorderBrush" Value="#e0e5ee" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+  </Style>
+
+  <Style Selector="TextBlock.AssistantRoleBadge">
+    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="Bold" />
+  </Style>
+
+  <Style Selector="TextBlock.AssistantTimestamp">
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+    <Setter Property="FontSize" Value="10" />
+  </Style>
+
+  <Style Selector="Border.RecipeHeaderCard">
+    <Setter Property="Background" Value="#f7fafe" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="12,10" />
+    <Setter Property="CornerRadius" Value="14" />
+  </Style>
+
+  <Style Selector="TextBlock.RecipeHeaderTitle">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.RecipeHeaderSummary">
+    <Setter Property="FontSize" Value="10.8" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+  </Style>
+
+  <Style Selector="TextBox.AssistantInputBox">
+    <Setter Property="Background" Value="#ffffff" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="10,8" />
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+
+  <Style Selector="TextBox.DocumentTextView">
+    <Setter Property="Background" Value="#f4f8fc" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="14,12" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBox.DocumentTextView /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="#f4f8fc" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+
+  <Style Selector="TextBlock.AssistantHintText">
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+    <Setter Property="FontSize" Value="10" />
+  </Style>
+
+  <Style Selector="Button.PlaneSelectButton">
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelInsetBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="8" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Button.PlaneSelectButton:pointerover">
+    <Setter Property="Background" Value="#daeaf8" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="Button.PlaneSelectButtonActive">
+    <Setter Property="Background" Value="#cce4f7" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="BorderThickness" Value="2" />
+  </Style>
+
+  <Style Selector="Border.SketchSidePanel">
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelInsetBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="10,8" />
+    <Setter Property="Margin" Value="0,6,0,0" />
+  </Style>
+
+  <Style Selector="TextBlock.SketchSidePanelHeader">
+    <Setter Property="FontSize" Value="10.5" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.SketchConstraintLabel">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.SketchConstraintIcon">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="Width" Value="16" />
+  </Style>
+
+  <Style Selector="TextBlock.SketchDimensionLabel">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+    <Setter Property="Width" Value="28" />
+  </Style>
+
+  <Style Selector="TextBlock.SketchDimensionUnit">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Margin" Value="3,0,0,0" />
+  </Style>
+
+  <Style Selector="Button.SketchConstraintToolButton">
+    <Setter Property="Width" Value="28" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Button.SketchConstraintToolButton:pointerover">
+    <Setter Property="Background" Value="#e4ecf6" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="Button.SketchConstraintToolButton:pressed">
+    <Setter Property="Background" Value="#d4e2f2" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="TextBox.AssistantKeyInput">
+    <Setter Property="Height" Value="28" />
+    <Setter Property="Padding" Value="8,4" />
+    <Setter Property="Background" Value="#ffffff" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontFamily" Value="Consolas, Courier New, monospace" />
+  </Style>
+
+  <Style Selector="TextBox.AssistantKeyInput /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="#ffffff" />
+  </Style>
+
+  <Style Selector="TextBox.AssistantKeyInput:focus /template/ Border#PART_BorderElement">
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+</Styles>

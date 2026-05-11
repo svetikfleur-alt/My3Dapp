@@ -1,0 +1,148 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="My3DApp.AvaloniaApp.Dialogs.HoleFeatureDialog"
+        Width="440"
+        Height="360"
+        MinWidth="400"
+        MinHeight="340"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Classes="FeatureDialogWindow"
+        Title="Hole">
+  <Border Classes="FeatureDialogPanel" Margin="0">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="FeatureDialogTitle"
+                     Text="Hole" />
+          <TextBlock Classes="FeatureDialogSubtitle"
+                     Text="Cut a cylindrical bore into the selected body." />
+        </StackPanel>
+        <Border Grid.Column="1"
+                Classes="FeatureDialogTag"
+                VerticalAlignment="Top">
+          <TextBlock Text="FEATURE"
+                     Classes="FeatureDialogTagText" />
+        </Border>
+      </Grid>
+
+      <StackPanel Grid.Row="2"
+                  Margin="0,16,0,16"
+                  Spacing="10">
+
+        <Border Classes="FeatureDialogSectionCard">
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="130,*">
+            <TextBlock Text="Diameter"
+                       Classes="FeatureDialogFieldLabel" />
+            <Grid Grid.Row="1"
+                  Grid.ColumnSpan="2"
+                  ColumnDefinitions="150,80"
+                  Margin="0,6,0,0">
+              <NumericUpDown x:Name="DiameterInput"
+                             Classes="FeatureDialogInput"
+                             Width="150"
+                             HorizontalAlignment="Left"
+                             Increment="1"
+                             Minimum="0.01"
+                             Maximum="10000"
+                             FormatString="0.###" />
+              <Border Grid.Column="1"
+                      Classes="FeatureDialogUnitChip"
+                      Margin="8,0,0,0"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Top">
+                <TextBlock HorizontalAlignment="Center"
+                           Text="mm" />
+              </Border>
+            </Grid>
+
+            <TextBlock Grid.Row="2"
+                       Text="Center Offset X / Y"
+                       Classes="FeatureDialogFieldLabel"
+                       Margin="0,12,0,0" />
+            <Grid Grid.Row="3"
+                  Grid.ColumnSpan="2"
+                  ColumnDefinitions="150,16,150"
+                  Margin="0,6,0,0">
+              <NumericUpDown x:Name="CenterXInput"
+                             Classes="FeatureDialogInput"
+                             Width="150"
+                             HorizontalAlignment="Left"
+                             Increment="1"
+                             Minimum="-10000"
+                             Maximum="10000"
+                             FormatString="0.###" />
+              <TextBlock Grid.Column="1"
+                         Text="/"
+                         VerticalAlignment="Center"
+                         HorizontalAlignment="Center" />
+              <NumericUpDown x:Name="CenterYInput"
+                             Classes="FeatureDialogInput"
+                             Grid.Column="2"
+                             Width="150"
+                             HorizontalAlignment="Left"
+                             Increment="1"
+                             Minimum="-10000"
+                             Maximum="10000"
+                             FormatString="0.###" />
+            </Grid>
+          </Grid>
+        </Border>
+
+        <Border Classes="FeatureDialogSectionCard">
+          <StackPanel Spacing="8">
+            <TextBlock Text="Depth"
+                       Classes="FeatureDialogFieldLabel" />
+            <StackPanel Orientation="Horizontal"
+                        Spacing="16">
+              <RadioButton x:Name="ThroughAllRadio"
+                           Classes="FeatureDialogCheckBox"
+                           Content="Through All"
+                           IsChecked="True"
+                           GroupName="DepthKind"
+                           Checked="OnDepthKindChanged" />
+              <RadioButton x:Name="BlindRadio"
+                           Classes="FeatureDialogCheckBox"
+                           Content="Blind"
+                           GroupName="DepthKind"
+                           Checked="OnDepthKindChanged" />
+            </StackPanel>
+            <Grid ColumnDefinitions="150,80"
+                  Margin="0,4,0,0">
+              <NumericUpDown x:Name="DepthValueInput"
+                             Classes="FeatureDialogInput"
+                             Width="150"
+                             HorizontalAlignment="Left"
+                             Increment="1"
+                             Minimum="0.01"
+                             Maximum="10000"
+                             FormatString="0.###"
+                             IsEnabled="False" />
+              <Border Grid.Column="1"
+                      Classes="FeatureDialogUnitChip"
+                      Margin="8,0,0,0"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Top">
+                <TextBlock HorizontalAlignment="Center"
+                           Text="mm" />
+              </Border>
+            </Grid>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <StackPanel Grid.Row="3"
+                  Orientation="Horizontal"
+                  HorizontalAlignment="Right"
+                  Spacing="8">
+        <Button Content="Cancel"
+                Classes="FeatureDialogButtonSecondary"
+                Click="OnCancelClick" />
+        <Button x:Name="OkButton"
+                Content="Apply"
+                Classes="FeatureDialogButtonPrimary"
+                Click="OnConfirmClick" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>

@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="My3DApp.AvaloniaApp.Dialogs.CircleSketchToolOptionsView">
+  <StackPanel Spacing="10">
+    <Border Background="{DynamicResource Studio.PanelInsetBrush}"
+            BorderBrush="{DynamicResource Studio.BorderBrush}"
+            BorderThickness="1"
+            Padding="12">
+      <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="96,*">
+        <TextBlock Text="Tool"
+                   FontWeight="SemiBold" />
+        <TextBlock Grid.Column="1"
+                   Text="Circle" />
+        <TextBlock Grid.Row="1"
+                   Margin="0,10,0,0"
+                   Text="Mode"
+                   FontWeight="SemiBold" />
+        <TextBlock Grid.Row="1"
+                   Grid.Column="1"
+                   Margin="0,10,0,0"
+                   Text="Center-radius — click center, drag to set radius."
+                   TextWrapping="Wrap" />
+      </Grid>
+    </Border>
+
+    <Border Background="{DynamicResource Studio.PanelInsetBrush}"
+            BorderBrush="{DynamicResource Studio.BorderBrush}"
+            BorderThickness="1"
+            Padding="12">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Draw mode"
+                   FontWeight="SemiBold" />
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <RadioButton x:Name="CenterRadiusButton"
+                       Content="Center-radius"
+                       IsChecked="True"
+                       GroupName="CircleMode" />
+          <RadioButton x:Name="ThreePointButton"
+                       Content="3-point"
+                       GroupName="CircleMode" />
+        </StackPanel>
+        <TextBlock Text="Confirm to begin placing a circle in the viewport."
+                   Foreground="{DynamicResource Studio.TextMutedBrush}"
+                   FontSize="11"
+                   TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

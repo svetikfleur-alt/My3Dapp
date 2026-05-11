@@ -1,0 +1,103 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="My3DApp.AvaloniaApp.Dialogs.FilletFeatureDialog"
+        Width="440"
+        Height="350"
+        MinWidth="410"
+        MinHeight="320"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Classes="FeatureDialogWindow"
+        Title="Fillet">
+  <Border Classes="FeatureDialogPanel" Margin="0">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="18">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="FeatureDialogTitle"
+                     Text="Fillet" />
+          <TextBlock Classes="FeatureDialogSubtitle"
+                     TextWrapping="Wrap"
+                     Text="Round supported edges on the selected body with a constant radius." />
+        </StackPanel>
+        <Border Grid.Column="1"
+                Classes="FeatureDialogTag"
+                VerticalAlignment="Top">
+          <TextBlock Text="FEATURE"
+                     Classes="FeatureDialogTagText" />
+        </Border>
+      </Grid>
+
+      <StackPanel Grid.Row="1"
+                  Margin="0,16,0,16"
+                  Spacing="12">
+        <Border Classes="FeatureDialogSectionCard">
+          <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="104,*">
+            <TextBlock Text="Selection"
+                       Classes="FeatureDialogFieldLabel" />
+            <TextBlock Grid.Column="1"
+                       x:Name="SelectionValueTextBlock"
+                       Classes="FeatureDialogValueText"
+                       Text="Selected body"
+                       TextWrapping="Wrap" />
+            <TextBlock Grid.Row="1"
+                       Text="Operation"
+                       Margin="0,10,0,0"
+                       Classes="FeatureDialogFieldLabel" />
+            <TextBlock Grid.Row="1"
+                       Grid.Column="1"
+                       Margin="0,10,0,0"
+                       Classes="FeatureDialogValueText"
+                       Text="Constant-radius fillet" />
+            <TextBlock Grid.Row="2"
+                       Grid.ColumnSpan="2"
+                       Margin="0,10,0,0"
+                       Classes="FeatureDialogHelpText"
+                       TextWrapping="Wrap"
+                       Text="This minimal fillet applies to the currently selected body. Unsupported edge-level selection is intentionally not faked." />
+          </Grid>
+        </Border>
+
+        <Border Classes="FeatureDialogSectionCard">
+          <Grid ColumnDefinitions="*,88" RowDefinitions="Auto,Auto">
+            <TextBlock Text="Radius"
+                       Classes="FeatureDialogFieldLabel" />
+            <NumericUpDown x:Name="RadiusInput"
+                           Classes="FeatureDialogInput"
+                           Grid.Row="1"
+                           Width="160"
+                           HorizontalAlignment="Left"
+                           Margin="0,8,0,0"
+                           Increment="0.5"
+                           Minimum="0.1"
+                           Maximum="100"
+                           FormatString="0.###" />
+            <Border Grid.Column="1"
+                    Grid.Row="1"
+                    Classes="FeatureDialogUnitChip"
+                    Margin="8,8,0,0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Top">
+              <TextBlock HorizontalAlignment="Center"
+                         Text="mm" />
+            </Border>
+          </Grid>
+        </Border>
+      </StackPanel>
+
+      <StackPanel Grid.Row="2"
+                  Orientation="Horizontal"
+                  HorizontalAlignment="Right"
+                  Spacing="8">
+        <Button Content="Cancel"
+                Classes="FeatureDialogButtonSecondary"
+                IsCancel="True"
+                Click="OnCancelClick" />
+        <Button Content="Apply"
+                Classes="FeatureDialogButtonPrimary"
+                IsDefault="True"
+                Click="OnConfirmClick" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>
