@@ -1,19 +1,24 @@
-Done:
-- HoleFeatureDialog.axaml: Diameter NumericUpDown (min 0.01), CenterX/Y offsets, Through All/Blind radio, DepthValue (disabled when Through All), Cancel/OK
-- HoleFeatureDialog.axaml.cs: validation (diameter>0, depthValue>0 when blind), Close(result), OnDepthKindChanged toggles DepthValueInput.IsEnabled
-- Engine/CadModel.cs: HoleFeature, HoleDepthKind, CadFeatureKind.Hole, CadCommandActionKind.HoleSelectedBody (pre-existing)
-- Engine/CadProjectStore.cs: HandleHoleSelectedBody (diameter/centerX/Y/depthKind/depthValue; CSG subtract stubbed with Trace) (pre-existing)
-- StudioWorkspaceController.cs: FindHoleParams, EditHoleFeature, CadViewportCommandKind.HoleBody wired (pre-existing)
-- StudioShellViewModel.cs: HoleSelectedBodyAsync, GetHoleParams, UpdateHoleAsync; BuildFeatureSummary HoleFeature case (pre-existing)
-- MainWindow.axaml: Hole button (CanEdgeTools, ToolTip "Hole (H)", Click="OnHoleClick") after CP button
-- MainWindow.axaml.cs: OnHoleClick handler (opens dialog, calls HoleSelectedBodyAsync); H key shortcut (3D mode only, CanEdgeTools guard); OnFeatureTreeDoubleTapped updated to handle HoleFeature (checks GetHoleParams first, then CP fallback)
+Done (task 66 — Sketch solver + definition behavior, 2026-05-11):
+- Engine/CadProjectStore.cs: Added Tangent case to ApplyConstraintToGeometry switch — calls new
+  ReapplyTangentConstraint(entities) which re-asserts line-arc tangency (snaps arc endpoint to
+  nearest line endpoint) and arc-arc tangency (snaps arc1 start to arc2 end) on every solver pass.
+- Engine/CadProjectStore.cs: Increased SolveSketchSession default iterations 4→8 for better
+  convergence on constraint chains involving multiple linked entities.
+- Engine/CadProjectStore.cs: Fixed HandleEditSketchEntityValue committed-sketch path — changed
+  sketch.Dimensions = InferDimensions(...) and sketch.Constraints = InferConstraints(...) to
+  MergeSketchDimensions/MergeSketchConstraints calls, so manually-added constraints survive a
+  parameter edit on a committed (outside-session) sketch.
 
 Not done:
-- Live viewport preview of cylinder during dialog open (no dialog→viewport bridge; same status as other ops)
-- Face-level hit-test (curved face rejection requires face-level picking not yet in codebase; dialog uses "first face of body" fallback per spec notes)
+- Full symbolic solver (matrix-based Gauss-Newton etc.) — out of scope for this task.
+- Conflict detection / overdefined diagnosis — no automatic resolution of contradictory constraints.
 
 Broken:
-- none expected
+- none expected; only CadProjectStore.cs touched, no new types or interfaces
 
 Next:
-- Verifier: run build (0 errors expected); confirm Hole button appears active when a body exists; open dialog, Diameter=10, Through All → OK → tree shows "Hole (⌀10 × Through)"; blind mode → DepthValue field enables; double-click node → dialog re-opens; H shortcut only in 3D mode
+- Verifier: open sketch, draw a line + arc, apply Tangent constraint, edit the line length — arc
+  should re-snap to maintain tangency. Apply EqualLength + Horizontal to a simple rectangle,
+  edit one entity — constraints should reassert. Fully-defined status (● Fully constrained) should
+  appear when enough constraints are applied; underdefined geometry should remain blue.
+- Remaining backlog tasks: 65 (dialog standardization), 67 (shell consistency), 68 (copilot assist).

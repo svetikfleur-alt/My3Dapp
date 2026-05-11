@@ -29,3 +29,5 @@ belongs in LOG.md or HANDOFF.md, not here.
 
 Queue correction:
 - Task 01 was previously marked done without matching completion evidence. It is now pending again in TASK_QUEUE.md and is intentionally not listed as done here.
+
+- 66 - Sketch solver and definition behavior (2026-05-11) - Added Tangent case to ApplyConstraintToGeometry so tangency re-asserts on every solver pass; increased default solver iterations 4→8 for better multi-constraint convergence; fixed HandleEditSketchEntityValue to merge (not replace) constraints/dimensions when editing committed sketch params, preserving manual constraints; commit 1287468; build: dotnet unavailable in env, code-level review clean.
