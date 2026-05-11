@@ -1,0 +1,1391 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:My3DApp.AvaloniaApp.ViewModels"
+        xmlns:controls="clr-namespace:My3DApp.AvaloniaApp.Controls"
+        xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Avalonia.Svg.Skia"
+        x:Class="My3DApp.AvaloniaApp.MainWindow"
+        x:DataType="vm:StudioShellViewModel"
+        Width="1680"
+        Height="980"
+        MinWidth="1280"
+        MinHeight="760"
+        Title="{Binding WindowTitle}"
+        mc:Ignorable="d">
+  <DockPanel LastChildFill="True" Background="{DynamicResource Studio.WindowBackgroundBrush}">
+    <Border DockPanel.Dock="Top"
+            Classes="StudioTopChrome"
+            Background="{DynamicResource Studio.ToolbarBackgroundBrush}"
+            BorderBrush="{DynamicResource Studio.BorderBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="14,12,14,10">
+      <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*,Auto">
+        <Grid ColumnDefinitions="Auto,*" VerticalAlignment="Center">
+          <Border Classes="StudioBrandMark">
+            <TextBlock Text="M3"
+                       Classes="StudioBrandMarkText" />
+          </Border>
+
+          <StackPanel Grid.Column="1" Margin="14,0,0,0" Spacing="2" VerticalAlignment="Center">
+            <TextBlock Text="{Binding ProjectTitle}"
+                       Classes="ToolbarTitleText" />
+            <TextBlock Text="{Binding StatusBarText}"
+                       Classes="ToolbarSubtleText"
+                       MaxWidth="640"
+                       TextTrimming="CharacterEllipsis" />
+          </StackPanel>
+        </Grid>
+
+        <Border Grid.Column="1"
+                HorizontalAlignment="Center"
+                Classes="ModeSwitchShell"
+                Padding="4">
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <ToggleButton x:Name="Workspace3DButton"
+                          Content="3D"
+                          IsChecked="{Binding IsThreeDMode, Mode=OneWay}"
+                          Classes="ModeToggleButton WorkspaceModeButton"
+                          ToolTip.Tip="Return to 3D workspace"
+                          Click="OnWorkspace3DClick" />
+            <ToggleButton x:Name="WorkspaceSketchButton"
+                          Content="Sketch"
+                          IsChecked="{Binding IsSketchMode, Mode=OneWay}"
+                          Classes="ModeToggleButton WorkspaceModeButton"
+                          ToolTip.Tip="Start or finish sketch workflow"
+                          Click="OnWorkspaceSketchClick" />
+          </StackPanel>
+        </Border>
+
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Border Classes="ToolbarModeChip">
+            <TextBlock Text="{Binding WorkspaceModeBadge}" Classes="ToolbarModeChipText" />
+          </Border>
+
+          <Border Classes="ModeSwitchShell" Padding="4">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <ToggleButton x:Name="LightThemeButton"
+                            Content="Light"
+                            Classes="ModeToggleButton ThemeToggleButton"
+                            Click="OnLightThemeClick" />
+              <ToggleButton x:Name="DarkThemeButton"
+                            Content="Dark"
+                            Classes="ModeToggleButton ThemeToggleButton"
+                            Click="OnDarkThemeClick" />
+            </StackPanel>
+          </Border>
+
+          <Button Classes="CommandButton"
+                  Content="Commands - Ctrl+K"
+                  Click="OnCommandPaletteClick" />
+        </StackPanel>
+
+        <Border Grid.Row="1"
+                Grid.ColumnSpan="3"
+                Classes="ToolbarCommandStrip"
+                Margin="0,12,0,0">
+          <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                        VerticalScrollBarVisibility="Disabled">
+          <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <TextBlock Text="Workflow" Classes="ToolbarGroupLabel" />
+            <Border Classes="ToolSplitGroup" Padding="4" IsVisible="{Binding IsThreeDMode}">
+              <Button Classes="ToolbarActionButton"
+                      IsEnabled="{Binding CanSketchPrimaryAction}"
+                      ToolTip.Tip="Start Sketch (S)"
+                      Click="OnSketchPrimaryClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/pencil.svg"
+                         Width="15"
+                         Height="15" />
+              </Button>
+            </Border>
+
+            <Border Classes="ToolSplitGroup" Padding="4" IsVisible="{Binding IsSketchMode}">
+              <StackPanel Orientation="Horizontal" Spacing="3">
+                <Button Classes="ToolbarActionButton"
+                        IsEnabled="{Binding CanFinishSketch}"
+                        ToolTip.Tip="Finish Sketch (S)"
+                        Click="OnSketchPrimaryClick">
+                  <svg:Svg Path="avares://My3DApp/Assets/Icons/check.svg"
+                           Width="15"
+                           Height="15" />
+                </Button>
+                <Button Classes="ToolbarActionButton"
+                        IsEnabled="{Binding CanCancelSketch}"
+                        ToolTip.Tip="Cancel Sketch"
+                        Click="OnSketchCancelClick">
+                  <svg:Svg Path="avares://My3DApp/Assets/Icons/delete.svg"
+                           Width="15"
+                           Height="15" />
+                </Button>
+              </StackPanel>
+            </Border>
+
+            <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsThreeDMode}">
+              <Border Classes="ToolbarDivider" />
+              <Border Classes="ToolSplitGroup" Padding="4">
+                <StackPanel Orientation="Horizontal" Spacing="3">
+                  <Button Classes="ToolbarActionButton"
+                          ToolTip.Tip="Open project (Ctrl+O)"
+                          Click="OnOpenProjectClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/open.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button x:Name="RecentFilesButton"
+                          Classes="ToolbarActionButton"
+                          ToolTip.Tip="Recent projects"
+                          IsEnabled="{Binding HasRecentFiles}"
+                          Click="OnRecentFilesClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/chevron-down.svg" Width="12" Height="12" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          ToolTip.Tip="Save project (Ctrl+S)"
+                          Click="OnSaveProjectClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/save.svg" Width="16" Height="16" />
+                  </Button>
+                </StackPanel>
+              </Border>
+
+              <Border Classes="ToolSplitGroup" Padding="4">
+                <StackPanel Orientation="Horizontal" Spacing="3">
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanUndo}"
+                          ToolTip.Tip="Undo (Ctrl+Z)"
+                          Click="OnUndoClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/undo.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanRedo}"
+                          ToolTip.Tip="Redo (Ctrl+Y)"
+                          Click="OnRedoClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/redo.svg" Width="16" Height="16" />
+                  </Button>
+                </StackPanel>
+              </Border>
+
+              <Button Classes="ToolbarActionButton"
+                      ToolTip.Tip="Export model (Ctrl+E)"
+                      Click="OnExportClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/export.svg" Width="16" Height="16" />
+              </Button>
+
+              <Border Classes="ToolbarDivider" />
+
+              <TextBlock Text="Shapes" Classes="ToolbarGroupLabel" />
+              <Border Classes="ToolSplitGroup" Padding="4">
+                <StackPanel Orientation="Horizontal" Spacing="3">
+                  <ItemsControl ItemsSource="{Binding RecentPrimitiveTools}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" Spacing="3" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate DataType="vm:PrimitiveToolItemViewModel">
+                        <Button Classes="ToolbarActionButton"
+                                Tag="{Binding Kind}"
+                                ToolTip.Tip="{Binding Name}"
+                                Click="OnPrimitiveMenuItemClick">
+                          <svg:Svg Path="{Binding IconPath}" Width="16" Height="16" />
+                        </Button>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <Button Classes="ToolbarActionButton PrimitiveMenuButton"
+                          IsEnabled="{Binding CanPrimitiveTools}"
+                          ToolTip.Tip="More primitives">
+                    <Button.Flyout>
+                      <MenuFlyout>
+                      <MenuItem Tag="box" Click="OnPrimitiveMenuItemClick">
+                        <MenuItem.Header>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <svg:Svg Path="avares://My3DApp/Assets/Icons/box.svg" Width="16" Height="16" />
+                            <TextBlock Text="Box" />
+                          </StackPanel>
+                        </MenuItem.Header>
+                      </MenuItem>
+                      <MenuItem Tag="cylinder" Click="OnPrimitiveMenuItemClick">
+                        <MenuItem.Header>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <svg:Svg Path="avares://My3DApp/Assets/Icons/cylinder.svg" Width="16" Height="16" />
+                            <TextBlock Text="Cylinder" />
+                          </StackPanel>
+                        </MenuItem.Header>
+                      </MenuItem>
+                      <MenuItem Tag="sphere" Click="OnPrimitiveMenuItemClick">
+                        <MenuItem.Header>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <svg:Svg Path="avares://My3DApp/Assets/Icons/sphere.svg" Width="16" Height="16" />
+                            <TextBlock Text="Sphere" />
+                          </StackPanel>
+                        </MenuItem.Header>
+                      </MenuItem>
+                      <MenuItem Tag="cone" Click="OnPrimitiveMenuItemClick">
+                        <MenuItem.Header>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <svg:Svg Path="avares://My3DApp/Assets/Icons/cone.svg" Width="16" Height="16" />
+                            <TextBlock Text="Cone" />
+                          </StackPanel>
+                        </MenuItem.Header>
+                      </MenuItem>
+                      <MenuItem Tag="torus" Click="OnPrimitiveMenuItemClick">
+                        <MenuItem.Header>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <svg:Svg Path="avares://My3DApp/Assets/Icons/torus.svg" Width="16" Height="16" />
+                            <TextBlock Text="Torus" />
+                          </StackPanel>
+                        </MenuItem.Header>
+                      </MenuItem>
+                      <MenuItem Tag="pyramid" Click="OnPrimitiveMenuItemClick">
+                        <MenuItem.Header>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <svg:Svg Path="avares://My3DApp/Assets/Icons/pyramid.svg" Width="16" Height="16" />
+                            <TextBlock Text="Pyramid" />
+                          </StackPanel>
+                        </MenuItem.Header>
+                      </MenuItem>
+                      <MenuItem Tag="wedge" Click="OnPrimitiveMenuItemClick">
+                        <MenuItem.Header>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <svg:Svg Path="avares://My3DApp/Assets/Icons/wedge.svg" Width="16" Height="16" />
+                            <TextBlock Text="Wedge" />
+                          </StackPanel>
+                        </MenuItem.Header>
+                      </MenuItem>
+                      <MenuItem Tag="prism" Click="OnPrimitiveMenuItemClick">
+                        <MenuItem.Header>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <svg:Svg Path="avares://My3DApp/Assets/Icons/prism.svg" Width="16" Height="16" />
+                            <TextBlock Text="Prism" />
+                          </StackPanel>
+                        </MenuItem.Header>
+                      </MenuItem>
+                      <MenuItem Tag="capsule" Click="OnPrimitiveMenuItemClick">
+                        <MenuItem.Header>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <svg:Svg Path="avares://My3DApp/Assets/Icons/capsule.svg" Width="16" Height="16" />
+                            <TextBlock Text="Capsule" />
+                          </StackPanel>
+                        </MenuItem.Header>
+                      </MenuItem>
+                      <MenuItem Tag="hemisphere" Click="OnPrimitiveMenuItemClick">
+                        <MenuItem.Header>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <svg:Svg Path="avares://My3DApp/Assets/Icons/hemisphere.svg" Width="16" Height="16" />
+                            <TextBlock Text="Hemisphere" />
+                          </StackPanel>
+                        </MenuItem.Header>
+                      </MenuItem>
+                      <MenuItem Tag="ellipsoid" Click="OnPrimitiveMenuItemClick">
+                        <MenuItem.Header>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <svg:Svg Path="avares://My3DApp/Assets/Icons/ellipsoid.svg" Width="16" Height="16" />
+                            <TextBlock Text="Ellipsoid" />
+                          </StackPanel>
+                        </MenuItem.Header>
+                      </MenuItem>
+                      <MenuItem Tag="arrow" Click="OnPrimitiveMenuItemClick">
+                        <MenuItem.Header>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <svg:Svg Path="avares://My3DApp/Assets/Icons/arrow-primitive.svg" Width="16" Height="16" />
+                            <TextBlock Text="Arrow" />
+                          </StackPanel>
+                        </MenuItem.Header>
+                      </MenuItem>
+                      <MenuItem Tag="icosphere" Click="OnPrimitiveMenuItemClick">
+                        <MenuItem.Header>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <svg:Svg Path="avares://My3DApp/Assets/Icons/icosphere.svg" Width="16" Height="16" />
+                            <TextBlock Text="Icosphere" />
+                          </StackPanel>
+                        </MenuItem.Header>
+                      </MenuItem>
+                      <MenuItem Tag="tetrahedron" Click="OnPrimitiveMenuItemClick">
+                        <MenuItem.Header>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <svg:Svg Path="avares://My3DApp/Assets/Icons/tetrahedron.svg" Width="16" Height="16" />
+                            <TextBlock Text="Tetrahedron" />
+                          </StackPanel>
+                        </MenuItem.Header>
+                      </MenuItem>
+                      <MenuItem Tag="octahedron" Click="OnPrimitiveMenuItemClick">
+                        <MenuItem.Header>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <svg:Svg Path="avares://My3DApp/Assets/Icons/octahedron.svg" Width="16" Height="16" />
+                            <TextBlock Text="Octahedron" />
+                          </StackPanel>
+                        </MenuItem.Header>
+                      </MenuItem>
+                      <MenuItem Tag="icosahedron" Click="OnPrimitiveMenuItemClick">
+                        <MenuItem.Header>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <svg:Svg Path="avares://My3DApp/Assets/Icons/icosahedron.svg" Width="16" Height="16" />
+                            <TextBlock Text="Icosahedron" />
+                          </StackPanel>
+                        </MenuItem.Header>
+                      </MenuItem>
+                      </MenuFlyout>
+                    </Button.Flyout>
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/chevron-down.svg" Width="10" Height="10" />
+                  </Button>
+                </StackPanel>
+              </Border>
+
+              <Border Classes="ToolbarDivider" />
+
+              <TextBlock Text="Features" Classes="ToolbarGroupLabel" />
+              <Border Classes="ToolSplitGroup" Padding="4">
+                <StackPanel Orientation="Horizontal" Spacing="3">
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanProfileTools}"
+                          ToolTip.Tip="Extrude selected profile"
+                          Click="OnExtrudeClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/extrude.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanProfileTools}"
+                          ToolTip.Tip="Revolve selected profile"
+                          Click="OnRevolveClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/revolve.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanProfileTools}"
+                          ToolTip.Tip="Sweep selected profile"
+                          Click="OnSweepClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/extrude.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanLoftTools}"
+                          ToolTip.Tip="Loft between two closed profiles"
+                          Click="OnLoftClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/revolve.svg" Width="16" Height="16" />
+                  </Button>
+                </StackPanel>
+              </Border>
+
+              <Border Classes="ToolbarDivider" />
+              <TextBlock Text="View" Classes="ToolbarGroupLabel" />
+              <Button Classes="ToolbarActionButton"
+                      ToolTip.Tip="Zoom to fit (F)"
+                      Click="OnFocusSelectionClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/focus.svg" Width="16" Height="16" />
+              </Button>
+              <ToggleButton x:Name="MeasureToolToggle"
+                            Classes="ToolbarIconToggle"
+                            ToolTip.Tip="Measure point-to-point distance"
+                            IsEnabled="{Binding IsThreeDMode}"
+                            Click="OnMeasureToolToggleClick">
+                <TextBlock Text="⇿" FontSize="14" FontWeight="Bold" />
+              </ToggleButton>
+
+              <ToggleButton x:Name="SectionViewToggle"
+                            Classes="ToolbarIconToggle"
+                            ToolTip.Tip="Section view — toggle cross-section clipping plane"
+                            IsEnabled="{Binding IsThreeDMode}"
+                            Click="OnSectionViewToggleClick">
+                <TextBlock Text="§" FontSize="14" FontWeight="Bold" />
+              </ToggleButton>
+              <ComboBox x:Name="SectionAxisCombo"
+                        Width="42"
+                        FontSize="11"
+                        IsEnabled="{Binding IsThreeDMode}"
+                        IsVisible="{Binding ElementName=SectionViewToggle, Path=IsChecked}"
+                        SelectedIndex="2"
+                        ToolTip.Tip="Section plane axis">
+                <ComboBoxItem Content="X" />
+                <ComboBoxItem Content="Y" />
+                <ComboBoxItem Content="Z" />
+              </ComboBox>
+              <NumericUpDown x:Name="SectionOffsetSpin"
+                             Width="68"
+                             FontSize="11"
+                             Minimum="-500"
+                             Maximum="500"
+                             Increment="1"
+                             Value="0"
+                             FormatString="0.#"
+                             IsEnabled="{Binding IsThreeDMode}"
+                             IsVisible="{Binding ElementName=SectionViewToggle, Path=IsChecked}"
+                             ValueChanged="OnSectionOffsetChanged"
+                             ToolTip.Tip="Section plane offset" />
+
+              <Border Classes="ToolbarDivider" />
+              <TextBlock Text="Transform" Classes="ToolbarGroupLabel" />
+              <ToggleButton x:Name="MoveToolButton"
+                            Classes="ToolbarIconToggle"
+                            ToolTip.Tip="Move · M"
+                            Click="OnMoveToolClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/move.svg" Width="16" Height="16" />
+              </ToggleButton>
+
+              <Border Classes="ToolbarDivider" />
+              <TextBlock Text="Modify" Classes="ToolbarGroupLabel" />
+              <Button Classes="ToolbarActionButton"
+                      IsEnabled="{Binding CanEdgeTools}"
+                      ToolTip.Tip="Fillet (round edges)"
+                      Click="OnFilletClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/fillet.svg" Width="16" Height="16" />
+              </Button>
+              <Button Classes="ToolbarActionButton"
+                      IsEnabled="{Binding CanEdgeTools}"
+                      ToolTip.Tip="Chamfer (bevel edges)"
+                      Click="OnChamferClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/chamfer.svg" Width="16" Height="16" />
+              </Button>
+              <Button Classes="ToolbarActionButton"
+                      IsEnabled="{Binding CanEdgeTools}"
+                      ToolTip.Tip="Hole (H)"
+                      Click="OnHoleClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/hole.svg" Width="16" Height="16" />
+              </Button>
+              <Button Classes="ToolbarActionButton"
+                      IsEnabled="{Binding CanEdgeTools}"
+                      ToolTip.Tip="Shell"
+                      Click="OnShellClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/shell.svg" Width="16" Height="16" />
+              </Button>
+              <Button Classes="ToolbarActionButton"
+                      IsEnabled="{Binding CanEdgeTools}"
+                      ToolTip.Tip="Linear Pattern"
+                      Click="OnLinearPatternClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/linear-pattern.svg" Width="16" Height="16" />
+              </Button>
+              <Button Classes="ToolbarActionButton"
+                      IsEnabled="{Binding CanEdgeTools}"
+                      ToolTip.Tip="Circular Pattern"
+                      Click="OnCircularPatternClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/circular-pattern.svg" Width="16" Height="16" />
+              </Button>
+              <Button Classes="ToolbarActionButton"
+                      IsEnabled="{Binding CanEdgeTools}"
+                      ToolTip.Tip="Mirror selected body"
+                      Click="OnMirrorMenuItemClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/mirror.svg" Width="16" Height="16" />
+              </Button>
+
+              <Border Classes="ToolbarDivider" IsVisible="{Binding CanBooleanTools}" />
+              <TextBlock Text="Boolean" Classes="ToolbarGroupLabel" IsVisible="{Binding CanBooleanTools}" />
+              <Button Classes="ToolbarActionButton"
+                      IsEnabled="{Binding CanBooleanTools}"
+                      IsVisible="{Binding CanBooleanTools}"
+                      ToolTip.Tip="Union — merge two bodies"
+                      Click="OnBooleanUnionClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/boolean-union.svg" Width="16" Height="16" />
+              </Button>
+              <Button Classes="ToolbarActionButton"
+                      IsEnabled="{Binding CanBooleanTools}"
+                      IsVisible="{Binding CanBooleanTools}"
+                      ToolTip.Tip="Subtract — cut Body B from Body A"
+                      Click="OnBooleanSubtractClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/boolean-subtract.svg" Width="16" Height="16" />
+              </Button>
+              <Button Classes="ToolbarActionButton"
+                      IsEnabled="{Binding CanBooleanTools}"
+                      IsVisible="{Binding CanBooleanTools}"
+                      ToolTip.Tip="Intersect — keep only overlapping volume"
+                      Click="OnBooleanIntersectClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/boolean-intersect.svg" Width="16" Height="16" />
+              </Button>
+
+              <Border Classes="ToolbarDivider" IsVisible="{Binding IsThreeDMode}" />
+              <TextBlock Text="Datum" Classes="ToolbarGroupLabel" IsVisible="{Binding IsThreeDMode}" />
+              <Button Classes="ToolbarActionButton"
+                      IsEnabled="{Binding IsThreeDMode}"
+                      IsVisible="{Binding IsThreeDMode}"
+                      ToolTip.Tip="Create datum plane (offset from reference plane)"
+                      Click="OnCreateDatumPlaneClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/sketch-plane.svg" Width="16" Height="16" />
+              </Button>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsSketchMode}">
+              <Border Classes="ToolbarDivider" />
+
+              <TextBlock Text="Sketch" Classes="ToolbarGroupLabel" />
+              <Border Classes="ToolSplitGroup" Padding="4">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                  <ToggleButton Classes="ToolbarIconToggle"
+                                Tag="Line"
+                                ToolTip.Tip="Line (L)"
+                                IsChecked="{Binding IsLineSketchToolSelected, Mode=OneWay}"
+                                IsEnabled="{Binding CanSketchTools}"
+                                Click="OnSketchToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/line.svg"
+                             Width="16"
+                             Height="16" />
+                  </ToggleButton>
+                  <ToggleButton Classes="ToolbarIconToggle"
+                                Tag="Rectangle"
+                                ToolTip.Tip="Rectangle (R)"
+                                IsChecked="{Binding IsRectangleSketchToolSelected, Mode=OneWay}"
+                                IsEnabled="{Binding CanSketchTools}"
+                                Click="OnSketchToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/rectangle.svg"
+                             Width="16"
+                             Height="16" />
+                  </ToggleButton>
+                  <ToggleButton Classes="ToolbarIconToggle"
+                                Tag="Circle"
+                                ToolTip.Tip="Circle (C)"
+                                IsChecked="{Binding IsCircleSketchToolSelected, Mode=OneWay}"
+                                IsEnabled="{Binding CanSketchTools}"
+                                Click="OnSketchToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/circle.svg"
+                             Width="16"
+                             Height="16" />
+                  </ToggleButton>
+                  <ToggleButton Classes="ToolbarIconToggle"
+                                Tag="Arc"
+                                ToolTip.Tip="Arc (A)"
+                                IsChecked="{Binding IsArcSketchToolSelected, Mode=OneWay}"
+                                IsEnabled="{Binding CanSketchTools}"
+                                Click="OnSketchToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/arc.svg"
+                             Width="16"
+                             Height="16" />
+                  </ToggleButton>
+                  <ToggleButton Classes="ToolbarIconToggle"
+                                Tag="Point"
+                                ToolTip.Tip="Point (P)"
+                                IsChecked="{Binding IsPointSketchToolSelected, Mode=OneWay}"
+                                IsEnabled="{Binding CanSketchTools}"
+                                Click="OnSketchToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/point.svg"
+                             Width="16"
+                             Height="16" />
+                  </ToggleButton>
+                  <ToggleButton Classes="ToolbarIconToggle"
+                                Tag="Trim"
+                                ToolTip.Tip="Trim sketch segment"
+                                IsChecked="{Binding IsTrimSketchToolSelected, Mode=OneWay}"
+                                IsEnabled="{Binding CanSketchTools}"
+                                Click="OnSketchToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/trim.svg" Width="16" Height="16" />
+                  </ToggleButton>
+                  <ToggleButton Classes="ToolbarIconToggle" Tag="Polygon" ToolTip.Tip="Polygon (n-sided)" IsChecked="{Binding IsPolygonSketchToolSelected, Mode=OneWay}" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/polygon.svg" Width="16" Height="16" />
+                  </ToggleButton>
+                  <ToggleButton Classes="ToolbarIconToggle" Tag="Slot" ToolTip.Tip="Slot (straight)" IsChecked="{Binding IsSlotSketchToolSelected, Mode=OneWay}" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/slot.svg" Width="16" Height="16" />
+                  </ToggleButton>
+                  <ToggleButton Classes="ToolbarIconToggle" Tag="Spline" ToolTip.Tip="Spline (control-point)" IsChecked="{Binding IsSplineSketchToolSelected, Mode=OneWay}" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/spline.svg" Width="16" Height="16" />
+                  </ToggleButton>
+                  <ToggleButton Classes="ToolbarIconToggle" Tag="Mirror" ToolTip.Tip="Mirror sketch entities" IsChecked="{Binding IsMirrorSketchToolSelected, Mode=OneWay}" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/mirror.svg" Width="16" Height="16" />
+                  </ToggleButton>
+                  <ToggleButton Classes="ToolbarIconToggle" Tag="Offset" ToolTip.Tip="Offset curves" IsChecked="{Binding IsOffsetSketchToolSelected, Mode=OneWay}" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/offset.svg" Width="16" Height="16" />
+                  </ToggleButton>
+                  <ToggleButton Classes="ToolbarIconToggle" Tag="Fillet2d" ToolTip.Tip="2D Fillet" IsChecked="{Binding IsFillet2dSketchToolSelected, Mode=OneWay}" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/fillet2d.svg" Width="16" Height="16" />
+                  </ToggleButton>
+                </StackPanel>
+              </Border>
+
+              <Border Classes="ToolbarDivider" />
+              <TextBlock Text="Transform" Classes="ToolbarGroupLabel" />
+              <ToggleButton x:Name="SketchTransformToolButton"
+                            Classes="ToolbarIconToggle"
+                            ToolTip.Tip="Transform sketch entities (move)"
+                            IsChecked="{Binding IsTransformSketchToolSelected, Mode=OneWay}"
+                            IsEnabled="{Binding CanSketchTools}"
+                            Click="OnSketchTransformToolClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/move.svg" Width="16" Height="16" />
+              </ToggleButton>
+              <!-- Rotate tool button — task 52 -->
+              <ToggleButton x:Name="SketchRotateToolButton"
+                            Classes="ToolbarIconToggle"
+                            ToolTip.Tip="Rotate sketch entity about a pivot point"
+                            IsEnabled="{Binding CanSketchTools}"
+                            Click="OnSketchRotateToolClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/rotate.svg" Width="16" Height="16" />
+              </ToggleButton>
+
+              <Border Classes="ToolbarDivider" />
+              <TextBlock Text="Construction" Classes="ToolbarGroupLabel" />
+              <ToggleButton x:Name="ConstructionModeButton"
+                            Classes="ToolbarIconToggle"
+                            ToolTip.Tip="Toggle construction mode — new entities drawn as construction (dashed)"
+                            IsChecked="{Binding IsConstructionModeActive, Mode=OneWay}"
+                            IsEnabled="{Binding CanSketchTools}"
+                            Click="OnToggleConstructionModeClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/construction.svg" Width="16" Height="16" />
+              </ToggleButton>
+
+              <Border Classes="ToolbarDivider" />
+              <TextBlock Text="Grid" Classes="ToolbarGroupLabel" />
+              <ToggleButton x:Name="GridToggleButton"
+                            Classes="ToolbarIconToggle"
+                            ToolTip.Tip="Toggle grid overlay [G]"
+                            IsEnabled="{Binding IsSketchMode}"
+                            IsChecked="False"
+                            Click="OnGridToggleClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/sketch-grid.svg" Width="16" Height="16" />
+              </ToggleButton>
+
+              <Border Classes="ToolbarDivider" />
+              <TextBlock Text="Dimension" Classes="ToolbarGroupLabel" />
+              <ToggleButton Classes="ToolbarIconToggle"
+                            Tag="LinearDimension"
+                            ToolTip.Tip="Linear Dimension [D] — click a line to add its length"
+                            IsChecked="{Binding IsLinearDimensionToolSelected, Mode=OneWay}"
+                            IsEnabled="{Binding CanSketchTools}"
+                            Click="OnSketchToolClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/linear-dimension.svg" Width="16" Height="16" />
+              </ToggleButton>
+              <ToggleButton Classes="ToolbarIconToggle"
+                            Tag="RadiusDimension"
+                            ToolTip.Tip="Radius Dimension [I] — click a circle or arc"
+                            IsChecked="{Binding IsRadiusDimensionToolSelected, Mode=OneWay}"
+                            IsEnabled="{Binding CanSketchTools}"
+                            Click="OnSketchToolClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/radius-dimension.svg" Width="16" Height="16" />
+              </ToggleButton>
+              <ToggleButton Classes="ToolbarIconToggle"
+                            Tag="AngleDimension"
+                            ToolTip.Tip="Angle Dimension — click two lines to measure angle"
+                            IsChecked="{Binding IsAngleDimensionToolSelected, Mode=OneWay}"
+                            IsEnabled="{Binding CanSketchTools}"
+                            Click="OnSketchToolClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/angle-dimension.svg" Width="16" Height="16" />
+              </ToggleButton>
+
+              <Border Classes="ToolbarDivider" />
+              <TextBlock Text="Constraints" Classes="ToolbarGroupLabel" />
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <Button Classes="SketchConstraintToolButton"
+                        ToolTip.Tip="Horizontal (snap last line horizontal)"
+                        IsEnabled="{Binding CanSketchTools}"
+                        Click="OnApplyHorizontalConstraintClick">
+                  <svg:Svg Path="avares://My3DApp/Assets/Icons/horizontal.svg" Width="15" Height="15" />
+                </Button>
+                <Button Classes="SketchConstraintToolButton"
+                        ToolTip.Tip="Vertical (snap last line vertical)"
+                        IsEnabled="{Binding CanSketchTools}"
+                        Click="OnApplyVerticalConstraintClick">
+                  <svg:Svg Path="avares://My3DApp/Assets/Icons/vertical.svg" Width="15" Height="15" />
+                </Button>
+                <Button Classes="SketchConstraintToolButton"
+                        ToolTip.Tip="Coincident (snap last line to previous line)"
+                        IsEnabled="{Binding CanSketchTools}"
+                        Click="OnApplyCoincidentConstraintClick">
+                  <svg:Svg Path="avares://My3DApp/Assets/Icons/coincident.svg" Width="15" Height="15" />
+                </Button>
+                <Button Classes="SketchConstraintToolButton"
+                        ToolTip.Tip="Equal (match last two line lengths or radii)"
+                        IsEnabled="{Binding CanSketchTools}"
+                        Click="OnApplyEqualConstraintClick">
+                  <svg:Svg Path="avares://My3DApp/Assets/Icons/equal.svg" Width="15" Height="15" />
+                </Button>
+                <Button Classes="SketchConstraintToolButton"
+                        ToolTip.Tip="Fix (lock last sketch entity)"
+                        IsEnabled="{Binding CanSketchTools}"
+                        Click="OnApplyFixedConstraintClick">
+                  <svg:Svg Path="avares://My3DApp/Assets/Icons/fix.svg" Width="15" Height="15" />
+                </Button>
+                <Button Classes="SketchConstraintToolButton"
+                        ToolTip.Tip="Tangent"
+                        IsEnabled="{Binding CanSketchTools}"
+                        Click="OnApplyTangentConstraintClick">
+                  <svg:Svg Path="avares://My3DApp/Assets/Icons/tangent.svg" Width="15" Height="15" />
+                </Button>
+                <Button Classes="SketchConstraintToolButton"
+                        ToolTip.Tip="Parallel"
+                        IsEnabled="{Binding CanSketchTools}"
+                        Click="OnApplyParallelConstraintClick">
+                  <svg:Svg Path="avares://My3DApp/Assets/Icons/parallel.svg" Width="15" Height="15" />
+                </Button>
+                <Button Classes="SketchConstraintToolButton"
+                        ToolTip.Tip="Perpendicular (make last two lines 90°)"
+                        IsEnabled="{Binding CanSketchTools}"
+                        Click="OnApplyPerpendicularConstraintClick">
+                  <svg:Svg Path="avares://My3DApp/Assets/Icons/perpendicular.svg" Width="15" Height="15" />
+                </Button>
+                <Button Classes="SketchConstraintToolButton"
+                        ToolTip.Tip="Concentric (share center for last two circles/arcs)"
+                        IsEnabled="{Binding CanSketchTools}"
+                        Click="OnApplyConcentricConstraintClick">
+                  <svg:Svg Path="avares://My3DApp/Assets/Icons/concentric.svg" Width="15" Height="15" />
+                </Button>
+              </StackPanel>
+
+              <Border Classes="ToolbarDivider" />
+              <Border Classes="SketchHintPanel" Padding="10,6">
+                <StackPanel Spacing="2">
+                  <TextBlock Text="{Binding SketchWorkflowHint}"
+                             Classes="ToolbarSubtleText"
+                             TextWrapping="Wrap" />
+                  <TextBlock Text="{Binding SketchConstraintHint}"
+                             Classes="ToolbarMetaLabel" />
+                  <TextBlock Text="{Binding SketchCursorPosition}"
+                             Classes="ToolbarMetaLabel"
+                             FontFamily="Consolas, Courier New, monospace"
+                             IsVisible="{Binding IsSketchMode}" />
+                  <TextBlock Text="{Binding SketchDofLabel}"
+                             Classes="SketchDofStatus"
+                             Classes.DofFullyConstrained="{Binding IsDofFullyConstrained}"
+                             Classes.DofOverconstrained="{Binding IsDofOverconstrained}"
+                             IsVisible="{Binding IsSketchMode}" />
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </StackPanel>
+          </ScrollViewer>
+        </Border>
+      </Grid>
+    </Border>
+
+    <Border DockPanel.Dock="Bottom"
+            Classes="StudioBottomChrome"
+            Background="{DynamicResource Studio.PanelInsetBrush}"
+            BorderBrush="{DynamicResource Studio.BorderBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="14,6">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Text="{Binding StatusBarText}"
+                   Classes="ToolbarSubtleText"
+                   VerticalAlignment="Center" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+          <TextBlock Text="Ctrl+Z Undo"
+                     Classes="ToolbarMetaLabel"
+                     IsVisible="{Binding CanUndo}" />
+          <TextBlock Text="Ctrl+Y Redo"
+                     Classes="ToolbarMetaLabel"
+                     IsVisible="{Binding CanRedo}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <Border DockPanel.Dock="Bottom"
+            IsVisible="{Binding HasNotification}"
+            Background="{Binding NotificationBackground}"
+            Height="32">
+      <Grid ColumnDefinitions="*,Auto" Margin="14,0">
+        <TextBlock Text="{Binding NotificationText}"
+                   Foreground="{Binding NotificationForeground}"
+                   FontSize="12"
+                   FontWeight="Medium"
+                   VerticalAlignment="Center"
+                   TextTrimming="CharacterEllipsis" />
+        <Button Grid.Column="1"
+                Content="✕"
+                Foreground="{Binding NotificationForeground}"
+                Background="Transparent"
+                BorderThickness="0"
+                Padding="8,0"
+                Height="32"
+                VerticalAlignment="Center"
+                Click="OnDismissNotificationClick" />
+      </Grid>
+    </Border>
+
+    <Grid ColumnDefinitions="320,8,*,8,320" Margin="10,10,10,8">
+      <Border Grid.Column="0"
+              Classes="StudioPanelSurface"
+              Background="{DynamicResource Studio.PanelBackgroundBrush}"
+              BorderBrush="{DynamicResource Studio.BorderBrush}"
+              BorderThickness="1">
+        <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="12">
+          <Grid ColumnDefinitions="34,*" VerticalAlignment="Center">
+            <Border Classes="TreeFilterIconShell">
+              <svg:Svg Path="avares://My3DApp/Assets/Icons/filter.svg"
+                       Width="16"
+                       Height="16"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center" />
+            </Border>
+            <TextBox Grid.Column="1"
+                     Margin="8,0,0,0"
+                     Watermark="Filter by name or type"
+                     Text="{Binding FeatureTreeFilterText, Mode=TwoWay}"
+                     Classes="TreeFilterTextBox" />
+          </Grid>
+            <Grid Grid.Row="1"
+                  ColumnDefinitions="*,Auto"
+                  Margin="0,12,0,0">
+              <TextBlock Text="{Binding FeatureListHeader}"
+                         Classes="FeatureListHeaderText" />
+              <TextBlock Grid.Column="1"
+                         Text="{Binding FeatureTreeSummary}"
+                         Classes="FeatureListMetaText" />
+            </Grid>
+          <StackPanel Grid.Row="2"
+                      Margin="0,10,0,0"
+                      Spacing="0"
+                      IsVisible="{Binding IsSketchMode}">
+            <Border Classes="SketchTaskCard">
+              <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
+                <TextBlock Text="{Binding ActiveSketchTaskTitle}"
+                           Classes="SketchTaskTitle" />
+                <Button Grid.Column="1"
+                        Width="28"
+                        Height="28"
+                        Margin="8,0,0,0"
+                        Classes="SketchTaskActionButton"
+                        IsEnabled="{Binding CanFinishSketch}"
+                        ToolTip.Tip="Finish Sketch"
+                        Click="OnSketchFinishClick">
+                  <svg:Svg Path="avares://My3DApp/Assets/Icons/check.svg"
+                           Width="14"
+                           Height="14" />
+                </Button>
+                <Button Grid.Column="2"
+                        Width="28"
+                        Height="28"
+                        Margin="6,0,0,0"
+                        Classes="SketchTaskActionButton"
+                        IsEnabled="{Binding CanCancelSketch}"
+                        ToolTip.Tip="Cancel Sketch"
+                        Click="OnSketchCancelClick">
+                  <TextBlock Text="✕"
+                             FontSize="12"
+                             FontWeight="SemiBold" />
+                </Button>
+                <TextBlock Grid.Row="1"
+                           Grid.ColumnSpan="3"
+                           Margin="0,8,0,0"
+                           Text="{Binding ActiveSketchTaskSummary}"
+                           Classes="SketchTaskSummary" />
+                <Border Grid.Row="2"
+                        Grid.ColumnSpan="3"
+                        Margin="0,8,0,0"
+                        Classes="SketchTaskStatusChip"
+                        Classes.DofFullyConstrained="{Binding IsDofFullyConstrained}"
+                        Classes.DofOverconstrained="{Binding IsDofOverconstrained}"
+                        Classes.DofUnderconstrained="{Binding IsDofUnderconstrained}">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding SketchDofLabel}"
+                               Classes="SketchTaskStatusText" />
+                    <TextBlock Text="{Binding SketchDefinitionDetail}"
+                               Classes="SketchTaskStatusHelp"
+                               TextWrapping="Wrap" />
+                  </StackPanel>
+                </Border>
+                <TextBlock Grid.Row="3"
+                           Grid.ColumnSpan="3"
+                           Margin="0,6,0,0"
+                           Text="{Binding ActiveSketchTaskDetails}"
+                           TextWrapping="Wrap"
+                           Classes="SketchTaskDetails" />
+              </Grid>
+            </Border>
+
+            <!-- Constraints panel -->
+            <Border Classes="SketchSidePanel"
+                    IsVisible="{Binding HasActiveSketchConstraints}">
+              <StackPanel Spacing="6">
+                <TextBlock Text="{Binding ActiveSketchConstraintCountLabel}"
+                           Classes="SketchSidePanelHeader" />
+                <ItemsControl ItemsSource="{Binding ActiveSketchConstraints}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid ColumnDefinitions="20,*,Auto" Margin="0,1,0,1">
+                        <TextBlock Text="{Binding Icon}"
+                                   Classes="SketchConstraintIcon"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding Description}"
+                                   Classes="SketchConstraintLabel"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="2"
+                                Width="20" Height="20"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                ToolTip.Tip="Remove constraint"
+                                Tag="{Binding Index}"
+                                Click="OnDeleteSketchConstraintClick">
+                          <TextBlock Text="✕" FontSize="9" FontWeight="SemiBold"
+                                     Foreground="{DynamicResource Studio.TextMutedBrush}" />
+                        </Button>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+
+            <!-- Dimensions panel -->
+            <Border Classes="SketchSidePanel"
+                    IsVisible="{Binding HasActiveSketchDimensions}">
+              <StackPanel Spacing="6">
+                <TextBlock Text="{Binding ActiveSketchDimensionCountLabel}"
+                           Classes="SketchSidePanelHeader" />
+                <ItemsControl ItemsSource="{Binding ActiveSketchDimensions}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid ColumnDefinitions="28,*,Auto" Margin="0,2,0,2">
+                        <TextBlock Text="{Binding Label}"
+                                   Classes="SketchDimensionLabel"
+                                   VerticalAlignment="Center" />
+                        <NumericUpDown Grid.Column="1"
+                                       Value="{Binding Value, Mode=OneWay}"
+                                       IsEnabled="{Binding IsEditable}"
+                                       Minimum="0.01"
+                                       Maximum="9999"
+                                       Increment="1"
+                                       FormatString="0.###"
+                                       Height="26"
+                                       FontSize="11"
+                                       Tag="{Binding}"
+                                       ValueChanged="OnSketchDimensionValueChanged" />
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding Unit}"
+                                   Classes="SketchDimensionUnit" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+          <TreeView x:Name="FeatureTreeView"
+                    Grid.Row="3"
+                    Margin="0,8,0,0"
+                    ItemsSource="{Binding FeatureNodes}"
+                    Classes="FeatureTree"
+                    Background="Transparent"
+                    SelectionChanged="OnFeatureTreeSelectionChanged"
+                    DoubleTapped="OnFeatureTreeDoubleTapped"
+                    KeyDown="OnFeatureTreeKeyDown">
+            <TreeView.ItemTemplate>
+              <TreeDataTemplate DataType="vm:FeatureNodeViewModel" ItemsSource="{Binding Children}">
+                <Grid ColumnDefinitions="20,*" RowDefinitions="Auto,Auto" Margin="0,1,0,1"
+                      Opacity="{Binding BodyOpacity}"
+                      ToolTip.Tip="{Binding TooltipText}">
+                  <Grid.ContextMenu>
+                    <ContextMenu IsVisible="{Binding IsSelectable}">
+                      <MenuItem Header="Start Sketch"
+                                IsVisible="{Binding CanStartSketchOnPlane}"
+                                Tag="start-sketch"
+                                Click="OnFeatureTreeContextMenuClick" />
+                      <MenuItem Header="Edit Sketch"
+                                IsVisible="{Binding CanEditSketch}"
+                                Tag="edit-sketch"
+                                Click="OnFeatureTreeContextMenuClick" />
+                      <MenuItem Header="Edit Parameters"
+                                IsVisible="{Binding CanEditParameters}"
+                                Tag="edit-parameters"
+                                Click="OnFeatureTreeContextMenuClick" />
+                      <MenuItem Header="Rename…"
+                                IsVisible="{Binding CanRenameItem}"
+                                Tag="rename"
+                                Click="OnFeatureTreeContextMenuClick" />
+                      <MenuItem Header="Duplicate"
+                                IsVisible="{Binding CanDuplicateItem}"
+                                Tag="duplicate"
+                                Click="OnFeatureTreeContextMenuClick" />
+                      <MenuItem Header="Toggle Visibility"
+                                IsVisible="{Binding CanToggleBodyVisibility}"
+                                Tag="toggle-visibility"
+                                Click="OnFeatureTreeContextMenuClick" />
+                      <MenuItem Header="Set Color…"
+                                IsVisible="{Binding CanSetColor}"
+                                Tag="set-color"
+                                Click="OnFeatureTreeContextMenuClick" />
+                      <MenuItem Header="Delete Entity"
+                                IsVisible="{Binding CanDeleteSketchEntity}"
+                                Tag="delete"
+                                Click="OnFeatureTreeContextMenuClick" />
+                      <MenuItem Header="Delete"
+                                IsVisible="{Binding CanDeleteModelItem}"
+                                Tag="delete"
+                                Click="OnFeatureTreeContextMenuClick" />
+                    </ContextMenu>
+                  </Grid.ContextMenu>
+                  <svg:Svg Grid.RowSpan="2"
+                           Width="15"
+                           Height="15"
+                           Margin="0,2,8,0"
+                           Path="{Binding IconPath}"
+                           IsVisible="{Binding HasSvgIcon}" />
+                  <Border Classes="TreeNodeGlyph"
+                          Grid.RowSpan="2"
+                          IsVisible="{Binding ShowGlyph}"
+                          Margin="0,1,8,0">
+                    <TextBlock Text="{Binding IconToken}"
+                               Classes="TreeNodeGlyphText" />
+                  </Border>
+                  <TextBlock Grid.Column="1"
+                             Text="{Binding Name}"
+                             VerticalAlignment="Center"
+                             IsVisible="{Binding ShowItemName}"
+                             Classes="TreeNodeNameText"
+                             Classes.SketchUnderdefined="{Binding IsSketchUnderdefined}"
+                             Classes.SketchFullyDefined="{Binding IsSketchFullyDefined}"
+                             Classes.SketchOverdefined="{Binding IsSketchOverdefined}" />
+                  <TextBlock Grid.Column="1"
+                             Text="{Binding Name}"
+                             VerticalAlignment="Center"
+                             IsVisible="{Binding ShowSectionName}"
+                             Classes="TreeSectionNameText" />
+                  <TextBlock Grid.Row="1"
+                             Grid.Column="1"
+                             Margin="0,2,0,0"
+                             Text="{Binding SecondaryText}"
+                             TextWrapping="Wrap"
+                             IsVisible="{Binding ShowSecondaryText}"
+                             Classes="TreeNodeSecondaryText"
+                             Classes.SketchUnderdefined="{Binding IsSketchUnderdefined}"
+                             Classes.SketchFullyDefined="{Binding IsSketchFullyDefined}"
+                             Classes.SketchOverdefined="{Binding IsSketchOverdefined}" />
+                </Grid>
+              </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+          </TreeView>
+        </Grid>
+      </Border>
+
+      <GridSplitter Grid.Column="1"
+                    Classes="StudioSplitter" />
+
+      <Grid Grid.Column="2" RowDefinitions="*" Margin="8,0,8,0">
+        <Border Grid.Row="0"
+                Classes="StudioPanelSurface StudioViewportSurface"
+                Background="{DynamicResource Studio.ViewportBackgroundBrush}"
+                BorderBrush="{DynamicResource Studio.BorderBrush}"
+                BorderThickness="1">
+          <Grid RowDefinitions="Auto,*">
+            <Border Background="{DynamicResource Studio.PanelInsetBrush}"
+                    BorderBrush="{DynamicResource Studio.BorderBrush}"
+                    BorderThickness="0,0,0,1"
+                    Padding="12,7">
+              <Grid ColumnDefinitions="*,Auto,Auto">
+                <StackPanel Spacing="2">
+                  <TextBlock FontWeight="SemiBold"
+                             Foreground="{DynamicResource Studio.TextPrimaryBrush}"
+                             Classes="ViewportHeaderTitle"
+                             Text="CAD Workspace" />
+                  <TextBlock Text="{Binding AssistantWorkspaceSummary}"
+                             Classes="ViewportHeaderSecondary" />
+                </StackPanel>
+                <Border Grid.Column="1" Classes="ViewportInfoTag" Margin="8,0,0,0">
+                  <TextBlock Text="{Binding WorkspaceModeBadge}" Classes="ViewportInfoTagText" />
+                </Border>
+                <Border Grid.Column="2" Classes="ViewportInfoTag" Margin="8,0,0,0">
+                  <TextBlock Text="{Binding AssistantPlaneSummary}" Classes="ViewportInfoTagText" />
+                </Border>
+              </Grid>
+            </Border>
+            <controls:WebViewportHost x:Name="ViewportHost" Grid.Row="1" />
+            <Grid Grid.Row="1"
+                  Margin="14"
+                  RowDefinitions="Auto,Auto,*">
+              <Border Classes="ViewportSketchPrompt"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Top"
+                      IsHitTestVisible="False"
+                      IsVisible="{Binding IsThreeDMode}">
+                <TextBlock Text="{Binding SketchWorkflowHint}"
+                           Classes="ViewportPromptText"
+                           TextWrapping="Wrap"
+                           MaxWidth="280" />
+              </Border>
+
+              <Border Grid.RowSpan="2"
+                      Classes="ViewportPlanePickCard"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Top"
+                      IsVisible="{Binding IsSelectingSketchPlane}">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                  <Border Classes="ViewportPlanePickBadge"
+                          VerticalAlignment="Center">
+                    <TextBlock Text="SKETCH"
+                               Classes="ViewportPlanePickBadgeText" />
+                  </Border>
+                  <StackPanel Grid.Column="1" Spacing="2" Margin="10,0,10,0">
+                    <TextBlock Text="{Binding ViewportSketchEntryLabel}"
+                               Classes="ViewportSessionTitle" />
+                    <TextBlock Text="{Binding ViewportSketchSessionSummary}"
+                               Classes="ViewportSessionSummary"
+                               TextWrapping="Wrap"
+                               MaxWidth="360" />
+                  </StackPanel>
+                  <Button Grid.Column="2"
+                          Classes="FeatureDialogButtonSecondary"
+                          VerticalAlignment="Center"
+                          ToolTip.Tip="Cancel sketch plane selection"
+                          Click="OnSketchCancelClick"
+                          Content="Cancel" />
+                </Grid>
+              </Border>
+
+              <Border Grid.Row="1"
+                      Classes="ViewportSketchSessionCard"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Top"
+                      Margin="0,8,0,0"
+                      IsHitTestVisible="False"
+                      IsVisible="{Binding IsSketchMode}">
+                <StackPanel Spacing="3">
+                  <TextBlock Text="{Binding ViewportSketchSessionTitle}"
+                             Classes="ViewportSessionTitle" />
+                  <TextBlock Text="{Binding ViewportSketchSessionSummary}"
+                             Classes="ViewportSessionSummary"
+                             TextWrapping="Wrap"
+                             MaxWidth="280" />
+                  <TextBlock Text="{Binding SketchDofLabel}"
+                             Foreground="{Binding SketchDofBrush}"
+                             FontSize="11"
+                             Margin="0,2,0,0" />
+                </StackPanel>
+              </Border>
+
+            </Grid>
+          </Grid>
+        </Border>
+      </Grid>
+
+      <GridSplitter Grid.Column="3"
+                    Classes="StudioSplitter" />
+
+      <Border Grid.Column="4"
+              Classes="StudioPanelSurface"
+              Background="{DynamicResource Studio.PanelBackgroundBrush}"
+              BorderBrush="{DynamicResource Studio.BorderBrush}"
+              BorderThickness="1">
+        <TabControl SelectedIndex="{Binding SelectedInspectorTabIndex}"
+                    Classes="SidePanelTabControl">
+          <TabItem Header="Properties">
+            <Grid RowDefinitions="Auto,*" Margin="10">
+              <Border Classes="AssistantContextCard" Margin="0,0,0,10">
+                <StackPanel Spacing="4">
+                  <TextBlock Text="Selection" Classes="AssistantContextPrimary" />
+                  <TextBlock Text="{Binding AssistantSelectionSummary}" Classes="AssistantContextSecondary" />
+                  <TextBlock Text="{Binding AssistantPlaneSummary}" Classes="AssistantContextSecondary" />
+                </StackPanel>
+              </Border>
+
+              <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Parameters}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="vm:ParameterItemViewModel">
+                      <Border Classes="ParameterRow">
+                        <Grid ColumnDefinitions="110,*">
+                          <TextBlock VerticalAlignment="Center"
+                                     FontSize="12"
+                                     Foreground="{DynamicResource Studio.TextSecondaryBrush}"
+                                     Text="{Binding Name}" />
+                          <TextBox Grid.Column="1"
+                                   Text="{Binding Value, Mode=TwoWay}"
+                                   IsReadOnly="{Binding IsReadOnly}"
+                                   Classes="InlineValueEditor"
+                                   LostFocus="OnParameterEditorLostFocus"
+                                   KeyDown="OnParameterEditorKeyDown" />
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </Grid>
+          </TabItem>
+
+          <TabItem>
+            <TabItem.Header>
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/focus.svg"
+                         Width="14"
+                         Height="14" />
+                <TextBlock Text="Copilot" />
+              </StackPanel>
+            </TabItem.Header>
+            <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Margin="10,8,10,8">
+
+              <!-- Header: title + Refresh + Clear -->
+              <Grid ColumnDefinitions="*,Auto,Auto">
+                <TextBlock Text="AI Copilot"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource Studio.TextMutedBrush}"
+                           VerticalAlignment="Center" />
+                <Button Grid.Column="1"
+                        Margin="0,0,6,0"
+                        Content="Refresh"
+                        Classes="AssistantLinkButton"
+                        Click="OnAssistantRefreshClick" />
+                <Button Grid.Column="2"
+                        Content="Clear"
+                        Classes="AssistantLinkButton"
+                        Click="OnAssistantClearClick" />
+              </Grid>
+
+              <!-- Row 1: 5-mode segmented selector -->
+              <ListBox Grid.Row="1"
+                       Margin="0,8,0,0"
+                       ItemsSource="{Binding AssistantModes}"
+                       SelectedItem="{Binding SelectedAssistantMode}"
+                       Classes="AssistantModePills"
+                       Background="Transparent"
+                       BorderThickness="0"
+                       Padding="0">
+                <ListBox.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="4" />
+                  </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding}" />
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+
+              <!-- Row 2: Provider / model / key config -->
+              <Border Grid.Row="2"
+                      Classes="AssistantContextCard"
+                      Margin="0,8,0,0">
+                <StackPanel Spacing="6">
+                  <Grid ColumnDefinitions="*,*">
+                    <ComboBox ItemsSource="{Binding AssistantProviders}"
+                              SelectedItem="{Binding SelectedAssistantProvider}"
+                              Classes="AssistantSelector" />
+                    <ComboBox Grid.Column="1"
+                              Margin="6,0,0,0"
+                              ItemsSource="{Binding AssistantModels}"
+                              SelectedItem="{Binding SelectedAssistantModel}"
+                              Classes="AssistantSelector" />
+                  </Grid>
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBox Text="{Binding AssistantKeyInput, Mode=TwoWay}"
+                             Watermark="API key (env or paste here)"
+                             PasswordChar="*"
+                             Classes="AssistantKeyInput" />
+                    <Border Grid.Column="1"
+                            Margin="6,0,0,0"
+                            Classes="AssistantStatusBadge"
+                            VerticalAlignment="Center">
+                      <TextBlock Text="{Binding AssistantStatusBadge}"
+                                 FontSize="10"
+                                 FontWeight="SemiBold" />
+                    </Border>
+                  </Grid>
+                  <TextBlock Text="{Binding AssistantConfigurationSummary}"
+                             TextWrapping="Wrap"
+                             Classes="AssistantHintText" />
+                </StackPanel>
+              </Border>
+
+              <!-- Row 3: Message area (fills space) -->
+              <Border Grid.Row="3"
+                      Classes="AssistantMessagesHost"
+                      Margin="0,8,0,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                  <StackPanel Spacing="0">
+                    <!-- Inactive / unconfigured notice -->
+                    <Border Classes="AssistantInactiveCard"
+                            Margin="0,0,0,8"
+                            IsVisible="{Binding ShowAssistantInactiveState}">
+                      <StackPanel Spacing="4">
+                        <TextBlock Text="{Binding AssistantInactiveTitle}"
+                                   Classes="AssistantContextPrimary" />
+                        <TextBlock Text="{Binding AssistantInactiveSummary}"
+                                   TextWrapping="Wrap"
+                                   Classes="AssistantContextSecondary" />
+                      </StackPanel>
+                    </Border>
+                    <!-- Message log -->
+                    <ItemsControl ItemsSource="{Binding AssistantMessages}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:AssistantMessageViewModel">
+                          <Border Classes="AssistantMessageRow">
+                            <StackPanel Spacing="2">
+                              <Grid ColumnDefinitions="Auto,*">
+                                <TextBlock Text="{Binding RoleBadge}"
+                                           Classes="AssistantRoleBadge"
+                                           Margin="0,0,6,0" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding TimestampText}"
+                                           Classes="AssistantTimestamp"
+                                           HorizontalAlignment="Right" />
+                              </Grid>
+                              <TextBlock Text="{Binding Content}"
+                                         TextWrapping="Wrap"
+                                         FontSize="11.5"
+                                         Foreground="{DynamicResource Studio.TextPrimaryBrush}" />
+                            </StackPanel>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </ScrollViewer>
+              </Border>
+
+              <!-- Row 4: Pending command action chip -->
+              <Border Grid.Row="4"
+                      Classes="AssistantPendingCard"
+                      Margin="0,6,0,0"
+                      IsVisible="{Binding HasPendingCommand}">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Text="{Binding PendingCommandSummary}"
+                             VerticalAlignment="Center"
+                             TextWrapping="Wrap"
+                             FontSize="11" />
+                  <Button Grid.Column="1"
+                          Margin="8,0,0,0"
+                          Content="Apply"
+                          Classes="AssistantApplyButton"
+                          IsEnabled="{Binding CanApplyPendingCommand}"
+                          Click="OnAssistantApplyCommandClick" />
+                </Grid>
+              </Border>
+
+              <!-- Row 5: Input bar -->
+              <Grid Grid.Row="5" ColumnDefinitions="*,Auto" Margin="0,6,0,0">
+                <TextBox x:Name="AssistantInputBox"
+                         Grid.Column="0"
+                         Margin="0,0,6,0"
+                         Text="{Binding AssistantInput, Mode=TwoWay}"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         MinHeight="40"
+                         MaxHeight="100"
+                         Watermark="Describe a bracket, spacer, mount, cutout, or ask for a CAD step..."
+                         Classes="AssistantInputBox"
+                         KeyDown="OnAssistantInputKeyDown" />
+                <Button Grid.Column="1"
+                        Content="Send"
+                        Classes="AssistantSendButton"
+                        IsEnabled="{Binding CanSendAssistant}"
+                        VerticalAlignment="Bottom"
+                        Click="OnAssistantSendClick" />
+              </Grid>
+            </Grid>
+          </TabItem>
+
+          <TabItem ToolTip.Tip="Feature recipe">
+            <TabItem.Header>
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/line.svg"
+                         Width="15"
+                         Height="15" />
+                <TextBlock Text="Recipe" />
+              </StackPanel>
+            </TabItem.Header>
+            <Grid RowDefinitions="Auto,*" Margin="10">
+              <Border Classes="RecipeHeaderCard">
+                <StackPanel Spacing="4">
+                  <TextBlock Text="Feature Recipe"
+                             Classes="RecipeHeaderTitle" />
+                  <TextBlock Text="Solid-first command history for the current part studio. Features stay readable, ordered, and ready for AI-assisted editing."
+                             TextWrapping="Wrap"
+                             Classes="RecipeHeaderSummary" />
+                </StackPanel>
+              </Border>
+              <TextBox Grid.Row="1"
+                       Margin="0,10,0,0"
+                       Text="{Binding CodeText}"
+                       IsReadOnly="True"
+                       AcceptsReturn="True"
+                       TextWrapping="NoWrap"
+                       FontFamily="Consolas, Cascadia Mono, monospace"
+                       Classes="DocumentTextView" />
+            </Grid>
+          </TabItem>
+        </TabControl>
+      </Border>
+    </Grid>
+  </DockPanel>
+</Window>

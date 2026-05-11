@@ -1,0 +1,73 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="My3DApp.AvaloniaApp.Dialogs.ParameterEditDialog"
+        Width="430"
+        Height="430"
+        MinWidth="400"
+        MinHeight="360"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Classes="FeatureDialogWindow"
+        Title="Edit Parameters">
+  <Border Classes="FeatureDialogPanel" Margin="0">
+    <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="18">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock x:Name="TitleTextBlock"
+                     Classes="FeatureDialogTitle"
+                     Text="Edit Parameters" />
+          <TextBlock x:Name="SubtitleTextBlock"
+                     Margin="0,6,0,0"
+                     Classes="FeatureDialogSubtitle"
+                     TextWrapping="Wrap"
+                     Text="Adjust feature parameters, then confirm." />
+        </StackPanel>
+        <Border Grid.Column="1"
+                Background="{DynamicResource Studio.PanelInsetBrush}"
+                BorderBrush="{DynamicResource Studio.BorderBrush}"
+                BorderThickness="1"
+                Padding="9,5"
+                VerticalAlignment="Top">
+          <TextBlock Text="FEATURE"
+                     FontSize="10"
+                     FontWeight="SemiBold" />
+        </Border>
+      </Grid>
+
+      <Border Grid.Row="2"
+              Margin="0,16,0,10"
+              Background="{DynamicResource Studio.PanelInsetBrush}"
+              BorderBrush="{DynamicResource Studio.BorderBrush}"
+              BorderThickness="1"
+              Padding="12">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel x:Name="RowsPanel" Spacing="10" />
+        </ScrollViewer>
+      </Border>
+
+      <TextBlock x:Name="ErrorLabel"
+                 Grid.Row="3"
+                 Foreground="OrangeRed"
+                 FontSize="11"
+                 TextWrapping="Wrap"
+                 IsVisible="False" />
+
+      <StackPanel Grid.Row="4"
+                  Orientation="Horizontal"
+                  HorizontalAlignment="Right"
+                  Spacing="8"
+                  Margin="0,12,0,0">
+        <Button Content="Cancel"
+                Classes="FeatureDialogButtonSecondary"
+                IsCancel="True"
+                Click="OnCancelClick" />
+        <Button x:Name="OkButton"
+                Content="Apply"
+                Classes="FeatureDialogButtonPrimary"
+                IsDefault="True"
+                Click="OnConfirmClick" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>

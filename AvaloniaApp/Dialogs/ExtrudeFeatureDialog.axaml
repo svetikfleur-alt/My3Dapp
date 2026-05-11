@@ -1,0 +1,184 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="My3DApp.AvaloniaApp.Dialogs.ExtrudeFeatureDialog"
+        Width="460"
+        Height="470"
+        MinWidth="430"
+        MinHeight="440"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Classes="FeatureDialogWindow"
+        Title="Extrude">
+  <Border Classes="FeatureDialogPanel" Margin="0">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="FeatureDialogTitle"
+                     Text="Extrude" />
+          <TextBlock Classes="FeatureDialogSubtitle"
+                     TextWrapping="Wrap"
+                     Text="Create a solid from a selected closed sketch profile." />
+        </StackPanel>
+        <Border Grid.Column="1"
+                Classes="FeatureDialogTag"
+                VerticalAlignment="Top">
+          <TextBlock Text="FEATURE"
+                     Classes="FeatureDialogTagText" />
+        </Border>
+      </Grid>
+
+      <StackPanel Grid.Row="2"
+                  Margin="0,16,0,16"
+                  Spacing="12">
+        <Border Classes="FeatureDialogSectionCard">
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="104,*">
+            <TextBlock Text="Profile"
+                       Classes="FeatureDialogFieldLabel" />
+            <TextBlock Grid.Column="1"
+                       x:Name="ProfileValueTextBlock"
+                       Classes="FeatureDialogValueText"
+                       TextWrapping="Wrap"
+                       Text="Closed sketch profile" />
+            <TextBlock Grid.Row="1"
+                       Text="Plane"
+                       Margin="0,10,0,0"
+                       Classes="FeatureDialogFieldLabel" />
+            <TextBlock Grid.Row="1"
+                       Grid.Column="1"
+                       x:Name="PlaneValueTextBlock"
+                       Margin="0,10,0,0"
+                       Classes="FeatureDialogValueText"
+                       Text="Top" />
+            <TextBlock Grid.Row="2"
+                       Text="Status"
+                       Margin="0,10,0,0"
+                       Classes="FeatureDialogFieldLabel" />
+            <TextBlock Grid.Row="2"
+                       Grid.Column="1"
+                       x:Name="SelectionStatusTextBlock"
+                       Margin="0,10,0,0"
+                       Classes="FeatureDialogValueText"
+                       TextWrapping="Wrap"
+                       Text="Ready" />
+            <TextBlock Grid.Row="3"
+                       Text="Recipe"
+                       Margin="0,10,0,0"
+                       Classes="FeatureDialogFieldLabel" />
+            <TextBlock Grid.Row="3"
+                       Grid.Column="1"
+                       x:Name="RecipeTextBlock"
+                       Margin="0,10,0,0"
+                       TextWrapping="Wrap"
+                       Classes="FeatureDialogHelpText"
+                       Text="extrude(profile, depth, operation)" />
+          </Grid>
+        </Border>
+
+        <Border Classes="FeatureDialogSectionCard">
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="104,*">
+            <TextBlock Text="Operation"
+                       Classes="FeatureDialogFieldLabel" />
+            <ComboBox Grid.Column="1"
+                      Classes="FeatureDialogInput"
+                      x:Name="OperationComboBox"
+                      SelectionChanged="OnOperationChanged"
+                      SelectedIndex="0">
+              <ComboBoxItem Content="New Body" Tag="NewBody" />
+              <ComboBoxItem Content="Join" Tag="Join" />
+              <ComboBoxItem Content="Cut" Tag="Cut" />
+              <ComboBoxItem Content="Symmetric" Tag="Symmetric" />
+            </ComboBox>
+
+            <TextBlock Grid.Row="1"
+                       Margin="0,10,0,0"
+                       Classes="FeatureDialogFieldLabel"
+                       Text="Result"
+                       />
+            <TextBlock Grid.Row="1"
+                       Grid.Column="1"
+                       x:Name="OperationHelpTextBlock"
+                       Margin="0,10,0,0"
+                       Classes="FeatureDialogHelpText"
+                       TextWrapping="Wrap"
+                       Text="Creates a separate solid body." />
+
+            <TextBlock Grid.Row="2"
+                       x:Name="TargetBodyLabel"
+                       Text="Target Body"
+                       Margin="0,10,0,0"
+                       Classes="FeatureDialogFieldLabel"
+                       IsVisible="False" />
+            <ComboBox Grid.Row="2"
+                      Grid.Column="1"
+                      Classes="FeatureDialogInput"
+                      x:Name="TargetBodyComboBox"
+                      Margin="0,8,0,0"
+                      IsVisible="False" />
+            <TextBlock Grid.Row="3"
+                       Grid.ColumnSpan="2"
+                       x:Name="NoBodyWarningText"
+                       Text="No bodies to join/cut. Create a body first."
+                       Foreground="OrangeRed"
+                       FontSize="11"
+                       TextWrapping="Wrap"
+                       Margin="0,6,0,0"
+                       IsVisible="False" />
+          </Grid>
+        </Border>
+
+        <Border Classes="FeatureDialogSectionCard">
+          <Grid ColumnDefinitions="*,88" RowDefinitions="Auto,Auto,Auto,Auto">
+            <TextBlock Text="Distance"
+                       Classes="FeatureDialogFieldLabel" />
+            <NumericUpDown x:Name="DistanceInput"
+                           Classes="FeatureDialogInput"
+                           Grid.Row="1"
+                           Width="160"
+                           HorizontalAlignment="Left"
+                           Margin="0,8,0,0"
+                           Increment="1"
+                           Minimum="0.2"
+                           Maximum="5000"
+                           FormatString="0.###" />
+            <Border Grid.Column="1"
+                    Grid.Row="1"
+                    Classes="FeatureDialogUnitChip"
+                    Margin="8,8,0,0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Top">
+              <TextBlock HorizontalAlignment="Center"
+                         Text="mm" />
+            </Border>
+
+            <CheckBox Grid.Row="2"
+                      Grid.ColumnSpan="2"
+                      Classes="FeatureDialogCheckBox"
+                      x:Name="ReverseDirectionCheckBox"
+                      Margin="0,12,0,0"
+                      Content="Reverse direction" />
+            <TextBlock Grid.Row="3"
+                       Grid.ColumnSpan="2"
+                       Margin="0,8,0,0"
+                       Classes="FeatureDialogHelpText"
+                       TextWrapping="Wrap"
+                       Text="Apply creates the feature. Cancel leaves the sketch/body unchanged." />
+          </Grid>
+        </Border>
+      </StackPanel>
+
+      <StackPanel Grid.Row="3"
+                  Orientation="Horizontal"
+                  HorizontalAlignment="Right"
+                  Spacing="8">
+        <Button Content="Cancel"
+                Classes="FeatureDialogButtonSecondary"
+                Click="OnCancelClick" />
+        <Button x:Name="OkButton"
+                Content="Apply"
+                Classes="FeatureDialogButtonPrimary"
+                Click="OnConfirmClick" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>
