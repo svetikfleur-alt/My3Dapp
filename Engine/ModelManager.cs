@@ -56,6 +56,40 @@ public class ModelManager
         return obj;
     }
 
+    public SceneObject CreateSweep(string name, float profileRadius, float pathLength,
+        float twistDeg = 0f, int segments = 32, float x = 0, float y = 0, float z = 0)
+    {
+        var obj = _scene.Add(name, "sweep");
+        obj.Solid = new SweepParams(profileRadius, pathLength, twistDeg, segments, x, y, z);
+        RuntimeLog.Info("Model", $"Created sweep '{name}' r={profileRadius} len={pathLength}mm @ ({x},{y},{z})");
+        return obj;
+    }
+
+    public SceneObject CreateLoft(string name, float baseW, float baseD, float height,
+        float endScale = 0.6f, float x = 0, float y = 0, float z = 0)
+    {
+        var obj = _scene.Add(name, "loft");
+        obj.Solid = new LoftParams(baseW, baseD, height, endScale, x, y, z);
+        RuntimeLog.Info("Model", $"Created loft '{name}' {baseW}×{baseD} h={height}mm @ ({x},{y},{z})");
+        return obj;
+    }
+
+    public SceneObject CreateFillet(string name, SolidParams body, float radius)
+    {
+        var obj = _scene.Add(name, "fillet");
+        obj.Solid = new FilletParams(body, radius);
+        RuntimeLog.Info("Model", $"Created fillet '{name}' r={radius}mm");
+        return obj;
+    }
+
+    public SceneObject CreateChamfer(string name, SolidParams body, float distance, float angleDeg = 45f)
+    {
+        var obj = _scene.Add(name, "chamfer");
+        obj.Solid = new ChamferParams(body, distance, angleDeg);
+        RuntimeLog.Info("Model", $"Created chamfer '{name}' d={distance}mm {angleDeg}°");
+        return obj;
+    }
+
     public SceneObject CreateBooleanUnion(string name, SolidParams a, SolidParams b)
     {
         var obj = _scene.Add(name, "boolean-union");

@@ -131,6 +131,14 @@ public partial class MainWindow : Window
                 vm.ShellCommand.Execute(null);
                 e.Handled = true;
                 break;
+            case Avalonia.Input.Key.F when vm.FilletCommand.CanExecute(null):
+                vm.FilletCommand.Execute(null);
+                e.Handled = true;
+                break;
+            case Avalonia.Input.Key.C when vm.ChamferCommand.CanExecute(null):
+                vm.ChamferCommand.Execute(null);
+                e.Handled = true;
+                break;
             case Avalonia.Input.Key.Escape:
                 vm.StatusMessage = "Ready";
                 e.Handled = true;

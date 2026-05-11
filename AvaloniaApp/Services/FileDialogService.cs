@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using My3DApp.AvaloniaApp.ViewModels;
 
 namespace My3DApp.AvaloniaApp.Services;
 
@@ -12,6 +13,7 @@ public interface IFileDialogService
     Task<string?> OpenFileAsync(string title, params FilePickerFileType[] filters);
     Task<string?> SaveFileAsync(string title, string defaultName, params FilePickerFileType[] filters);
     Task<string?> ShowRenameDialogAsync(string currentName);
+    Task<FeatureDialogResult> ShowFeatureDialogAsync(string featureType);
 }
 
 public class FileDialogService : IFileDialogService
@@ -49,6 +51,9 @@ public class FileDialogService : IFileDialogService
 
         return file?.TryGetLocalPath();
     }
+
+    public Task<FeatureDialogResult> ShowFeatureDialogAsync(string featureType)
+        => FeatureDialog.ShowAsync(_owner, featureType);
 
     public async Task<string?> ShowRenameDialogAsync(string currentName)
     {

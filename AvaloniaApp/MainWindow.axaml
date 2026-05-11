@@ -45,11 +45,15 @@
         <Border DockPanel.Dock="Top" Background="#0F1E35" Padding="4,3"
                 BorderThickness="0,0,0,1" BorderBrush="#1A304D">
             <StackPanel Orientation="Horizontal" Spacing="1">
-                <Button Content="⬜ Sketch"    Command="{Binding NewSketchCommand}"       ToolTip.Tip="New Sketch  [S]"     Classes="toolbar-btn" />
-                <Button Content="⬆ Extrude"   Command="{Binding ExtrudeCommand}"         ToolTip.Tip="Extrude  [E]"        Classes="toolbar-btn" />
-                <Button Content="↻ Revolve"   Command="{Binding RevolveCommand}"         ToolTip.Tip="Revolve  [R]"        Classes="toolbar-btn" />
-                <Button Content="⤵ Loft"      Command="{Binding LoftCommand}"            ToolTip.Tip="Loft  [L]"           Classes="toolbar-btn" />
-                <Button Content="⚙ Shell"     Command="{Binding ShellCommand}"           ToolTip.Tip="Shell  [H]"          Classes="toolbar-btn" />
+                <Button Content="⬜ Sketch"    Command="{Binding NewSketchCommand}"       ToolTip.Tip="New Sketch  [S]"      Classes="toolbar-btn" />
+                <Button Content="⬆ Extrude"   Command="{Binding ExtrudeCommand}"         ToolTip.Tip="Extrude  [E]"         Classes="toolbar-btn" />
+                <Button Content="↻ Revolve"   Command="{Binding RevolveCommand}"         ToolTip.Tip="Revolve  [R]"         Classes="toolbar-btn" />
+                <Button Content="⤵ Loft"      Command="{Binding LoftCommand}"            ToolTip.Tip="Loft  [L]"            Classes="toolbar-btn" />
+                <Button Content="⬡ Sweep"     Command="{Binding SweepCommand}"           ToolTip.Tip="Sweep"                Classes="toolbar-btn" />
+                <Border Width="1" Margin="4,4" Background="#1E3050" />
+                <Button Content="◯ Fillet"    Command="{Binding FilletCommand}"          ToolTip.Tip="Fillet  [F]"          Classes="toolbar-btn" />
+                <Button Content="◢ Chamfer"   Command="{Binding ChamferCommand}"         ToolTip.Tip="Chamfer  [C]"         Classes="toolbar-btn" />
+                <Button Content="⚙ Shell"     Command="{Binding ShellCommand}"           ToolTip.Tip="Shell  [H]"           Classes="toolbar-btn" />
                 <Border Width="1" Margin="6,4" Background="#1E3050" />
                 <Button Content="⊕ Union"     Command="{Binding BooleanUnionCommand}"    ToolTip.Tip="Boolean Union"       Classes="toolbar-btn" />
                 <Button Content="⊖ Subtract"  Command="{Binding BooleanSubtractCommand}" ToolTip.Tip="Boolean Subtract"    Classes="toolbar-btn" />

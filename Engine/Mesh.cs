@@ -95,6 +95,36 @@ public class Mesh
         return mesh;
     }
 
+    // Creates a lofted box (frustum): rectangular base fades linearly to a scaled top.
+    // Bottom face at y = -height/2, top face at y = +height/2.
+    public static Mesh LoftBox(float baseW, float baseD, float height, float endScale = 0.6f)
+    {
+        var mesh = new Mesh();
+        float hw = baseW / 2, hd = baseD / 2, hy = height / 2;
+        float tw = baseW * endScale / 2, td = baseD * endScale / 2;
+
+        // 8 corners: bottom (b0..b3) and top (t0..t3)
+        var b0 = new System.Numerics.Vector3(-hw, -hy, -hd);
+        var b1 = new System.Numerics.Vector3( hw, -hy, -hd);
+        var b2 = new System.Numerics.Vector3( hw, -hy,  hd);
+        var b3 = new System.Numerics.Vector3(-hw, -hy,  hd);
+        var t0 = new System.Numerics.Vector3(-tw,  hy, -td);
+        var t1 = new System.Numerics.Vector3( tw,  hy, -td);
+        var t2 = new System.Numerics.Vector3( tw,  hy,  td);
+        var t3 = new System.Numerics.Vector3(-tw,  hy,  td);
+
+        // Bottom cap
+        mesh.AddTri(b0, b2, b1); mesh.AddTri(b0, b3, b2);
+        // Top cap
+        mesh.AddTri(t0, t1, t2); mesh.AddTri(t0, t2, t3);
+        // Four side quads
+        mesh.AddQuad(b0, b1, t1, t0); // front -Z
+        mesh.AddQuad(b1, b2, t2, t1); // right +X
+        mesh.AddQuad(b2, b3, t3, t2); // back  +Z
+        mesh.AddQuad(b3, b0, t0, t3); // left  -X
+        return mesh;
+    }
+
     // Revolves a 2D profile around the Y axis. profile = [r0,y0, r1,y1, ...] in mm.
     public static Mesh RevolveProfile(float[] profile, float angleDeg = 360f, int segments = 32)
     {

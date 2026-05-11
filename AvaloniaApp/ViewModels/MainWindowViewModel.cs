@@ -19,6 +19,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     public IFileDialogService? FileDialogs { get; set; }
 
+
     private ViewportService? _viewportService;
     public ViewportService? ViewportService
     {
@@ -183,6 +184,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     public ICommand ExtrudeCommand          { get; private set; } = null!;
     public ICommand RevolveCommand          { get; private set; } = null!;
     public ICommand LoftCommand             { get; private set; } = null!;
+    public ICommand SweepCommand            { get; private set; } = null!;
+    public ICommand FilletCommand           { get; private set; } = null!;
+    public ICommand ChamferCommand          { get; private set; } = null!;
     public ICommand ShellCommand            { get; private set; } = null!;
     public ICommand BooleanUnionCommand     { get; private set; } = null!;
     public ICommand BooleanSubtractCommand  { get; private set; } = null!;
@@ -223,9 +227,12 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         RedoCommand             = new RelayCommand(Redo, () => _history.CanRedo);
         SetViewCommand          = new RelayCommand(p => SetView(p as string ?? "iso"));
         NewSketchCommand        = new RelayCommand(NewSketch);
-        ExtrudeCommand          = new RelayCommand(Extrude);
-        RevolveCommand          = new RelayCommand(Revolve);
-        LoftCommand             = new RelayCommand(Loft);
+        ExtrudeCommand          = new AsyncRelayCommand(ExtrudeAsync);
+        RevolveCommand          = new AsyncRelayCommand(RevolveAsync);
+        LoftCommand             = new AsyncRelayCommand(LoftAsync);
+        SweepCommand            = new AsyncRelayCommand(SweepAsync);
+        FilletCommand           = new AsyncRelayCommand(FilletAsync);
+        ChamferCommand          = new AsyncRelayCommand(ChamferAsync);
         ShellCommand            = new RelayCommand(Shell);
         BooleanUnionCommand     = new RelayCommand(BooleanUnion);
         BooleanSubtractCommand  = new RelayCommand(BooleanSubtract);
@@ -444,23 +451,121 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             "viewer.addSketchPlane('{name}'); viewer.fitView();",
             "{name} — sketch plane added. Define profile in the AI panel.");
 
-    private void Extrude()
-        => PushFeatureNode("⬆", "extrude", "Extrude",
-            "viewer.addBox('{name}', 100, 50, 30); viewer.fitView();",
-            "{name} added. Adjust dimensions in the properties panel.",
-            new BoxParams(100, 50, 30));
+    private async Task ExtrudeAsync()
+    {
+        if (FileDialogs is null) { PushExtrudeDefault(); return; }
+        var r = await FileDialogs.ShowFeatureDialogAsync("extrude");
+        if (!r.Confirmed) return;
+        var d = r.Depth > 0 ? r.Depth : 50f;
+        var solid = new BoxParams(100, d, 60);
+        PushFeatureNode("⬆", r.Mode == "New" ? "extrude" : $"extrude-{r.Mode.ToLower()}",
+            $"Extrude",
+            $"viewer.addBox('{{name}}', 100, {d:F1}, 60); viewer.fitView();",
+            $"{{name}} — Extrude {d:F1}mm [{r.Mode}] added.",
+            solid);
+    }
 
-    private void Revolve()
+    private void PushExtrudeDefault()
+        => PushFeatureNode("⬆", "extrude", "Extrude",
+            "viewer.addBox('{name}', 100, 50, 60); viewer.fitView();",
+            "{name} added.",
+            new BoxParams(100, 50, 60));
+
+    private async Task RevolveAsync()
+    {
+        if (FileDialogs is null) { PushRevolveDefault(); return; }
+        var r = await FileDialogs.ShowFeatureDialogAsync("revolve");
+        if (!r.Confirmed) return;
+        var angle = r.Angle > 0 ? r.Angle : 360f;
+        var solid = new CylinderParams(40, 80, 32);
+        PushFeatureNode("↻", r.Mode == "New" ? "revolve" : $"revolve-{r.Mode.ToLower()}",
+            "Revolve",
+            $"viewer.addCylinder('{{name}}', 40, 80, 32); viewer.fitView();",
+            $"{{name}} — Revolve {angle:F0}° [{r.Mode}] added.",
+            solid);
+    }
+
+    private void PushRevolveDefault()
         => PushFeatureNode("↻", "revolve", "Revolve",
             "viewer.addCylinder('{name}', 40, 80, 32); viewer.fitView();",
-            "{name} added — select profile and axis to refine.",
+            "{name} added.",
             new CylinderParams(40, 80, 32));
 
-    private void Loft()
+    private async Task LoftAsync()
+    {
+        if (FileDialogs is null) { PushLoftDefault(); return; }
+        var r = await FileDialogs.ShowFeatureDialogAsync("loft");
+        if (!r.Confirmed) return;
+        var h  = r.LoftHeight > 0 ? r.LoftHeight : 60f;
+        var sc = Math.Clamp(r.LoftScale, 0.1f, 2f);
+        var solid = new LoftParams(80, 60, h, sc);
+        var endW = (int)(80 * sc); var endD = (int)(60 * sc);
+        PushFeatureNode("⤵", r.Mode == "New" ? "loft" : $"loft-{r.Mode.ToLower()}",
+            "Loft",
+            $"viewer.addLoft('{{name}}', 80, 60, {h:F1}, {sc:F2}); viewer.fitView();",
+            $"{{name}} — Loft 80×60→{endW}×{endD}, h={h:F1}mm [{r.Mode}] added.",
+            solid);
+    }
+
+    private void PushLoftDefault()
         => PushFeatureNode("⤵", "loft", "Loft",
-            "viewer.addBox('{name}', 80, 120, 80); viewer.fitView();",
-            "{name} added — select profiles to define the loft.",
-            new BoxParams(80, 120, 80));
+            "viewer.addLoft('{name}', 80, 60, 60, 0.6); viewer.fitView();",
+            "{name} added.",
+            new LoftParams(80, 60, 60, 0.6f));
+
+    private async Task SweepAsync()
+    {
+        if (FileDialogs is null) { PushSweepDefault(); return; }
+        var r = await FileDialogs.ShowFeatureDialogAsync("sweep");
+        if (!r.Confirmed) return;
+        var len = r.PathLength > 0 ? r.PathLength : 80f;
+        var solid = new SweepParams(8, len, r.TwistAngle);
+        PushFeatureNode("⬡", r.Mode == "New" ? "sweep" : $"sweep-{r.Mode.ToLower()}",
+            "Sweep",
+            $"viewer.addSweep('{{name}}', 8, {len:F1}); viewer.fitView();",
+            $"{{name}} — Sweep r=8mm path={len:F1}mm [{r.Mode}] added.",
+            solid);
+    }
+
+    private void PushSweepDefault()
+        => PushFeatureNode("⬡", "sweep", "Sweep",
+            "viewer.addSweep('{name}', 8, 80); viewer.fitView();",
+            "{name} added.",
+            new SweepParams(8, 80));
+
+    private async Task FilletAsync()
+    {
+        if (FileDialogs is null) { PushFilletDefault(); return; }
+        var r = await FileDialogs.ShowFeatureDialogAsync("fillet");
+        if (!r.Confirmed) return;
+        var rad = r.FilletRadius > 0 ? r.FilletRadius : 3f;
+        PushFeatureNode("◯", "fillet", "Fillet",
+            $"viewer.addFillet('{{name}}', {rad:F1}); viewer.fitView();",
+            $"{{name}} — Fillet r={rad:F1}mm added.",
+            null);
+    }
+
+    private void PushFilletDefault()
+        => PushFeatureNode("◯", "fillet", "Fillet",
+            "viewer.addFillet('{name}', 3); viewer.fitView();",
+            "{name} added.", null);
+
+    private async Task ChamferAsync()
+    {
+        if (FileDialogs is null) { PushChamferDefault(); return; }
+        var r = await FileDialogs.ShowFeatureDialogAsync("chamfer");
+        if (!r.Confirmed) return;
+        var dist = r.ChamferDist > 0 ? r.ChamferDist : 2f;
+        PushFeatureNode("◢", "chamfer", "Chamfer",
+            $"viewer.addChamfer('{{name}}', {dist:F1}, {r.ChamferAngle:F0}); viewer.fitView();",
+            $"{{name}} — Chamfer d={dist:F1}mm, {r.ChamferAngle:F0}° added.",
+            null);
+    }
+
+    private void PushChamferDefault()
+        => PushFeatureNode("◢", "chamfer", "Chamfer",
+            "viewer.addChamfer('{name}', 2, 45); viewer.fitView();",
+            "{name} added.", null);
 
     private void Shell()
         => PushFeatureNode("⚙", "shell", "Shell",
@@ -709,12 +814,14 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
                 {
                     so.Solid = so.Solid switch
                     {
-                        BoxParams bp      => bp      with { X = mx, Y = my, Z = mz },
-                        CylinderParams cp => cp      with { X = mx, Y = my, Z = mz },
-                        SphereParams sp   => sp      with { X = mx, Y = my, Z = mz },
-                        ExtrudePolygonParams ep => ep with { X = mx, Y = my, Z = mz },
-                        RevolveProfileParams rp => rp with { X = mx, Y = my, Z = mz },
-                        _                 => so.Solid
+                        BoxParams bp            => bp with { X = mx, Y = my, Z = mz },
+                        CylinderParams cp       => cp with { X = mx, Y = my, Z = mz },
+                        SphereParams sp         => sp with { X = mx, Y = my, Z = mz },
+                        ExtrudePolygonParams ep  => ep with { X = mx, Y = my, Z = mz },
+                        RevolveProfileParams rp  => rp with { X = mx, Y = my, Z = mz },
+                        SweepParams sw           => sw with { X = mx, Y = my, Z = mz },
+                        LoftParams lp            => lp with { X = mx, Y = my, Z = mz },
+                        _                        => so.Solid
                     };
                     node.SolidDescription = so.Solid.ToString();
                 }
@@ -733,9 +840,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             }
         }
 
-        // addBox / addCylinder / addSphere / addSketchPlane / extrudePolygon / revolveProfile → add nodes (single or double quotes)
+        // addBox / addCylinder / addSphere / addSketchPlane / addSweep / addLoft / extrudePolygon / revolveProfile → add nodes
         var addPattern = new Regex(
-            @"viewer\.(addBox|addCylinder|addSphere|addSketchPlane|extrudePolygon|revolveProfile)\s*\(\s*['""]([^'""]+)['""]");
+            @"viewer\.(addBox|addCylinder|addSphere|addSketchPlane|addSweep|addLoft|extrudePolygon|revolveProfile)\s*\(\s*['""]([^'""]+)['""]");
         foreach (Match m in addPattern.Matches(script))
         {
             var call = m.Groups[1].Value;
@@ -748,6 +855,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
                 "addCylinder"     => ("↻", "revolve"),
                 "addSphere"       => ("⚪", "sphere"),
                 "addSketchPlane"  => ("⬜", "sketch"),
+                "addSweep"        => ("⬡", "sweep"),
+                "addLoft"         => ("⤵", "loft"),
                 "extrudePolygon"  => ("⬆", "extrude"),
                 "revolveProfile"  => ("↻", "revolve"),
                 _                 => ("⚙", "mesh"),
@@ -797,6 +906,23 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
                     $@"viewer\.revolveProfile\s*\(\s*[""']{Regex.Escape(name)}[""']\s*,\s*\[([^\]]+)\]\s*,\s*(-?[\d.]+)(?:\s*,\s*(-?[\d.]+))?(?:\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+))?")
                     is { Success: true } rm
                     => ParseRevolveProfile(name, rm),
+
+                "addSweep" when Regex.Match(script,
+                    $@"viewer\.addSweep\s*\(\s*[""']{Regex.Escape(name)}[""']\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)(?:\s*,\s*(-?[\d.]+))?(?:\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+))?")
+                    is { Success: true } wm
+                    && float.TryParse(wm.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var wr)
+                    && float.TryParse(wm.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var wl)
+                    => _models.CreateSweep(name, wr, wl, 0f, 32,
+                        TryF(wm.Groups[4].Value), TryF(wm.Groups[5].Value), TryF(wm.Groups[6].Value)),
+
+                "addLoft" when Regex.Match(script,
+                    $@"viewer\.addLoft\s*\(\s*[""']{Regex.Escape(name)}[""']\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)(?:\s*,\s*(-?[\d.]+))?(?:\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+))?")
+                    is { Success: true } lm
+                    && float.TryParse(lm.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var lbw)
+                    && float.TryParse(lm.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var lbd)
+                    && float.TryParse(lm.Groups[3].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var lh)
+                    => _models.CreateLoft(name, lbw, lbd, lh, TryF(lm.Groups[4].Value) is var sc && sc > 0 ? sc : 0.6f,
+                        TryF(lm.Groups[5].Value), TryF(lm.Groups[6].Value), TryF(lm.Groups[7].Value)),
 
                 _ => _scene.Add(name, type)
             };

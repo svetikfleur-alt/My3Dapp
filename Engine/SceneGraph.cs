@@ -69,6 +69,47 @@ public record ExtrudePolygonParams(float[] Points2D, float Depth,
     public override string ToString() => $"ExtrudePolygon depth={Depth}mm @ ({X},{Y},{Z})";
 }
 
+// Sweep: circular profile swept along a straight Y-axis path. Visually a cylinder; at export a full tube.
+// For non-circular profiles, extrudePolygon is more appropriate.
+public record SweepParams(float ProfileRadius, float PathLength, float TwistDeg = 0f,
+                          int Segments = 32, float X = 0, float Y = 0, float Z = 0) : SolidParams
+{
+    public override Mesh ToMesh()
+    {
+        var m = Mesh.Cylinder(ProfileRadius, PathLength, Segments);
+        return (X != 0 || Y != 0 || Z != 0) ? m.Translated(X, Y, Z) : m;
+    }
+    public override string ToString() => $"Sweep r={ProfileRadius} len={PathLength}mm @ ({X},{Y},{Z})";
+}
+
+// Loft: linearly blends from a square base to a scaled square top.
+// Approximated as a tapered box mesh (frustum via scaling).
+public record LoftParams(float BaseWidth, float BaseDepth, float Height, float EndScale = 0.6f,
+                         float X = 0, float Y = 0, float Z = 0) : SolidParams
+{
+    public override Mesh ToMesh()
+    {
+        var m = Mesh.LoftBox(BaseWidth, BaseDepth, Height, EndScale);
+        return (X != 0 || Y != 0 || Z != 0) ? m.Translated(X, Y, Z) : m;
+    }
+    public override string ToString() => $"Loft {BaseWidth}×{BaseDepth} h={Height}mm scale={EndScale} @ ({X},{Y},{Z})";
+}
+
+// Fillet: intent marker — marks edges for rounding. Mesh output is the body unchanged
+// (full CSG fillet requires PicoGK or equivalent kernel).
+public record FilletParams(SolidParams Body, float Radius) : SolidParams
+{
+    public override Mesh ToMesh() => Body.ToMesh();
+    public override string ToString() => $"Fillet r={Radius}mm on ({Body})";
+}
+
+// Chamfer: intent marker — marks edges for chamfering. Same approximation as Fillet.
+public record ChamferParams(SolidParams Body, float Distance, float AngleDeg = 45f) : SolidParams
+{
+    public override Mesh ToMesh() => Body.ToMesh();
+    public override string ToString() => $"Chamfer d={Distance}mm {AngleDeg}° on ({Body})";
+}
+
 // Boolean union: merges both meshes into one combined mesh.
 public record BooleanUnionParams(SolidParams A, SolidParams B) : SolidParams
 {

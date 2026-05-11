@@ -268,6 +268,81 @@ window.viewer = {
     setStatus(`Revolved "${name}" ${angle}° @ (${x},${y},${z})`);
   },
 
+  // Sweeps a circular profile along a straight Y-axis path. Displayed as a cylinder.
+  addSweep(name, radius = 8, pathLength = 80, segments = 32, x = 0, y = 0, z = 0) {
+    const geo = new THREE.CylinderGeometry(radius, radius, pathLength, segments);
+    const mesh = new THREE.Mesh(geo, isWireframe ? wireframeMaterial.clone() : defaultMaterial.clone());
+    mesh.castShadow = true;
+    mesh.position.set(x, y, z);
+    mesh.name = name;
+    scene.add(mesh);
+    meshObjects[name] = mesh;
+    setStatus(`Sweep "${name}" r=${radius} path=${pathLength}mm @ (${x},${y},${z})`);
+  },
+
+  // Lofts between a base rectangle and a scaled top rectangle (linear taper).
+  addLoft(name, baseW = 80, baseD = 60, height = 60, endScale = 0.6, x = 0, y = 0, z = 0) {
+    const hw = baseW / 2, hd = baseD / 2, hy = height / 2;
+    const tw = baseW * endScale / 2, td = baseD * endScale / 2;
+    const verts = new Float32Array([
+      // bottom quad  (y = -hy)
+      -hw,-hy,-hd,  hw,-hy,-hd,  hw,-hy, hd,
+      -hw,-hy,-hd,  hw,-hy, hd, -hw,-hy, hd,
+      // top quad     (y = +hy)
+      -tw, hy,-td,   tw, hy, td,  tw, hy,-td,
+      -tw, hy,-td,  -tw, hy, td,  tw, hy, td,
+      // front -Z
+      -hw,-hy,-hd,  tw, hy,-td,  hw,-hy,-hd,
+      -hw,-hy,-hd, -tw, hy,-td,  tw, hy,-td,
+      // right +X
+       hw,-hy,-hd,  tw, hy, td,  hw,-hy, hd,
+       hw,-hy,-hd,  tw, hy,-td,  tw, hy, td,
+      // back +Z
+       hw,-hy, hd, -tw, hy, td, -hw,-hy, hd,
+       hw,-hy, hd,  tw, hy, td, -tw, hy, td,
+      // left -X
+      -hw,-hy, hd, -tw, hy,-td, -hw,-hy,-hd,
+      -hw,-hy, hd, -tw, hy, td, -tw, hy,-td,
+    ]);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+    geo.computeVertexNormals();
+    const mesh = new THREE.Mesh(geo, isWireframe ? wireframeMaterial.clone() : defaultMaterial.clone());
+    mesh.castShadow = true;
+    mesh.position.set(x, y, z);
+    mesh.name = name;
+    scene.add(mesh);
+    meshObjects[name] = mesh;
+    setStatus(`Loft "${name}" ${baseW}×${baseD}→${Math.round(baseW*endScale)}×${Math.round(baseD*endScale)} h=${height}mm @ (${x},${y},${z})`);
+  },
+
+  // Fillet: shows a small torus indicator on the selected solid (visual hint only).
+  addFillet(name, radius = 3, x = 0, y = 0, z = 0) {
+    const geo = new THREE.TorusGeometry(radius * 4, radius * 0.5, 8, 24);
+    const mat = new THREE.MeshStandardMaterial({ color: 0xffaa33, roughness: 0.5, metalness: 0.2 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.castShadow = false;
+    mesh.position.set(x, y, z);
+    mesh.name = name;
+    scene.add(mesh);
+    meshObjects[name] = mesh;
+    setStatus(`Fillet "${name}" r=${radius}mm`);
+  },
+
+  // Chamfer: shows a small diagonal indicator (visual hint only).
+  addChamfer(name, distance = 2, angle = 45, x = 0, y = 0, z = 0) {
+    const h = distance / Math.tan(angle * Math.PI / 180);
+    const geo = new THREE.CylinderGeometry(distance, h, distance, 4, 1);
+    const mat = new THREE.MeshStandardMaterial({ color: 0xffcc44, roughness: 0.5, metalness: 0.2 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.castShadow = false;
+    mesh.position.set(x, y, z);
+    mesh.name = name;
+    scene.add(mesh);
+    meshObjects[name] = mesh;
+    setStatus(`Chamfer "${name}" d=${distance}mm ${angle}°`);
+  },
+
   // Boolean union: both solids remain visible; export already merges all solids.
   booleanUnion(resultName, nameA, nameB) {
     setStatus(`Union "${resultName}": ${nameA} ∪ ${nameB} — merged on export`);

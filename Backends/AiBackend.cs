@@ -51,6 +51,8 @@ public class AiBackend : IDisposable
         viewer.addCylinder('Name', radius, height, segments=32, x=0, y=0, z=0)
         viewer.addSphere('Name', radius, segments=32, x=0, y=0, z=0)
         viewer.addSketchPlane('Name', width, depth, x=0, y=0, z=0)
+        viewer.addSweep('Name', radius, pathLength, segments=32, x=0, y=0, z=0)
+        viewer.addLoft('Name', baseW, baseD, height, endScale=0.6, x=0, y=0, z=0)
         viewer.moveObject('Name', x, y, z)          — reposition an existing solid
         viewer.extrudePolygon('Name', [x0,z0,x1,z1,...], depth, x=0, y=0, z=0)
         viewer.revolveProfile('Name', [r0,y0,r1,y1,...], angle=360, segs=32, x=0, y=0, z=0)

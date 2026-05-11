@@ -1,0 +1,216 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:My3DApp.AvaloniaApp.ViewModels"
+        x:Class="My3DApp.AvaloniaApp.FeatureDialog"
+        x:DataType="vm:FeatureDialogViewModel"
+        Title="{Binding Title}"
+        Width="330"
+        CanResize="False"
+        Background="#111827"
+        WindowStartupLocation="CenterOwner"
+        SizeToContent="Height">
+
+    <Window.Styles>
+        <Style Selector="TextBlock.lbl">
+            <Setter Property="Foreground" Value="#6B8EAE" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="MinWidth" Value="90" />
+        </Style>
+        <Style Selector="TextBlock.section">
+            <Setter Property="Foreground" Value="#3A6080" />
+            <Setter Property="FontSize" Value="9" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+        <Style Selector="TextBox.dim">
+            <Setter Property="Background" Value="#0A1420" />
+            <Setter Property="Foreground" Value="#BDD4EE" />
+            <Setter Property="CaretBrush" Value="#4B9EF5" />
+            <Setter Property="BorderBrush" Value="#1A2E48" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="6,5" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Width" Value="80" />
+            <Setter Property="HorizontalContentAlignment" Value="Right" />
+        </Style>
+        <Style Selector="TextBox.dim:focus">
+            <Setter Property="BorderBrush" Value="#3B6EBF" />
+        </Style>
+        <Style Selector="TextBlock.unit">
+            <Setter Property="Foreground" Value="#3A5470" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="5,0,0,0" />
+        </Style>
+        <Style Selector="Button.ok">
+            <Setter Property="Background" Value="#3730A3" />
+            <Setter Property="Foreground" Value="#E0E7FF" />
+            <Setter Property="Padding" Value="20,8" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Button.ok:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#4338CA" />
+        </Style>
+        <Style Selector="Button.cancel">
+            <Setter Property="Background" Value="#162030" />
+            <Setter Property="Foreground" Value="#6B8EAE" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.cancel:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1e3050" />
+        </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Foreground" Value="#6B8EAE" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1E3A6A" />
+        </Style>
+        <Style Selector="ListBoxItem:selected">
+            <Setter Property="Foreground" Value="#90C4FF" />
+        </Style>
+        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#162848" />
+        </Style>
+    </Window.Styles>
+
+    <StackPanel Spacing="0">
+
+        <!-- Indigo accent bar -->
+        <Border Height="3" Background="#4F46E5" />
+
+        <StackPanel Margin="16,14,16,0" Spacing="12">
+
+            <!-- MODE selector (Extrude, Revolve, Loft, Sweep only) -->
+            <Border IsVisible="{Binding ShowModes}"
+                    Background="#0D1929"
+                    CornerRadius="6"
+                    Padding="12,10"
+                    BorderBrush="#1A304D" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Classes="section" Text="MODE" />
+                    <ListBox Name="ModeList"
+                             ItemsSource="{Binding AllModes}"
+                             SelectedIndex="{Binding ModeIndex}"
+                             Background="Transparent"
+                             SelectionMode="Single">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                    </ListBox>
+                </StackPanel>
+            </Border>
+
+            <!-- PARAMETERS -->
+            <Border Background="#0D1929"
+                    CornerRadius="6"
+                    Padding="12,10"
+                    BorderBrush="#1A304D" BorderThickness="1">
+                <StackPanel Spacing="8">
+                    <TextBlock Classes="section" Text="PARAMETERS" />
+
+                    <!-- Blind Distance (Extrude) -->
+                    <Grid IsVisible="{Binding ShowDepth}"
+                          ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock Grid.Column="0" Text="Blind Distance" Classes="lbl" />
+                        <TextBox   Grid.Column="1" Classes="dim" Text="{Binding Depth}" />
+                        <TextBlock Grid.Column="2" Text="mm" Classes="unit" />
+                    </Grid>
+
+                    <!-- Draft Angle (Extrude, Loft) -->
+                    <Grid IsVisible="{Binding ShowDraftAngle}"
+                          ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock Grid.Column="0" Text="Draft Angle" Classes="lbl" />
+                        <TextBox   Grid.Column="1" Classes="dim" Text="{Binding DraftAngle}" />
+                        <TextBlock Grid.Column="2" Text="°" Classes="unit" />
+                    </Grid>
+
+                    <!-- Revolve Angle -->
+                    <Grid IsVisible="{Binding ShowAngle}"
+                          ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock Grid.Column="0" Text="Angle" Classes="lbl" />
+                        <TextBox   Grid.Column="1" Classes="dim" Text="{Binding Angle}" />
+                        <TextBlock Grid.Column="2" Text="°" Classes="unit" />
+                    </Grid>
+
+                    <!-- Sweep Path Length -->
+                    <Grid IsVisible="{Binding ShowPathLength}"
+                          ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock Grid.Column="0" Text="Path Length" Classes="lbl" />
+                        <TextBox   Grid.Column="1" Classes="dim" Text="{Binding PathLength}" />
+                        <TextBlock Grid.Column="2" Text="mm" Classes="unit" />
+                    </Grid>
+
+                    <!-- Sweep Twist -->
+                    <Grid IsVisible="{Binding ShowTwistAngle}"
+                          ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock Grid.Column="0" Text="Twist Angle" Classes="lbl" />
+                        <TextBox   Grid.Column="1" Classes="dim" Text="{Binding TwistAngle}" />
+                        <TextBlock Grid.Column="2" Text="°" Classes="unit" />
+                    </Grid>
+
+                    <!-- Loft Height -->
+                    <Grid IsVisible="{Binding ShowLoftOptions}"
+                          ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock Grid.Column="0" Text="Height" Classes="lbl" />
+                        <TextBox   Grid.Column="1" Classes="dim" Text="{Binding LoftHeight}" />
+                        <TextBlock Grid.Column="2" Text="mm" Classes="unit" />
+                    </Grid>
+
+                    <!-- Loft End Scale -->
+                    <Grid IsVisible="{Binding ShowLoftOptions}"
+                          ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock Grid.Column="0" Text="End Scale" Classes="lbl" />
+                        <TextBox   Grid.Column="1" Classes="dim" Text="{Binding LoftScale}" />
+                        <TextBlock Grid.Column="2" Text="" Classes="unit" />
+                    </Grid>
+
+                    <!-- Fillet Radius -->
+                    <Grid IsVisible="{Binding ShowFillet}"
+                          ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock Grid.Column="0" Text="Radius" Classes="lbl" />
+                        <TextBox   Grid.Column="1" Classes="dim" Text="{Binding FilletRadius}" />
+                        <TextBlock Grid.Column="2" Text="mm" Classes="unit" />
+                    </Grid>
+
+                    <!-- Chamfer Distance -->
+                    <Grid IsVisible="{Binding ShowChamfer}"
+                          ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock Grid.Column="0" Text="Distance" Classes="lbl" />
+                        <TextBox   Grid.Column="1" Classes="dim" Text="{Binding ChamferDist}" />
+                        <TextBlock Grid.Column="2" Text="mm" Classes="unit" />
+                    </Grid>
+
+                    <!-- Chamfer Angle -->
+                    <Grid IsVisible="{Binding ShowChamfer}"
+                          ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock Grid.Column="0" Text="Angle" Classes="lbl" />
+                        <TextBox   Grid.Column="1" Classes="dim" Text="{Binding ChamferAngle}" />
+                        <TextBlock Grid.Column="2" Text="°" Classes="unit" />
+                    </Grid>
+
+                </StackPanel>
+            </Border>
+
+            <!-- Button row -->
+            <Grid ColumnDefinitions="*,Auto,8,Auto" Margin="0,0,0,16">
+                <Button Grid.Column="1" Classes="cancel" Name="CancelBtn" Content="Cancel" />
+                <Button Grid.Column="3" Classes="ok"     Name="OkBtn"
+                        Content="{Binding Title}" />
+            </Grid>
+
+        </StackPanel>
+    </StackPanel>
+</Window>
