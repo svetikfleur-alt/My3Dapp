@@ -815,8 +815,8 @@ public sealed class CadProjectStore
                     return Failure($"Cannot set {key} on this entity.");
                 }
 
-                sketch.Dimensions = InferDimensions(sketch.Entities);
-                sketch.Constraints = InferConstraints(sketch.Entities);
+                sketch.Dimensions = MergeSketchDimensions(InferDimensions(sketch.Entities), sketch.Dimensions);
+                sketch.Constraints = MergeSketchConstraints(InferConstraints(sketch.Entities), sketch.Constraints);
                 return Success($"Updated {key} to {value:0.###}.", true);
             }
         }
@@ -3744,7 +3744,7 @@ public sealed class CadProjectStore
         session.ManualConstraints.Add(constraint);
     }
 
-    private static void SolveSketchSession(CadSketchSession session, int iterations = 4)
+    private static void SolveSketchSession(CadSketchSession session, int iterations = 8)
     {
         if (session.DraftEntities.Count == 0)
         {
@@ -3851,6 +3851,66 @@ public sealed class CadProjectStore
                     TrySetCenter(entities[1], refCenter.X, refCenter.Y);
                 }
                 break;
+
+            case CadSketchConstraintKind.Tangent:
+                ReapplyTangentConstraint(entities);
+                break;
+        }
+    }
+
+    private static void ReapplyTangentConstraint(IReadOnlyList<CadSketchEntity> entities)
+    {
+        if (entities.Count < 2)
+        {
+            return;
+        }
+
+        var line = entities.OfType<CadSketchLine>().FirstOrDefault();
+        var arc = entities.OfType<CadSketchArc>().FirstOrDefault();
+
+        if (line is not null && arc is not null && !arc.IsFixed)
+        {
+            var arcStartX = arc.CenterX + arc.Radius * Math.Cos(arc.StartAngleDegrees * Math.PI / 180d);
+            var arcStartY = arc.CenterY + arc.Radius * Math.Sin(arc.StartAngleDegrees * Math.PI / 180d);
+            var arcEndX = arc.CenterX + arc.Radius * Math.Cos(arc.EndAngleDegrees * Math.PI / 180d);
+            var arcEndY = arc.CenterY + arc.Radius * Math.Sin(arc.EndAngleDegrees * Math.PI / 180d);
+
+            var linePts = new[] { (line.StartX, line.StartY), (line.EndX, line.EndY) };
+            var arcPts = new[] { (arcStartX, arcStartY), (arcEndX, arcEndY) };
+
+            var minDist = double.MaxValue;
+            var bestLineX = line.StartX;
+            var bestLineY = line.StartY;
+            var bestArcX = arcStartX;
+            var bestArcY = arcStartY;
+
+            foreach (var (lx, ly) in linePts)
+            {
+                foreach (var (ax, ay) in arcPts)
+                {
+                    var dist = Math.Sqrt((lx - ax) * (lx - ax) + (ly - ay) * (ly - ay));
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                        bestLineX = lx;
+                        bestLineY = ly;
+                        bestArcX = ax;
+                        bestArcY = ay;
+                    }
+                }
+            }
+
+            arc.CenterX += bestLineX - bestArcX;
+            arc.CenterY += bestLineY - bestArcY;
+        }
+        else if (entities[0] is CadSketchArc arc1 && entities[1] is CadSketchArc arc2 && !arc1.IsFixed)
+        {
+            var a2EndX = arc2.CenterX + arc2.Radius * Math.Cos(arc2.EndAngleDegrees * Math.PI / 180d);
+            var a2EndY = arc2.CenterY + arc2.Radius * Math.Sin(arc2.EndAngleDegrees * Math.PI / 180d);
+            var a1StartX = arc1.CenterX + arc1.Radius * Math.Cos(arc1.StartAngleDegrees * Math.PI / 180d);
+            var a1StartY = arc1.CenterY + arc1.Radius * Math.Sin(arc1.StartAngleDegrees * Math.PI / 180d);
+            arc1.CenterX += a2EndX - a1StartX;
+            arc1.CenterY += a2EndY - a1StartY;
         }
     }
 
