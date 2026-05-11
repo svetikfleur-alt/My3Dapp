@@ -169,27 +169,34 @@ let _selectedMesh = null; // currently highlighted mesh
 window.viewer = {
 
   // Adds a semi-transparent sketch plane indicator (flat XZ-plane rectangle).
-  addSketchPlane(name, w = 120, d = 120) {
+  addSketchPlane(name, w = 120, d = 120, x = 0, y = 0, z = 0) {
     const geo = new THREE.PlaneGeometry(w, d);
     const mat = new THREE.MeshBasicMaterial({
       color: 0x4488ff, transparent: true, opacity: 0.18,
       side: THREE.DoubleSide, depthWrite: false
     });
     const mesh = new THREE.Mesh(geo, mat);
-    mesh.rotation.x = -Math.PI / 2; // lie flat on XZ plane
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.set(x, y, z);
     mesh.name = name;
     scene.add(mesh);
     meshObjects[name] = mesh;
 
-    // Outline border
     const edgesGeo = new THREE.EdgesGeometry(geo);
     const edgesMat = new THREE.LineBasicMaterial({ color: 0x6699ff });
     const edges = new THREE.LineSegments(edgesGeo, edgesMat);
     edges.rotation.x = -Math.PI / 2;
+    edges.position.set(x, y, z);
     edges.name = name + '_edges';
     scene.add(edges);
 
-    setStatus(`Sketch plane "${name}" ready`);
+    setStatus(`Sketch plane "${name}" @ (${x},${y},${z})`);
+  },
+
+  // Moves an existing object to a new position.
+  moveObject(name, x, y, z) {
+    const obj = meshObjects[name];
+    if (obj) { obj.position.set(x, y, z); setStatus(`Moved "${name}" to (${x},${y},${z})`); }
   },
 
   addBox(name, w = 100, h = 50, d = 30, x = 0, y = 0, z = 0) {

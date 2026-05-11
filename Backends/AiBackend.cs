@@ -50,7 +50,8 @@ public class AiBackend : IDisposable
         viewer.addBox('Name', width, height, depth, x=0, y=0, z=0)
         viewer.addCylinder('Name', radius, height, segments=32, x=0, y=0, z=0)
         viewer.addSphere('Name', radius, segments=32, x=0, y=0, z=0)
-        viewer.addSketchPlane('Name', width, depth)
+        viewer.addSketchPlane('Name', width, depth, x=0, y=0, z=0)
+        viewer.moveObject('Name', x, y, z)          — reposition an existing solid
         viewer.removeObject('Name')
         viewer.setObjectVisible('Name', true|false)
         viewer.clearScene()

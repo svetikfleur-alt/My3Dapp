@@ -134,6 +134,17 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         FeatureNodes.Count == 0 ? "PARTS" :
         $"PARTS  ({FeatureNodes[0].Children.Count})";
 
+    public string SolidsInfo
+    {
+        get
+        {
+            var n = _scene.Objects.Count(o => o.Solid != null);
+            return n == 0 ? "No solids yet" : $"{n} solid{(n == 1 ? "" : "s")} — ready to export";
+        }
+    }
+
+    private void RefreshSolidsInfo() => OnPropertyChanged(nameof(SolidsInfo));
+
     private bool _aiIsThinking;
     public bool AiIsThinking
     {
@@ -148,11 +159,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     // ── Collections ───────────────────────────────────────────────────────────
     public ObservableCollection<FeatureNode> FeatureNodes { get; } = new()
     {
-        new FeatureNode { Icon = "📦", Name = "Part Studio 1", FeatureType = "root", Children =
-        {
-            new FeatureNode { Icon = "⬜", Name = "Sketch 1",   FeatureType = "sketch" },
-            new FeatureNode { Icon = "⬆", Name = "Extrude 1",  FeatureType = "extrude" },
-        }}
+        new FeatureNode { Icon = "📦", Name = "Part Studio 1", FeatureType = "root" }
     };
 
     public ObservableCollection<AiMessage> AiMessages { get; } = new()
@@ -252,6 +259,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         OnPropertyChanged(nameof(FilteredFeatureNodes));
         OnPropertyChanged(nameof(PartsHeader));
+        RefreshSolidsInfo();
     }
 
     // ── History ───────────────────────────────────────────────────────────────
@@ -316,6 +324,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         var ext      = Path.GetExtension(path).TrimStart('.');
         var node     = MakeNode("📥", Path.GetFileNameWithoutExtension(path), ext);
         node.SceneObjectId = obj.Id;
+        node.SolidDescription = obj.Solid?.ToString() ?? $"Imported {ext.ToUpperInvariant()}";
 
         if (FeatureNodes.Count > 0)
             FeatureNodes[0].Children.Add(node);
@@ -350,6 +359,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         WindowTitle = $"My3DApp — {Path.GetFileName(path)}";
         StatusMessage = finalStatus;
+        RefreshSolidsInfo();
     }
 
     private async Task ExportAsync()
@@ -408,11 +418,13 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         var count = FeatureNodes[0].Children.Count + 1;
         var name  = $"{displayPrefix} {count}";
         var node  = MakeNode(icon, name, featureType);
-        var safe  = name.Replace("'", "");
+        node.SolidDescription = solid?.ToString();
+        var safe   = name.Replace("'", "");
         var script = viewportScript?.Replace("{name}", safe);
         _history.Push(new FeatureNodeUndoAction(
             _scene, FeatureNodes[0].Children, node, ViewportService, script, solid));
         StatusMessage = status.Replace("{name}", name);
+        RefreshSolidsInfo();
         RuntimeLog.Info("VM", $"Created '{name}' ({featureType}) solid={solid?.ToString() ?? "none"}");
     }
 
@@ -525,6 +537,11 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         }
 
         node.Name = newName;
+        if (node.SceneObjectId.HasValue)
+        {
+            var so = _scene.Find(node.SceneObjectId.Value);
+            if (so != null) so.Name = newName;
+        }
         StatusMessage = $"Renamed to '{newName}'.";
         RefreshTreeBindings();
     }
@@ -589,10 +606,12 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     private async Task AiGenerateSketchAsync()
     {
-        const string prompt = "Generate a parametric sketch with dimensions. Describe the profile and provide a geometry-script to visualise it.";
-        AiMessages.Add(new AiMessage { Role = "You", Content = "(Generate Sketch)" });
+        const string prompt = "I want to start a new 3D part. Suggest a practical part worth modelling " +
+            "(e.g. a bracket, housing, shaft, clip, or enclosure) and immediately generate its geometry " +
+            "script with correct positions so the solids are properly assembled and non-overlapping.";
+        AiMessages.Add(new AiMessage { Role = "You", Content = "(✦ Generate Part)" });
         AiIsThinking = true;
-        StatusMessage = "AI generating sketch…";
+        StatusMessage = "AI generating part…";
         try
         {
             var context = BuildFeatureTreeContext();
@@ -623,7 +642,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     private async Task AiSuggestFeatureAsync()
     {
-        const string prompt = "Based on my current feature tree, what should I model next?";
+        const string prompt = "Looking at my current part, what would be the most useful next solid to add? " +
+            "Consider the existing dimensions and positions. Generate the geometry script for it immediately, " +
+            "using correct x,y,z placement relative to existing solids.";
         AiMessages.Add(new AiMessage { Role = "You", Content = "(Suggest next feature)" });
         AiIsThinking = true;
         StatusMessage = "AI analyzing part...";
@@ -732,6 +753,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             };
 
             node.SceneObjectId = obj.Id;
+            node.SolidDescription = obj.Solid?.ToString();
             children.Add(node);
             RuntimeLog.Info("VM", $"AI synced solid '{name}' ({type}) — {obj.Solid?.ToString() ?? "no solid"}");
         }
@@ -754,7 +776,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     private static void AppendFeatureNode(StringBuilder sb, FeatureNode node, int depth)
     {
-        sb.AppendLine($"{new string(' ', depth * 2)}{node.Icon} {node.Name} ({node.FeatureType})");
+        var dims = node.SolidDescription is { } d ? $"  [{d}]" : "";
+        sb.AppendLine($"{new string(' ', depth * 2)}{node.Icon} {node.Name} ({node.FeatureType}){dims}");
         foreach (var child in node.Children)
             AppendFeatureNode(sb, child, depth + 1);
     }

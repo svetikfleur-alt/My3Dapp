@@ -62,10 +62,11 @@
         <!-- Status Bar -->
         <Border DockPanel.Dock="Bottom" Background="#0B1525" Padding="10,3"
                 BorderThickness="0,1,0,0" BorderBrush="#1A304D">
-            <Grid ColumnDefinitions="*,Auto,Auto">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto">
                 <TextBlock Grid.Column="0" Text="{Binding StatusMessage}"  Foreground="#4B6A8A" FontSize="11" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1" Text="{Binding CursorPosition}" Foreground="#4B6A8A" FontSize="11" VerticalAlignment="Center" Margin="0,0,20,0" FontFamily="Consolas,Menlo,monospace" />
-                <TextBlock Grid.Column="2" Text="{Binding SelectionInfo}"  Foreground="#4B6A8A" FontSize="11" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{Binding SolidsInfo}"     Foreground="#2E6A3A" FontSize="11" VerticalAlignment="Center" Margin="0,0,20,0" />
+                <TextBlock Grid.Column="2" Text="{Binding CursorPosition}" Foreground="#4B6A8A" FontSize="11" VerticalAlignment="Center" Margin="0,0,20,0" FontFamily="Consolas,Menlo,monospace" />
+                <TextBlock Grid.Column="3" Text="{Binding SelectionInfo}"  Foreground="#4B6A8A" FontSize="11" VerticalAlignment="Center" />
             </Grid>
         </Border>
 
@@ -106,11 +107,11 @@
                             IsVisible="{Binding SelectedFeatureNode, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <StackPanel Spacing="3">
                             <TextBlock Text="PROPERTIES" Classes="section-label" Margin="0,0,0,4" />
-                            <Grid ColumnDefinitions="Auto,8,*" RowDefinitions="Auto,Auto,Auto">
+                            <Grid ColumnDefinitions="52,6,*" RowDefinitions="Auto,Auto,Auto,Auto">
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Name"    Foreground="#3A5470" FontSize="11" />
                                 <TextBlock Grid.Row="0" Grid.Column="2"
                                            Text="{Binding SelectedFeatureNode.Name}"
-                                           Foreground="#8AAFCC" FontSize="11" />
+                                           Foreground="#8AAFCC" FontSize="11" TextWrapping="Wrap" />
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Type"    Foreground="#3A5470" FontSize="11" />
                                 <TextBlock Grid.Row="1" Grid.Column="2"
                                            Text="{Binding SelectedFeatureNode.FeatureType}"
@@ -119,6 +120,12 @@
                                 <TextBlock Grid.Row="2" Grid.Column="2"
                                            Text="{Binding SelectedFeatureNode.IsVisible}"
                                            Foreground="#8AAFCC" FontSize="11" />
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Solid"   Foreground="#3A5470" FontSize="11"
+                                           IsVisible="{Binding SelectedFeatureNode.SolidDescription, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                <TextBlock Grid.Row="3" Grid.Column="2"
+                                           Text="{Binding SelectedFeatureNode.SolidDescription}"
+                                           Foreground="#4B9EF5" FontSize="10" TextWrapping="Wrap"
+                                           IsVisible="{Binding SelectedFeatureNode.SolidDescription, Converter={x:Static ObjectConverters.IsNotNull}}" />
                             </Grid>
                         </StackPanel>
                     </Border>

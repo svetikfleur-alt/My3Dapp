@@ -41,12 +41,19 @@ public class FeatureNode : ViewModelBase
         set => SetField(ref _isSelected, value);
     }
 
-    // Set when the node corresponds to a SceneGraph object (import, extrude, sketch, etc.)
-    // Used by delete and visibility sync to keep the engine scene in sync with the UI tree.
+    // Set when the node corresponds to a SceneGraph object
     public Guid? SceneObjectId { get; set; }
 
-    // The viewer script that created this node's geometry. Stored so undo-of-delete
-    // can replay the add script to restore the viewport visual.
+    // Human-readable solid parameters, e.g. "Box 80×8×50 mm @ (0,0,0)"
+    // Shown in the properties panel and included in AI context.
+    private string? _solidDescription;
+    public string? SolidDescription
+    {
+        get => _solidDescription;
+        set => SetField(ref _solidDescription, value);
+    }
+
+    // The viewer script that created this node's geometry.
     public string? ViewportAddScript { get; set; }
 
     // Commands set by the ViewModel when the node is created.
