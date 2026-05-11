@@ -233,10 +233,10 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         SweepCommand            = new AsyncRelayCommand(SweepAsync);
         FilletCommand           = new AsyncRelayCommand(FilletAsync);
         ChamferCommand          = new AsyncRelayCommand(ChamferAsync);
-        ShellCommand            = new RelayCommand(Shell);
-        BooleanUnionCommand     = new RelayCommand(BooleanUnion);
-        BooleanSubtractCommand  = new RelayCommand(BooleanSubtract);
-        BooleanIntersectCommand = new RelayCommand(BooleanIntersect);
+        ShellCommand            = new AsyncRelayCommand(ShellAsync);
+        BooleanUnionCommand     = new AsyncRelayCommand(BooleanUnionAsync);
+        BooleanSubtractCommand  = new AsyncRelayCommand(BooleanSubtractAsync);
+        BooleanIntersectCommand = new AsyncRelayCommand(BooleanIntersectAsync);
         AiGenerateCommand       = new RelayCommand(AiGenerate);
         AiSendCommand           = new AsyncRelayCommand(AiSendAsync);
         FocusAiPanelCommand     = new RelayCommand(FocusAiPanel);
@@ -567,21 +567,118 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             "viewer.addChamfer('{name}', 2, 45); viewer.fitView();",
             "{name} added.", null);
 
-    private void Shell()
+    private async Task ShellAsync()
+    {
+        if (FileDialogs is null) { PushShellDefault(); return; }
+        var r = await FileDialogs.ShowFeatureDialogAsync("shell");
+        if (!r.Confirmed) return;
+        var t = r.ShellThickness > 0 ? r.ShellThickness : 2f;
+
+        // Shell wraps the last added solid as its body
+        var lastSolid = AllNodes()
+            .Where(n => n.SceneObjectId.HasValue)
+            .Select(n => _scene.Find(n.SceneObjectId!.Value))
+            .LastOrDefault(o => o?.Solid != null && !o.ConsumedByBoolean);
+
+        SolidParams? bodyParam = lastSolid?.Solid;
+        if (bodyParam is null)
+        {
+            StatusMessage = "Shell: no solid body found — add geometry first.";
+            return;
+        }
+
+        var shell = new ShellParams(bodyParam, t, r.Mode);
+        PushFeatureNode("⚙", "shell", "Shell",
+            null,
+            $"{{name}} — Shell t={t:F1}mm ({r.Mode}) applied.",
+            shell);
+    }
+
+    private void PushShellDefault()
         => PushFeatureNode("⚙", "shell", "Shell",
-            null, "{name} — select a solid body and set wall thickness in the AI panel.");
+            null, "{name} — shell (select body + wall thickness in AI panel).");
 
-    private void BooleanUnion()
-        => PushFeatureNode("⊕", "boolean-union", "Union",
-            null, "{name} — select two bodies to merge.");
+    private async Task BooleanUnionAsync()
+    {
+        if (FileDialogs is null) { PushBooleanDefault("⊕", "boolean-union", "Union"); return; }
+        var r = await FileDialogs.ShowFeatureDialogAsync("boolean-union");
+        if (!r.Confirmed) return;
+        await ApplyBooleanAsync("⊕", "boolean-union", "Union", r.BodyA, r.BodyB,
+            (a, b) => new BooleanUnionParams(a, b),
+            (sa, sb) => $"viewer.booleanUnion('{{name}}', '{sa}', '{sb}'); viewer.fitView();");
+    }
 
-    private void BooleanSubtract()
-        => PushFeatureNode("⊖", "boolean-subtract", "Subtract",
-            null, "{name} — select target body, then tool body.");
+    private async Task BooleanSubtractAsync()
+    {
+        if (FileDialogs is null) { PushBooleanDefault("⊖", "boolean-subtract", "Subtract"); return; }
+        var r = await FileDialogs.ShowFeatureDialogAsync("boolean-subtract");
+        if (!r.Confirmed) return;
+        await ApplyBooleanAsync("⊖", "boolean-subtract", "Subtract", r.BodyA, r.BodyB,
+            (a, b) => new BooleanSubtractParams(a, b),
+            (sa, sb) => $"viewer.booleanSubtract('{{name}}', '{sa}', '{sb}'); viewer.fitView();");
+    }
 
-    private void BooleanIntersect()
-        => PushFeatureNode("⊗", "boolean-intersect", "Intersect",
-            null, "{name} — select bodies to intersect.");
+    private async Task BooleanIntersectAsync()
+    {
+        if (FileDialogs is null) { PushBooleanDefault("⊗", "boolean-intersect", "Intersect"); return; }
+        var r = await FileDialogs.ShowFeatureDialogAsync("boolean-intersect");
+        if (!r.Confirmed) return;
+        await ApplyBooleanAsync("⊗", "boolean-intersect", "Intersect", r.BodyA, r.BodyB,
+            (a, b) => new BooleanIntersectParams(a, b),
+            (sa, sb) => $"viewer.booleanIntersect('{{name}}', '{sa}', '{sb}'); viewer.fitView();");
+    }
+
+    private async Task ApplyBooleanAsync(
+        string icon, string featureType, string prefix,
+        string nameA, string nameB,
+        Func<SolidParams, SolidParams, SolidParams> buildParams,
+        Func<string, string, string> scriptBuilder)
+    {
+        if (FeatureNodes.Count == 0) return;
+
+        if (string.IsNullOrWhiteSpace(nameA) || string.IsNullOrWhiteSpace(nameB))
+        {
+            StatusMessage = $"{prefix}: enter both body names in the dialog.";
+            return;
+        }
+
+        // Resolve body nodes by name (case-insensitive)
+        var nodeA = AllNodes().FirstOrDefault(n => n.Name.Equals(nameA, StringComparison.OrdinalIgnoreCase));
+        var nodeB = AllNodes().FirstOrDefault(n => n.Name.Equals(nameB, StringComparison.OrdinalIgnoreCase));
+
+        SceneObject? objA = nodeA?.SceneObjectId.HasValue == true ? _scene.Find(nodeA.SceneObjectId!.Value) : null;
+        SceneObject? objB = nodeB?.SceneObjectId.HasValue == true ? _scene.Find(nodeB.SceneObjectId!.Value) : null;
+
+        if (objA?.Solid is null || objB?.Solid is null)
+        {
+            var missing = string.Join(", ",
+                new[] { (nameA, objA), (nameB, objB) }
+                    .Where(p => p.Item2?.Solid is null)
+                    .Select(p => $"'{p.Item1}'"));
+            StatusMessage = $"{prefix}: body {missing} not found — check names in the feature tree.";
+            return;
+        }
+
+        // Mark inputs as consumed so export does not double the geometry
+        objA.ConsumedByBoolean = true;
+        objB.ConsumedByBoolean = true;
+
+        var boolParams = buildParams(objA.Solid!, objB.Solid!);
+        var safeA = nameA.Replace("'", "");
+        var safeB = nameB.Replace("'", "");
+        var script = scriptBuilder(safeA, safeB);
+
+        // PushFeatureNode uses FeatureNodeUndoAction which calls _scene.Add itself,
+        // so we only pass the SolidParams — no pre-created SceneObject.
+        PushFeatureNode(icon, featureType, prefix, script,
+            $"{{name}} — {prefix}({nameA}, {nameB}) applied.", boolParams);
+
+        await Task.CompletedTask;
+    }
+
+    private void PushBooleanDefault(string icon, string featureType, string prefix)
+        => PushFeatureNode(icon, featureType, prefix,
+            null, $"{{name}} — open the dialog to select bodies for {prefix}.");
     private void AiGenerate()
     {
         AiPrompt = "Generate a practical 3D part with geometry — describe what you want to model and include a geometry-script to visualise it.";

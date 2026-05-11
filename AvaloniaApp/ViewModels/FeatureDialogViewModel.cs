@@ -3,18 +3,21 @@ namespace My3DApp.AvaloniaApp.ViewModels;
 /// <summary>Result returned from the feature creation dialog.</summary>
 public class FeatureDialogResult
 {
-    public bool   Confirmed      { get; init; }
-    public string Mode           { get; init; } = "New";
-    public float  Depth          { get; init; } = 50f;
-    public float  DraftAngle     { get; init; } = 0f;
-    public float  Angle          { get; init; } = 360f;
-    public float  PathLength     { get; init; } = 80f;
-    public float  TwistAngle     { get; init; } = 0f;
-    public float  LoftHeight     { get; init; } = 60f;
-    public float  LoftScale      { get; init; } = 0.6f;
-    public float  FilletRadius   { get; init; } = 3f;
-    public float  ChamferDist    { get; init; } = 2f;
-    public float  ChamferAngle   { get; init; } = 45f;
+    public bool   Confirmed        { get; init; }
+    public string Mode             { get; init; } = "New";
+    public float  Depth            { get; init; } = 50f;
+    public float  DraftAngle       { get; init; } = 0f;
+    public float  Angle            { get; init; } = 360f;
+    public float  PathLength       { get; init; } = 80f;
+    public float  TwistAngle       { get; init; } = 0f;
+    public float  LoftHeight       { get; init; } = 60f;
+    public float  LoftScale        { get; init; } = 0.6f;
+    public float  FilletRadius     { get; init; } = 3f;
+    public float  ChamferDist      { get; init; } = 2f;
+    public float  ChamferAngle     { get; init; } = 45f;
+    public float  ShellThickness   { get; init; } = 2f;
+    public string BodyA            { get; init; } = "";
+    public string BodyB            { get; init; } = "";
 }
 
 /// <summary>View-model backing the feature creation dialog.</summary>
@@ -33,10 +36,12 @@ public class FeatureDialogViewModel : ViewModelBase
     public bool ShowLoftOptions { get; }
     public bool ShowFillet      { get; }
     public bool ShowChamfer     { get; }
+    public bool ShowShell       { get; }
+    public bool ShowBoolBodies  { get; }
 
-    public string[] AllModes { get; } = ["New", "Add", "Remove", "Surface", "Thin"];
+    // Modes are feature-specific
+    public string[] AllModes { get; }
 
-    // Selected mode index so ListBox / RadioButton group can bind by index
     private int _modeIndex = 0;
     public int ModeIndex
     {
@@ -48,9 +53,9 @@ public class FeatureDialogViewModel : ViewModelBase
         }
     }
     public string SelectedMode => ModeIndex >= 0 && ModeIndex < AllModes.Length
-        ? AllModes[ModeIndex] : "New";
+        ? AllModes[ModeIndex] : AllModes[0];
 
-    // String-typed dimension fields — code-behind parses on OK
+    // Dimension fields (string-typed for TextBox binding)
     private string _depth = "50";
     public string Depth { get => _depth; set => SetField(ref _depth, value); }
 
@@ -81,21 +86,40 @@ public class FeatureDialogViewModel : ViewModelBase
     private string _chamferAngle = "45";
     public string ChamferAngle { get => _chamferAngle; set => SetField(ref _chamferAngle, value); }
 
+    private string _shellThickness = "2";
+    public string ShellThickness { get => _shellThickness; set => SetField(ref _shellThickness, value); }
+
+    private string _bodyA = "";
+    public string BodyA { get => _bodyA; set => SetField(ref _bodyA, value); }
+
+    private string _bodyB = "";
+    public string BodyB { get => _bodyB; set => SetField(ref _bodyB, value); }
+
     public FeatureDialogViewModel(string featureType)
     {
         FeatureType = featureType;
         Title = featureType switch
         {
-            "extrude"  => "Extrude",
-            "revolve"  => "Revolve",
-            "loft"     => "Loft",
-            "sweep"    => "Sweep",
-            "fillet"   => "Fillet",
-            "chamfer"  => "Chamfer",
-            _          => featureType
+            "extrude"            => "Extrude",
+            "revolve"            => "Revolve",
+            "loft"               => "Loft",
+            "sweep"              => "Sweep",
+            "fillet"             => "Fillet",
+            "chamfer"            => "Chamfer",
+            "shell"              => "Shell",
+            "boolean-union"      => "Union",
+            "boolean-subtract"   => "Subtract",
+            "boolean-intersect"  => "Intersect",
+            _                    => featureType
         };
 
-        ShowModes       = featureType is "extrude" or "revolve" or "loft" or "sweep";
+        AllModes = featureType switch
+        {
+            "shell"  => ["Inside", "Outside", "Mid-plane"],
+            _        => ["New", "Add", "Remove", "Surface", "Thin"]
+        };
+
+        ShowModes       = featureType is "extrude" or "revolve" or "loft" or "sweep" or "shell";
         ShowDepth       = featureType is "extrude";
         ShowDraftAngle  = featureType is "extrude" or "loft";
         ShowAngle       = featureType is "revolve";
@@ -104,6 +128,8 @@ public class FeatureDialogViewModel : ViewModelBase
         ShowLoftOptions = featureType is "loft";
         ShowFillet      = featureType is "fillet";
         ShowChamfer     = featureType is "chamfer";
+        ShowShell       = featureType is "shell";
+        ShowBoolBodies  = featureType is "boolean-union" or "boolean-subtract" or "boolean-intersect";
     }
 
     private static float Parse(string s, float fallback = 0f)
@@ -112,17 +138,20 @@ public class FeatureDialogViewModel : ViewModelBase
 
     public FeatureDialogResult ToResult(bool confirmed) => new()
     {
-        Confirmed    = confirmed,
-        Mode         = SelectedMode,
-        Depth        = Parse(Depth, 50f),
-        DraftAngle   = Parse(DraftAngle, 0f),
-        Angle        = Parse(Angle, 360f),
-        PathLength   = Parse(PathLength, 80f),
-        TwistAngle   = Parse(TwistAngle, 0f),
-        LoftHeight   = Parse(LoftHeight, 60f),
-        LoftScale    = Parse(LoftScale, 0.6f),
-        FilletRadius = Parse(FilletRadius, 3f),
-        ChamferDist  = Parse(ChamferDist, 2f),
-        ChamferAngle = Parse(ChamferAngle, 45f),
+        Confirmed      = confirmed,
+        Mode           = SelectedMode,
+        Depth          = Parse(Depth, 50f),
+        DraftAngle     = Parse(DraftAngle, 0f),
+        Angle          = Parse(Angle, 360f),
+        PathLength     = Parse(PathLength, 80f),
+        TwistAngle     = Parse(TwistAngle, 0f),
+        LoftHeight     = Parse(LoftHeight, 60f),
+        LoftScale      = Parse(LoftScale, 0.6f),
+        FilletRadius   = Parse(FilletRadius, 3f),
+        ChamferDist    = Parse(ChamferDist, 2f),
+        ChamferAngle   = Parse(ChamferAngle, 45f),
+        ShellThickness = Parse(ShellThickness, 2f),
+        BodyA          = BodyA.Trim(),
+        BodyB          = BodyB.Trim(),
     };
 }

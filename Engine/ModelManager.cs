@@ -114,6 +114,14 @@ public class ModelManager
         return obj;
     }
 
+    public SceneObject CreateShell(string name, SolidParams body, float wallThickness, string direction = "Inside")
+    {
+        var obj = _scene.Add(name, "shell");
+        obj.Solid = new ShellParams(body, wallThickness, direction);
+        RuntimeLog.Info("Model", $"Created shell '{name}' t={wallThickness}mm {direction}");
+        return obj;
+    }
+
     // ── Import ────────────────────────────────────────────────────────────────
 
     public async Task<SceneObject?> ImportAsync(string filePath)

@@ -138,6 +138,14 @@ public record BooleanIntersectParams(SolidParams A, SolidParams B) : SolidParams
     public override string ToString() => $"Intersect ({A}) ∩ ({B})";
 }
 
+// Shell: hollows out a solid leaving walls of the given thickness.
+// Approximation: returns the body mesh unchanged (full hollow requires PicoGK).
+public record ShellParams(SolidParams Body, float WallThickness, string Direction = "Inside") : SolidParams
+{
+    public override Mesh ToMesh() => Body.ToMesh(); // intent marker — full CSG hollow via PicoGK
+    public override string ToString() => $"Shell t={WallThickness}mm ({Direction}) on ({Body})";
+}
+
 // ── Scene object ──────────────────────────────────────────────────────────────
 
 public class SceneObject

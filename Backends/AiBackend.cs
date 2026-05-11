@@ -122,6 +122,32 @@ public class AiBackend : IDisposable
         Note: booleanSubtract is a visual preview — the tool body appears ghosted in red.
         On export, all named solids are merged into one STL. Use it to communicate design intent.
 
+        ## Example — Swept tube (pipe, 12mm OD, 80mm long)
+        Sweep: circular profile r=6, path length 80mm along Y axis
+        <geometry-script>
+        viewer.clearScene();
+        viewer.addSweep('Pipe', 6, 80, 32, 0, 0, 0);
+        viewer.fitView();
+        </geometry-script>
+
+        ## Example — Lofted inlet (80×60 base tapers to 50% at 70mm height)
+        <geometry-script>
+        viewer.clearScene();
+        viewer.addLoft('Inlet', 80, 60, 70, 0.5, 0, 0, 0);
+        viewer.fitView();
+        </geometry-script>
+
+        ## Example — Hex bolt head (extruded hexagon profile)
+        Hex profile (flat-to-flat 13mm → vertex radius ≈ 7.5mm), 5mm tall, then 20mm shaft
+        Hex Y-up: 6 points at 60° each, r=7.5 → extrudePolygon with depth=5
+        Shaft: cylinder r=4 h=20, sitting on top of head (head top at y=2.5 → shaft centre at 2.5+10=12.5)
+        <geometry-script>
+        viewer.clearScene();
+        viewer.extrudePolygon('Hex-Head', [7.5,0, 3.75,6.5, -3.75,6.5, -7.5,0, -3.75,-6.5, 3.75,-6.5, 7.5,0], 5, 0, -2.5, 0);
+        viewer.addCylinder('Shaft', 4, 20, 32, 0, 12.5, 0);
+        viewer.fitView();
+        </geometry-script>
+
         After the script, briefly list each solid's name, dimensions, and position so the user can
         adjust them. Do not apologise or repeat the question.
         """;

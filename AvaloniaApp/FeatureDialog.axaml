@@ -201,6 +201,32 @@
                         <TextBlock Grid.Column="2" Text="°" Classes="unit" />
                     </Grid>
 
+                    <!-- Shell Wall Thickness -->
+                    <Grid IsVisible="{Binding ShowShell}"
+                          ColumnDefinitions="*,Auto,Auto">
+                        <TextBlock Grid.Column="0" Text="Wall Thickness" Classes="lbl" />
+                        <TextBox   Grid.Column="1" Classes="dim" Text="{Binding ShellThickness}" />
+                        <TextBlock Grid.Column="2" Text="mm" Classes="unit" />
+                    </Grid>
+
+                    <!-- Boolean Body A -->
+                    <Grid IsVisible="{Binding ShowBoolBodies}"
+                          ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="Body A" Classes="lbl" />
+                        <TextBox   Grid.Column="1" Classes="dim" Width="120"
+                                   Text="{Binding BodyA}"
+                                   Watermark="name…" />
+                    </Grid>
+
+                    <!-- Boolean Body B / Tool -->
+                    <Grid IsVisible="{Binding ShowBoolBodies}"
+                          ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="Body B / Tool" Classes="lbl" />
+                        <TextBox   Grid.Column="1" Classes="dim" Width="120"
+                                   Text="{Binding BodyB}"
+                                   Watermark="name…" />
+                    </Grid>
+
                 </StackPanel>
             </Border>
 
