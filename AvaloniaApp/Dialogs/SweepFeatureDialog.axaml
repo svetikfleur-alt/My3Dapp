@@ -51,13 +51,14 @@
                        Classes="FeatureDialogValueText"
                        Text="Sketch plane" />
             <TextBlock Grid.Row="2"
-                       Text="Recipe"
+                       Text="Expression"
                        Margin="0,10,0,0"
                        Classes="FeatureDialogFieldLabel" />
             <TextBlock Grid.Row="2"
                        Grid.Column="1"
                        Margin="0,10,0,0"
                        TextWrapping="Wrap"
+                       FontFamily="Consolas, Courier New, monospace"
                        Classes="FeatureDialogHelpText"
                        Text="sweep(profile, distance, twist)" />
           </Grid>

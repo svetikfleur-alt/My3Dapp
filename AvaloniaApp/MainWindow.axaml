@@ -349,13 +349,13 @@
                   </Button>
                   <Button Classes="ToolbarActionButton"
                           IsEnabled="{Binding CanProfileTools}"
-                          ToolTip.Tip="Sweep selected profile"
+                          ToolTip.Tip="Sweep — extrude a profile along a path curve"
                           Click="OnSweepClick">
                     <svg:Svg Path="avares://My3DApp/Assets/Icons/extrude.svg" Width="16" Height="16" />
                   </Button>
                   <Button Classes="ToolbarActionButton"
                           IsEnabled="{Binding CanLoftTools}"
-                          ToolTip.Tip="Loft between two closed profiles"
+                          ToolTip.Tip="Loft — blend between two closed profiles"
                           Click="OnLoftClick">
                     <svg:Svg Path="avares://My3DApp/Assets/Icons/revolve.svg" Width="16" Height="16" />
                   </Button>
@@ -419,48 +419,52 @@
 
               <Border Classes="ToolbarDivider" />
               <TextBlock Text="Modify" Classes="ToolbarGroupLabel" />
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Fillet (round edges)"
-                      Click="OnFilletClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/fillet.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Chamfer (bevel edges)"
-                      Click="OnChamferClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/chamfer.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Hole (H)"
-                      Click="OnHoleClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/hole.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Shell"
-                      Click="OnShellClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/shell.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Linear Pattern"
-                      Click="OnLinearPatternClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/linear-pattern.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Circular Pattern"
-                      Click="OnCircularPatternClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/circular-pattern.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Mirror selected body"
-                      Click="OnMirrorMenuItemClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/mirror.svg" Width="16" Height="16" />
-              </Button>
+              <Border Classes="ToolSplitGroup" Padding="4">
+                <StackPanel Orientation="Horizontal" Spacing="3">
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanEdgeTools}"
+                          ToolTip.Tip="Fillet — round selected edges"
+                          Click="OnFilletClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/fillet.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanEdgeTools}"
+                          ToolTip.Tip="Chamfer — bevel selected edges"
+                          Click="OnChamferClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/chamfer.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanEdgeTools}"
+                          ToolTip.Tip="Hole (H)"
+                          Click="OnHoleClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/hole.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanEdgeTools}"
+                          ToolTip.Tip="Shell — hollow body to a wall thickness"
+                          Click="OnShellClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/shell.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanEdgeTools}"
+                          ToolTip.Tip="Linear Pattern — array body along an axis"
+                          Click="OnLinearPatternClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/linear-pattern.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanEdgeTools}"
+                          ToolTip.Tip="Circular Pattern — array body around an axis"
+                          Click="OnCircularPatternClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/circular-pattern.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          IsEnabled="{Binding CanEdgeTools}"
+                          ToolTip.Tip="Mirror — reflect body across a plane"
+                          Click="OnMirrorMenuItemClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/mirror.svg" Width="16" Height="16" />
+                  </Button>
+                </StackPanel>
+              </Border>
 
               <Border Classes="ToolbarDivider" IsVisible="{Binding CanBooleanTools}" />
               <TextBlock Text="Boolean" Classes="ToolbarGroupLabel" IsVisible="{Binding CanBooleanTools}" />
@@ -1355,19 +1359,19 @@
             </Grid>
           </TabItem>
 
-          <TabItem ToolTip.Tip="Feature recipe">
+          <TabItem ToolTip.Tip="Feature script — command history for the current part studio">
             <TabItem.Header>
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <svg:Svg Path="avares://My3DApp/Assets/Icons/line.svg"
                          Width="15"
                          Height="15" />
-                <TextBlock Text="Recipe" />
+                <TextBlock Text="Script" />
               </StackPanel>
             </TabItem.Header>
             <Grid RowDefinitions="Auto,*" Margin="10">
               <Border Classes="RecipeHeaderCard">
                 <StackPanel Spacing="4">
-                  <TextBlock Text="Feature Recipe"
+                  <TextBlock Text="Feature Script"
                              Classes="RecipeHeaderTitle" />
                   <TextBlock Text="Solid-first command history for the current part studio. Features stay readable, ordered, and ready for AI-assisted editing."
                              TextWrapping="Wrap"

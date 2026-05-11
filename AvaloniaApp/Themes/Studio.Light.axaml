@@ -455,6 +455,22 @@
     <Setter Property="FontWeight" Value="SemiBold" />
   </Style>
 
+  <Style Selector="Button.FeatureDialogButtonPrimary:pointerover">
+    <Setter Property="Background" Value="#d4e9f8" />
+  </Style>
+
+  <Style Selector="Button.FeatureDialogButtonPrimary:pressed">
+    <Setter Property="Background" Value="#c2def4" />
+  </Style>
+
+  <Style Selector="Button.FeatureDialogButtonSecondary:pointerover">
+    <Setter Property="Background" Value="#edf3fb" />
+  </Style>
+
+  <Style Selector="Button.FeatureDialogButtonSecondary:pressed">
+    <Setter Property="Background" Value="#dce8f5" />
+  </Style>
+
   <Style Selector="Button.ToolbarMiniButton">
     <Setter Property="Height" Value="30" />
     <Setter Property="MinWidth" Value="56" />
@@ -1293,6 +1309,10 @@
   <Style Selector="Button.SketchConstraintToolButton:pressed">
     <Setter Property="Background" Value="#d4e2f2" />
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="Button.SketchConstraintToolButton:disabled">
+    <Setter Property="Opacity" Value="0.45" />
   </Style>
 
   <Style Selector="TextBox.AssistantKeyInput">

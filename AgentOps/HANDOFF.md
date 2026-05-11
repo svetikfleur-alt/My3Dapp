@@ -1,19 +1,19 @@
 Done:
-- HoleFeatureDialog.axaml: Diameter NumericUpDown (min 0.01), CenterX/Y offsets, Through All/Blind radio, DepthValue (disabled when Through All), Cancel/OK
-- HoleFeatureDialog.axaml.cs: validation (diameter>0, depthValue>0 when blind), Close(result), OnDepthKindChanged toggles DepthValueInput.IsEnabled
-- Engine/CadModel.cs: HoleFeature, HoleDepthKind, CadFeatureKind.Hole, CadCommandActionKind.HoleSelectedBody (pre-existing)
-- Engine/CadProjectStore.cs: HandleHoleSelectedBody (diameter/centerX/Y/depthKind/depthValue; CSG subtract stubbed with Trace) (pre-existing)
-- StudioWorkspaceController.cs: FindHoleParams, EditHoleFeature, CadViewportCommandKind.HoleBody wired (pre-existing)
-- StudioShellViewModel.cs: HoleSelectedBodyAsync, GetHoleParams, UpdateHoleAsync; BuildFeatureSummary HoleFeature case (pre-existing)
-- MainWindow.axaml: Hole button (CanEdgeTools, ToolTip "Hole (H)", Click="OnHoleClick") after CP button
-- MainWindow.axaml.cs: OnHoleClick handler (opens dialog, calls HoleSelectedBodyAsync); H key shortcut (3D mode only, CanEdgeTools guard); OnFeatureTreeDoubleTapped updated to handle HoleFeature (checks GetHoleParams first, then CP fallback)
+- Studio.Dark.axaml: added FeatureDialogButtonPrimary :pointerover/#294155, :pressed/#334f68; FeatureDialogButtonSecondary :pointerover/#2c3748, :pressed/#374455; SketchConstraintToolButton :disabled/opacity 0.45
+- Studio.Light.axaml: same hover/press/disabled additions with light-theme colors (#d4e9f8, #c2def4, #edf3fb, #dce8f5, opacity 0.45)
+- MainWindow.axaml: Fillet/Chamfer/Hole/Shell/LinearPattern/CircularPattern/Mirror buttons wrapped in ToolSplitGroup border with ToolbarDivider + "Modify" ToolbarGroupLabel; improved tooltips for Sweep, Loft, Fillet, Chamfer, Shell, LP, CP, Mirror; Recipe tab renamed Script (TabItem header + RecipeHeaderTitle TextBlock)
+- ExtrudeFeatureDialog.axaml: "Recipe" label → "Expression"; monospace font on expression TextBlock
+- RevolveFeatureDialog.axaml: same Recipe→Expression + monospace
+- SweepFeatureDialog.axaml: same Recipe→Expression + monospace
+- LoftFeatureDialog.axaml: same Recipe→Expression + monospace
+- MirrorFeatureDialog.axaml: same Recipe→Expression + monospace
 
 Not done:
-- Live viewport preview of cylinder during dialog open (no dialog→viewport bridge; same status as other ops)
-- Face-level hit-test (curved face rejection requires face-level picking not yet in codebase; dialog uses "first face of body" fallback per spec notes)
+- Build verification (dotnet SDK not available on this Linux host; project targets net10.0-windows)
+- Live viewport preview bridging for feature dialogs (pre-existing gap, out of scope)
 
 Broken:
-- none expected
+- none expected; all x:Name bindings preserved (RecipeTextBlock kept in all dialogs)
 
 Next:
-- Verifier: run build (0 errors expected); confirm Hole button appears active when a body exists; open dialog, Diameter=10, Through All → OK → tree shows "Hole (⌀10 × Through)"; blind mode → DepthValue field enables; double-click node → dialog re-opens; H shortcut only in 3D mode
+- Verifier: open app, hover Cancel/Apply buttons in any feature dialog — should animate background on hover/click; check Modify group has pill border grouping in toolbar; check tooltips on Modify buttons; check Script tab label in right inspector panel

@@ -62,7 +62,7 @@
                        TextWrapping="Wrap"
                        Text="Ready" />
             <TextBlock Grid.Row="3"
-                       Text="Recipe"
+                       Text="Expression"
                        Margin="0,10,0,0"
                        Classes="FeatureDialogFieldLabel" />
             <TextBlock Grid.Row="3"
@@ -70,6 +70,7 @@
                        x:Name="RecipeTextBlock"
                        Margin="0,10,0,0"
                        TextWrapping="Wrap"
+                       FontFamily="Consolas, Courier New, monospace"
                        Classes="FeatureDialogHelpText"
                        Text="extrude(profile, depth, operation)" />
           </Grid>
