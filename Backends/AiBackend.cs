@@ -101,6 +101,25 @@ public class AiBackend : IDisposable
         viewer.fitView();
         </geometry-script>
 
+        ## Example — Simple mounting bracket (base + boss + two bolt holes via booleanSubtract)
+        Base-Plate 100×8×60 at origin → top at y=4
+        Boss (cylinder, r=12, h=30) centred on top → y = 4+15 = 19
+        Hole-L (r=3.5, h=10, tool for subtract) at left bolt position → x=-35, y=4, z=0
+        Hole-R same on right → x=35
+        <geometry-script>
+        viewer.clearScene();
+        viewer.addBox('Base-Plate', 100, 8, 60, 0, 0, 0);
+        viewer.addCylinder('Boss', 12, 30, 32, 0, 19, 0);
+        viewer.addCylinder('Hole-L', 3.5, 10, 16, -35, 4, 0);
+        viewer.addCylinder('Hole-R', 3.5, 10, 16,  35, 4, 0);
+        viewer.booleanSubtract('Bracket-L', 'Base-Plate', 'Hole-L');
+        viewer.booleanSubtract('Bracket-R', 'Bracket-L',  'Hole-R');
+        viewer.fitView();
+        </geometry-script>
+
+        Note: booleanSubtract is a visual preview — the tool body appears ghosted in red.
+        On export, all named solids are merged into one STL. Use it to communicate design intent.
+
         After the script, briefly list each solid's name, dimensions, and position so the user can
         adjust them. Do not apologise or repeat the question.
         """;

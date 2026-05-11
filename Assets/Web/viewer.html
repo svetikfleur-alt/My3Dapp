@@ -179,6 +179,7 @@ window.viewer = {
     mesh.rotation.x = -Math.PI / 2;
     mesh.position.set(x, y, z);
     mesh.name = name;
+    mesh.userData.isSketch = true;   // exempt from wireframe toggle + raycasting
     scene.add(mesh);
     meshObjects[name] = mesh;
 
@@ -363,6 +364,7 @@ window.viewer = {
   setWireframe(on) {
     isWireframe = on;
     Object.values(meshObjects).forEach(mesh => {
+      if (mesh.userData.isSketch) return; // keep sketch plane material untouched
       mesh.material = on ? wireframeMaterial.clone() : defaultMaterial.clone();
     });
     // Re-apply selection highlight after material swap
@@ -377,6 +379,8 @@ window.viewer = {
     const geo = new STLLoader().parse(buffer.buffer);
     geo.computeVertexNormals();
     const mesh = new THREE.Mesh(geo, defaultMaterial.clone());
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
     mesh.name = name;
     scene.add(mesh);
     meshObjects[name] = mesh;
@@ -421,7 +425,8 @@ renderer.domElement.addEventListener('click', (e) => {
     -((e.clientY - rect.top)  / rect.height) * 2 + 1
   );
   _raycaster.setFromCamera(ndc, camera);
-  const hits = _raycaster.intersectObjects(Object.values(meshObjects), false);
+  const selectables = Object.values(meshObjects).filter(m => !m.userData.isSketch);
+  const hits = _raycaster.intersectObjects(selectables, false);
   const hit = hits.length > 0 ? hits[0].object : null;
 
   if (_selectedMesh !== hit) {

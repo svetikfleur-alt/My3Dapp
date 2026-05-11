@@ -695,6 +695,32 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             children.Clear();
         }
 
+        // moveObject('name', x, y, z) → update position in existing SceneObject's SolidParams
+        foreach (Match m in Regex.Matches(script,
+            @"viewer\.moveObject\s*\(\s*['""]([^'""]+)['""]\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)"))
+        {
+            var name = m.Groups[1].Value;
+            float mx = TryF(m.Groups[2].Value), my = TryF(m.Groups[3].Value), mz = TryF(m.Groups[4].Value);
+            var node = children.FirstOrDefault(n => n.Name == name);
+            if (node?.SceneObjectId.HasValue == true)
+            {
+                var so = _scene.Find(node.SceneObjectId.Value);
+                if (so?.Solid != null)
+                {
+                    so.Solid = so.Solid switch
+                    {
+                        BoxParams bp      => bp      with { X = mx, Y = my, Z = mz },
+                        CylinderParams cp => cp      with { X = mx, Y = my, Z = mz },
+                        SphereParams sp   => sp      with { X = mx, Y = my, Z = mz },
+                        ExtrudePolygonParams ep => ep with { X = mx, Y = my, Z = mz },
+                        RevolveProfileParams rp => rp with { X = mx, Y = my, Z = mz },
+                        _                 => so.Solid
+                    };
+                    node.SolidDescription = so.Solid.ToString();
+                }
+            }
+        }
+
         // removeObject('name') → remove matching node
         foreach (Match m in Regex.Matches(script, @"viewer\.removeObject\s*\(\s*['""]([^'""]+)['""]"))
         {
