@@ -67,8 +67,11 @@
 - [x] 64 — Double-click rename in feature tree           → F2 rename already wired; dbl-click opens param edit
 
 # Backlog (out of current cycle)
-- (empty — promote items from AUDIT.md as auditor finds them)
+# Note: unqueued task files 53-hole-csg-geometry and 54-boolean-csg-subtract-intersect
+#       describe work that is already done in code (SolidMesher.cs + CadProjectStore.cs);
+#       no queue entries needed for them.
+- [ ] 66 — Sketch solver and definition behavior             → TASKS/66-sketch-solver-definition-behavior.md   ← NEXT
 - [ ] 65 — CAD command dialog standardization                 → TASKS/65-cad-command-dialog-standardization.md
-- [ ] 66 — Sketch solver and definition behavior             → TASKS/66-sketch-solver-definition-behavior.md
 - [ ] 67 — Shell consistency pass (toolbar + viewport nav)   → TASKS/67-shell-consistency-toolbar-viewport.md
 - [ ] 68 — Copilot structured CAD assistance                 → TASKS/68-copilot-structured-cad-assistance.md
+- [ ] 69 — Polyline sketch tool                              → TASKS/55-polyline-sketch-tool.md
