@@ -566,6 +566,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             RaisePropertyChanged(nameof(IsOffsetSketchToolSelected));
             RaisePropertyChanged(nameof(IsFillet2dSketchToolSelected));
             RaisePropertyChanged(nameof(IsTransformSketchToolSelected));
+            RaisePropertyChanged(nameof(IsRotateSketchToolSelected));
             RaisePropertyChanged(nameof(IsAngleDimensionToolSelected));
             RaisePropertyChanged(nameof(IsLinearDimensionToolSelected));
             RaisePropertyChanged(nameof(IsRadiusDimensionToolSelected));
@@ -600,6 +601,8 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public bool IsFillet2dSketchToolSelected => string.Equals(SelectedSketchTool, "Fillet2d", StringComparison.OrdinalIgnoreCase);
 
     public bool IsTransformSketchToolSelected => string.Equals(SelectedSketchTool, "Transform", StringComparison.OrdinalIgnoreCase);
+
+    public bool IsRotateSketchToolSelected => string.Equals(SelectedSketchTool, "Rotate", StringComparison.OrdinalIgnoreCase);
 
     public bool IsAngleDimensionToolSelected => string.Equals(SelectedSketchTool, "AngleDimension", StringComparison.OrdinalIgnoreCase);
 

@@ -596,6 +596,7 @@
               <ToggleButton x:Name="SketchRotateToolButton"
                             Classes="ToolbarIconToggle"
                             ToolTip.Tip="Rotate sketch entity about a pivot point"
+                            IsChecked="{Binding IsRotateSketchToolSelected, Mode=OneWay}"
                             IsEnabled="{Binding CanSketchTools}"
                             Click="OnSketchRotateToolClick">
                 <svg:Svg Path="avares://My3DApp/Assets/Icons/rotate.svg" Width="16" Height="16" />
