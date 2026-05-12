@@ -120,6 +120,7 @@
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
     <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="LetterSpacing" Value="0.4" />
   </Style>
 
   <Style Selector="Border.ToolbarDivider">
@@ -230,6 +231,7 @@
     <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
     <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
     <Setter Property="HorizontalContentAlignment" Value="Center" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -437,11 +439,26 @@
     <Setter Property="MinWidth" Value="92" />
     <Setter Property="Height" Value="32" />
     <Setter Property="Padding" Value="14,6" />
-    <Setter Property="Background" Value="#eef4fc" />
+    <Setter Property="Background" Value="{DynamicResource Studio.AccentBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
     <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="Foreground" Value="#ffffff" />
     <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="Button.FeatureDialogButtonPrimary:pointerover">
+    <Setter Property="Background" Value="#1280d6" />
+    <Setter Property="BorderBrush" Value="#1280d6" />
+  </Style>
+
+  <Style Selector="Button.FeatureDialogButtonPrimary:pressed">
+    <Setter Property="Background" Value="#0068b8" />
+    <Setter Property="BorderBrush" Value="#0068b8" />
+  </Style>
+
+  <Style Selector="Button.FeatureDialogButtonSecondary:pointerover">
+    <Setter Property="Background" Value="#edf3fb" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
   </Style>
 
   <Style Selector="Button.FeatureDialogButtonSecondary">
@@ -496,6 +513,7 @@
     <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
   </Style>
 
   <Style Selector="ToggleButton.ToolbarIconToggle:pointerover">
@@ -625,6 +643,7 @@
     <Setter Property="Background" Value="#f9fbfe" />
     <Setter Property="BorderBrush" Value="#d9e1ec" />
     <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="14" />
     <Setter Property="Padding" Value="10" />
   </Style>
 
@@ -1236,6 +1255,7 @@
     <Setter Property="Background" Value="{DynamicResource Studio.PanelInsetBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
     <Setter Property="Padding" Value="10,8" />
     <Setter Property="Margin" Value="0,6,0,0" />
   </Style>
@@ -1281,6 +1301,7 @@
     <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="7" />
     <Setter Property="HorizontalContentAlignment" Value="Center" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
   </Style>
