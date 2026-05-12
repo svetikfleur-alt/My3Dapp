@@ -455,6 +455,81 @@
     <Setter Property="FontWeight" Value="SemiBold" />
   </Style>
 
+  <Style Selector="Button.FeatureDialogConfirmBtn">
+    <Setter Property="Width" Value="26" />
+    <Setter Property="Height" Value="26" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Background" Value="#22c55e" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="CornerRadius" Value="13" />
+    <Setter Property="Content" Value="✓" />
+  </Style>
+  <Style Selector="Button.FeatureDialogConfirmBtn:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#16a34a" />
+  </Style>
+  <Style Selector="Button.FeatureDialogConfirmBtn:disabled /template/ ContentPresenter">
+    <Setter Property="Background" Value="#9ca3af" />
+    <Setter Property="Opacity" Value="0.6" />
+  </Style>
+
+  <Style Selector="Button.FeatureDialogCancelBtn">
+    <Setter Property="Width" Value="26" />
+    <Setter Property="Height" Value="26" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Background" Value="#ef4444" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="CornerRadius" Value="13" />
+    <Setter Property="Content" Value="✕" />
+  </Style>
+  <Style Selector="Button.FeatureDialogCancelBtn:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#dc2626" />
+  </Style>
+
+  <Style Selector="Border.FeatureDialogTabBar">
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelInsetBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="2" />
+  </Style>
+
+  <Style Selector="ToggleButton.FeatureDialogOperationTab">
+    <Setter Property="Height" Value="24" />
+    <Setter Property="Padding" Value="10,0" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+    <Setter Property="CornerRadius" Value="8" />
+  </Style>
+  <Style Selector="ToggleButton.FeatureDialogOperationTab:checked">
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+  <Style Selector="ToggleButton.FeatureDialogOperationTab:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+  </Style>
+
+  <Style Selector="Border.FeatureDialogSelectionField">
+    <Setter Property="Background" Value="#eaf3fd" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1.5" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="10,7" />
+  </Style>
+
+  <Style Selector="TextBlock.FeatureDialogSelectionText">
+    <Setter Property="FontSize" Value="11.5" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+  </Style>
+
   <Style Selector="Button.ToolbarMiniButton">
     <Setter Property="Height" Value="30" />
     <Setter Property="MinWidth" Value="56" />

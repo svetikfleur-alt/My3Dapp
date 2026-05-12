@@ -1,130 +1,95 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="My3DApp.AvaloniaApp.Dialogs.SweepFeatureDialog"
-        Width="460"
-        Height="430"
-        MinWidth="430"
-        MinHeight="410"
+        Width="400"
+        Height="330"
+        MinWidth="370"
+        MinHeight="300"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         Classes="FeatureDialogWindow"
         Title="Sweep">
   <Border Classes="FeatureDialogPanel" Margin="0">
-    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
-      <Grid ColumnDefinitions="*,Auto">
-        <StackPanel Spacing="4">
-          <TextBlock Classes="FeatureDialogTitle"
-                     Text="Sweep" />
-          <TextBlock Classes="FeatureDialogSubtitle"
-                     TextWrapping="Wrap"
-                     Text="Create a solid by sweeping a closed sketch profile along the sketch plane normal." />
-        </StackPanel>
-        <Border Grid.Column="1"
-                Classes="FeatureDialogTag"
-                VerticalAlignment="Top">
-          <TextBlock Text="FEATURE"
-                     Classes="FeatureDialogTagText" />
-        </Border>
+    <StackPanel Margin="16,14,16,16" Spacing="0">
+
+      <!-- Header: title + confirm/cancel -->
+      <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
+        <TextBlock Classes="FeatureDialogTitle"
+                   Text="Sweep"
+                   VerticalAlignment="Center" />
+        <Button Grid.Column="1"
+                Classes="FeatureDialogConfirmBtn"
+                IsDefault="True"
+                Click="OnConfirmClick"
+                ToolTip.Tip="Confirm (Enter)" />
+        <Button Grid.Column="2"
+                Margin="6,0,0,0"
+                Classes="FeatureDialogCancelBtn"
+                IsCancel="True"
+                Click="OnCancelClick"
+                ToolTip.Tip="Cancel (Esc)" />
       </Grid>
 
-      <StackPanel Grid.Row="2"
-                  Margin="0,16,0,16"
-                  Spacing="12">
-        <Border Classes="FeatureDialogSectionCard">
-          <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="96,*">
-            <TextBlock Text="Profile"
-                       Classes="FeatureDialogFieldLabel" />
-            <TextBlock Grid.Column="1"
-                       x:Name="ProfileValueTextBlock"
-                       Classes="FeatureDialogValueText"
-                       TextWrapping="Wrap"
-                       Text="Closed sketch profile" />
-            <TextBlock Grid.Row="1"
-                       Text="Plane"
-                       Margin="0,10,0,0"
-                       Classes="FeatureDialogFieldLabel" />
-            <TextBlock Grid.Row="1"
-                       Grid.Column="1"
-                       x:Name="PlaneValueTextBlock"
-                       Margin="0,10,0,0"
-                       Classes="FeatureDialogValueText"
-                       Text="Sketch plane" />
-            <TextBlock Grid.Row="2"
-                       Text="Recipe"
-                       Margin="0,10,0,0"
-                       Classes="FeatureDialogFieldLabel" />
-            <TextBlock Grid.Row="2"
-                       Grid.Column="1"
-                       Margin="0,10,0,0"
-                       TextWrapping="Wrap"
-                       Classes="FeatureDialogHelpText"
-                       Text="sweep(profile, distance, twist)" />
-          </Grid>
-        </Border>
+      <!-- Profile selection field -->
+      <TextBlock Classes="FeatureDialogFieldLabel"
+                 Text="Sketch profile to sweep"
+                 Margin="0,0,0,4" />
+      <Border Classes="FeatureDialogSelectionField" Margin="0,0,0,10">
+        <TextBlock x:Name="ProfileValueTextBlock"
+                   Classes="FeatureDialogSelectionText"
+                   Text="Select a closed sketch profile" />
+      </Border>
 
-        <Border Classes="FeatureDialogSectionCard">
-          <Grid ColumnDefinitions="*,88" RowDefinitions="Auto,Auto,Auto,Auto">
-            <TextBlock Text="Distance"
-                       Classes="FeatureDialogFieldLabel" />
-            <NumericUpDown x:Name="DistanceInput"
-                           Classes="FeatureDialogInput"
-                           Grid.Row="1"
-                           Width="160"
-                           HorizontalAlignment="Left"
-                           Margin="0,8,0,0"
-                           Increment="1"
-                           Minimum="0.1"
-                           Maximum="10000"
-                           FormatString="0.###" />
-            <Border Grid.Column="1"
-                    Grid.Row="1"
-                    Classes="FeatureDialogUnitChip"
-                    Margin="8,8,0,0"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Top">
-              <TextBlock HorizontalAlignment="Center"
-                         Text="mm" />
-            </Border>
+      <!-- Parameters -->
+      <Border Classes="FeatureDialogSectionCard">
+        <Grid ColumnDefinitions="*,72" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+          <TextBlock Text="Distance"
+                     Classes="FeatureDialogFieldLabel" />
+          <NumericUpDown x:Name="DistanceInput"
+                         Classes="FeatureDialogInput"
+                         Grid.Row="1"
+                         Width="150"
+                         HorizontalAlignment="Left"
+                         Margin="0,6,0,0"
+                         Increment="1"
+                         Minimum="0.1"
+                         Maximum="10000"
+                         FormatString="0.###" />
+          <Border Grid.Column="1"
+                  Grid.Row="1"
+                  Classes="FeatureDialogUnitChip"
+                  Margin="8,6,0,0"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Top">
+            <TextBlock HorizontalAlignment="Center" Text="mm" />
+          </Border>
 
-            <TextBlock Grid.Row="2"
-                       Text="Twist"
-                       Margin="0,12,0,0"
-                       Classes="FeatureDialogFieldLabel" />
-            <NumericUpDown x:Name="TwistInput"
-                           Classes="FeatureDialogInput"
-                           Grid.Row="3"
-                           Width="160"
-                           HorizontalAlignment="Left"
-                           Margin="0,8,0,0"
-                           Increment="5"
-                           Minimum="-360"
-                           Maximum="360"
-                           FormatString="0.###" />
-            <Border Grid.Column="1"
-                    Grid.Row="3"
-                    Classes="FeatureDialogUnitChip"
-                    Margin="8,8,0,0"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Top">
-              <TextBlock HorizontalAlignment="Center"
-                         Text="deg" />
-            </Border>
-          </Grid>
-        </Border>
-      </StackPanel>
+          <TextBlock Grid.Row="2"
+                     Text="Twist"
+                     Classes="FeatureDialogFieldLabel"
+                     Margin="0,12,0,0" />
+          <NumericUpDown x:Name="TwistInput"
+                         Classes="FeatureDialogInput"
+                         Grid.Row="3"
+                         Width="150"
+                         HorizontalAlignment="Left"
+                         Margin="0,6,0,0"
+                         Increment="5"
+                         Minimum="-360"
+                         Maximum="360"
+                         FormatString="0.###" />
+          <Border Grid.Column="1"
+                  Grid.Row="3"
+                  Classes="FeatureDialogUnitChip"
+                  Margin="8,6,0,0"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Top">
+            <TextBlock HorizontalAlignment="Center" Text="deg" />
+          </Border>
+        </Grid>
+      </Border>
 
-      <StackPanel Grid.Row="3"
-                  Orientation="Horizontal"
-                  HorizontalAlignment="Right"
-                  Spacing="8">
-        <Button Content="Cancel"
-                Classes="FeatureDialogButtonSecondary"
-                Click="OnCancelClick" />
-        <Button Content="Apply"
-                Classes="FeatureDialogButtonPrimary"
-                Click="OnConfirmClick" />
-      </StackPanel>
-    </Grid>
+    </StackPanel>
   </Border>
 </Window>
