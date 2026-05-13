@@ -1,19 +1,26 @@
 Done:
-- HoleFeatureDialog.axaml: Diameter NumericUpDown (min 0.01), CenterX/Y offsets, Through All/Blind radio, DepthValue (disabled when Through All), Cancel/OK
-- HoleFeatureDialog.axaml.cs: validation (diameter>0, depthValue>0 when blind), Close(result), OnDepthKindChanged toggles DepthValueInput.IsEnabled
-- Engine/CadModel.cs: HoleFeature, HoleDepthKind, CadFeatureKind.Hole, CadCommandActionKind.HoleSelectedBody (pre-existing)
-- Engine/CadProjectStore.cs: HandleHoleSelectedBody (diameter/centerX/Y/depthKind/depthValue; CSG subtract stubbed with Trace) (pre-existing)
-- StudioWorkspaceController.cs: FindHoleParams, EditHoleFeature, CadViewportCommandKind.HoleBody wired (pre-existing)
-- StudioShellViewModel.cs: HoleSelectedBodyAsync, GetHoleParams, UpdateHoleAsync; BuildFeatureSummary HoleFeature case (pre-existing)
-- MainWindow.axaml: Hole button (CanEdgeTools, ToolTip "Hole (H)", Click="OnHoleClick") after CP button
-- MainWindow.axaml.cs: OnHoleClick handler (opens dialog, calls HoleSelectedBodyAsync); H key shortcut (3D mode only, CanEdgeTools guard); OnFeatureTreeDoubleTapped updated to handle HoleFeature (checks GetHoleParams first, then CP fallback)
+- BooleanBodyDialog.axaml: converted from raw brush/border bindings to shared FeatureDialog style classes
+  (FeatureDialogSectionCard, FeatureDialogFieldLabel, FeatureDialogInput, FeatureDialogCheckBox);
+  added FEATURE tag badge in header; added ShowInTaskbar="False"; renamed OK → Apply
+- ExtrudeFeatureDialog.axaml: removed Recipe row (Profile/Plane/Status only); Height 470→430; RecipeTextBlock gone
+- ExtrudeFeatureDialog.axaml.cs: removed RecipeTextBlock.Text assignments and BuildRecipeText() method
+- RevolveFeatureDialog.axaml: removed Recipe row; Height 410→370; RecipeTextBlock gone
+- RevolveFeatureDialog.axaml.cs: removed RecipeTextBlock.Text assignment and BuildRecipeText() method
+- SweepFeatureDialog.axaml: removed Recipe row; Height 430→395
+- LoftFeatureDialog.axaml: removed Recipe row; Height 440→405
+- MirrorFeatureDialog.axaml: removed Recipe row; Height 340→300
 
 Not done:
-- Live viewport preview of cylinder during dialog open (no dialog→viewport bridge; same status as other ops)
-- Face-level hit-test (curved face rejection requires face-level picking not yet in codebase; dialog uses "first face of body" fallback per spec notes)
+- dotnet not installed in agent environment; build could not be run locally.
+  All changes are AXAML style-class substitutions and dead code removal with no
+  structural logic changes — backend bindings are untouched.
 
 Broken:
 - none expected
 
 Next:
-- Verifier: run build (0 errors expected); confirm Hole button appears active when a body exists; open dialog, Diameter=10, Through All → OK → tree shows "Hole (⌀10 × Through)"; blind mode → DepthValue field enables; double-click node → dialog re-opens; H shortcut only in 3D mode
+- Verifier: run dotnet build; confirm 0 errors 0 warnings
+- Open BooleanBodyDialog → should show FEATURE badge, consistent field labels, radio buttons styled, Apply button
+- Open ExtrudeFeatureDialog → profile card should show Profile/Plane/Status only (no Recipe row)
+- Same check for Revolve, Sweep, Loft, Mirror dialogs
+- Task 66 (sketch solver behavior pass) is next in queue

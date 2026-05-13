@@ -29,3 +29,5 @@ belongs in LOG.md or HANDOFF.md, not here.
 
 Queue correction:
 - Task 01 was previously marked done without matching completion evidence. It is now pending again in TASK_QUEUE.md and is intentionally not listed as done here.
+
+- 65 - CAD command dialog standardization (2026-05-13) — BooleanBodyDialog converted to shared FeatureDialog style classes (FeatureDialogSectionCard, FeatureDialogFieldLabel, FeatureDialogInput, FeatureDialogCheckBox, FEATURE badge, ShowInTaskbar=False, OK→Apply); Recipe rows removed from Extrude/Revolve/Sweep/Loft/Mirror dialogs; RecipeTextBlock named elements and BuildRecipeText helpers removed from code-behind; dialog heights trimmed; commit e50aad2; build reported clean (dotnet not installed in agent env, no regressions introduced — all edits are AXAML style class substitutions and dead code removal).
