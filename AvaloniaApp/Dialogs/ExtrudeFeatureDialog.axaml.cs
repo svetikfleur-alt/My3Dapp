@@ -33,8 +33,6 @@ public sealed partial class ExtrudeFeatureDialog : AWindow
         SelectionStatusTextBlock.Text = ProfileValueTextBlock.Text.Contains("Select a closed", StringComparison.OrdinalIgnoreCase)
             ? "No valid profile selected."
             : "Closed profile selected.";
-        RecipeTextBlock.Text = BuildRecipeText(CadExtrudeOperation.NewBody, initialDistance, false);
-
         // region: task 31 start
         foreach (var (id, name) in _bodies)
         {
@@ -121,7 +119,6 @@ public sealed partial class ExtrudeFeatureDialog : AWindow
             CadExtrudeOperation.Symmetric => "Extrudes equally on both sides of the sketch plane.",
             _ => "Creates a separate solid body."
         };
-        RecipeTextBlock.Text = BuildRecipeText(op, (double)(DistanceInput.Value ?? 0m), ReverseDirectionCheckBox.IsChecked == true);
         ReverseDirectionCheckBox.IsEnabled = !symmetric;
         if (symmetric)
         {
@@ -163,21 +160,6 @@ public sealed partial class ExtrudeFeatureDialog : AWindow
         return _bodies.Count > 0 ? _bodies[0].Id : Guid.Empty;
     }
 
-    private static string BuildRecipeText(CadExtrudeOperation operation, double distance, bool reverse)
-    {
-        var opText = operation switch
-        {
-            CadExtrudeOperation.Join => "join",
-            CadExtrudeOperation.Cut => "cut",
-            CadExtrudeOperation.Symmetric => "symmetric",
-            _ => "newBody"
-        };
-        var directionText = operation == CadExtrudeOperation.Symmetric
-            ? "bothDirections"
-            : reverse ? "reverse" : "forward";
-        var depthText = Math.Abs(distance).ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
-        return $"extrude(profile, depth={depthText} mm, direction={directionText}, operation={opText})";
-    }
 }
 
 public sealed record ExtrudeFeatureDialogResult(

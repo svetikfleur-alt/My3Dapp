@@ -25,7 +25,6 @@ public sealed partial class RevolveFeatureDialog : AWindow
         PlaneValueTextBlock.Text = string.IsNullOrWhiteSpace(planeSummary) ? "Sketch plane" : planeSummary;
         AngleInput.Value = (decimal)initialAngle;
         AxisComboBox.SelectedIndex = string.Equals(initialAxis, "x", StringComparison.OrdinalIgnoreCase) ? 0 : 1;
-        RecipeTextBlock.Text = BuildRecipeText(initialAngle, initialAxis);
     }
 
     public double ConfirmedAngle { get; private set; }
@@ -51,12 +50,6 @@ public sealed partial class RevolveFeatureDialog : AWindow
         Close(new RevolveFeatureDialogResult(ConfirmedAngle, ConfirmedAxis));
     }
 
-    private static string BuildRecipeText(double angle, string axis)
-    {
-        var axisText = string.Equals(axis, "x", StringComparison.OrdinalIgnoreCase) ? "sketchX" : "sketchY";
-        var angleText = angle.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
-        return $"revolve(profile, axis={axisText}, angle={angleText} deg)";
-    }
 }
 
 public sealed record RevolveFeatureDialogResult(double Angle, string Axis);
