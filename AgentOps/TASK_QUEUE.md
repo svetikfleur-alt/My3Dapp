@@ -67,7 +67,7 @@
 - [x] 64 — Double-click rename in feature tree           → F2 rename already wired; dbl-click opens param edit
 
 # Backlog (out of current cycle)
-- (empty — promote items from AUDIT.md as auditor finds them)
+- [ ] 69 — Sketch preview rendering diagnostic & fix (Point/Line/Rect) → TASKS/69-sketch-preview-rendering-fix.md
 - [ ] 65 — CAD command dialog standardization                 → TASKS/65-cad-command-dialog-standardization.md
 - [ ] 66 — Sketch solver and definition behavior             → TASKS/66-sketch-solver-definition-behavior.md
 - [ ] 67 — Shell consistency pass (toolbar + viewport nav)   → TASKS/67-shell-consistency-toolbar-viewport.md
