@@ -337,7 +337,7 @@
                 <StackPanel Orientation="Horizontal" Spacing="3">
                   <Button Classes="ToolbarActionButton"
                           IsEnabled="{Binding CanProfileTools}"
-                          ToolTip.Tip="Extrude selected profile"
+                          ToolTip.Tip="Extrude selected profile (E)"
                           Click="OnExtrudeClick">
                     <svg:Svg Path="avares://My3DApp/Assets/Icons/extrude.svg" Width="16" Height="16" />
                   </Button>
@@ -349,7 +349,7 @@
                   </Button>
                   <Button Classes="ToolbarActionButton"
                           IsEnabled="{Binding CanProfileTools}"
-                          ToolTip.Tip="Sweep selected profile"
+                          ToolTip.Tip="Sweep — extrude profile along normal with optional twist"
                           Click="OnSweepClick">
                     <svg:Svg Path="avares://My3DApp/Assets/Icons/extrude.svg" Width="16" Height="16" />
                   </Button>

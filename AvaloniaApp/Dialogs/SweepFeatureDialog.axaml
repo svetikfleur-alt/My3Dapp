@@ -18,7 +18,7 @@
                      Text="Sweep" />
           <TextBlock Classes="FeatureDialogSubtitle"
                      TextWrapping="Wrap"
-                     Text="Create a solid by sweeping a closed sketch profile along the sketch plane normal." />
+                     Text="Extrude a closed sketch profile along the sketch plane normal. Optional twist rotates the profile as it travels." />
         </StackPanel>
         <Border Grid.Column="1"
                 Classes="FeatureDialogTag"

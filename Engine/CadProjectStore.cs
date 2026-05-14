@@ -79,6 +79,9 @@ public sealed class CadProjectStore
                 CadCommandActionKind.DeleteSketchConstraint => HandleDeleteSketchConstraint(action),
                 CadCommandActionKind.SetBodyColor => HandleSetBodyColor(action),
                 CadCommandActionKind.ToggleBodyVisibility => HandleToggleBodyVisibility(action),
+                CadCommandActionKind.CreateDatumPlane => HandleCreateDatumPlane(action),
+                CadCommandActionKind.ToggleDatumPlaneVisibility => HandleToggleDatumPlaneVisibility(action),
+                CadCommandActionKind.DeleteDatumPlane => HandleDeleteDatumPlane(action),
                 _ => Failure($"Unsupported CAD action: {action.Kind}.")
             };
         }
@@ -1258,6 +1261,59 @@ public sealed class CadProjectStore
         return Success(body.Visible
             ? $"Showed '{body.Name}'."
             : $"Hidden '{body.Name}'.", true);
+    }
+
+    private CadActionResult HandleCreateDatumPlane(CadCommandAction action)
+    {
+        if (action.PlaneKind is null)
+            return Failure("Datum plane requires a source plane kind.");
+
+        var offset = action.Amount;
+        var name = string.IsNullOrWhiteSpace(action.EntityName)
+            ? $"Datum{Project.Scene.ReferencePlanes.Count(p => p.Kind == CadReferencePlaneKind.Datum) + 1}"
+            : action.EntityName.Trim();
+
+        var plane = new CadReferencePlane
+        {
+            Name = name,
+            Kind = CadReferencePlaneKind.Datum,
+            DatumSourceKind = action.PlaneKind.Value,
+            DatumOffsetDistance = offset,
+            Visible = true
+        };
+
+        Project.Scene.ReferencePlanes.Add(plane);
+        Project.Selection = new CadSelection(CadEntityKind.ReferencePlane, plane.Id, plane.Name);
+        return Success($"Created datum plane '{plane.Name}' offset {offset:0.###} mm from {action.PlaneKind.Value}.", true);
+    }
+
+    private CadActionResult HandleToggleDatumPlaneVisibility(CadCommandAction action)
+    {
+        if (action.EntityId == Guid.Empty)
+            return Failure("Datum plane ID required.");
+
+        var plane = Project.Scene.ReferencePlanes.FirstOrDefault(p => p.Id == action.EntityId);
+        if (plane is null)
+            return Failure("Datum plane not found.");
+
+        plane.Visible = !plane.Visible;
+        return Success(plane.Visible ? $"Showed '{plane.Name}'." : $"Hidden '{plane.Name}'.", true);
+    }
+
+    private CadActionResult HandleDeleteDatumPlane(CadCommandAction action)
+    {
+        if (action.EntityId == Guid.Empty)
+            return Failure("Datum plane ID required.");
+
+        var plane = Project.Scene.ReferencePlanes.FirstOrDefault(p => p.Id == action.EntityId
+            && p.Kind == CadReferencePlaneKind.Datum);
+        if (plane is null)
+            return Failure("Datum plane not found or cannot delete a reference plane.");
+
+        Project.Scene.ReferencePlanes.Remove(plane);
+        if (Project.Selection.EntityId == plane.Id)
+            Project.Selection = CadSelection.None;
+        return Success($"Deleted datum plane '{plane.Name}'.", true);
     }
 
     private CadActionResult HandleDuplicateSelectedBody(CadCommandAction action)
