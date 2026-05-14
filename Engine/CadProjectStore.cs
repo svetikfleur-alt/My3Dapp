@@ -3325,13 +3325,59 @@ public sealed class CadProjectStore
                 .Sum(entity => SketchEntityDof(entity!)),
             CadSketchConstraintKind.Horizontal => 1,
             CadSketchConstraintKind.Vertical => 1,
-            CadSketchConstraintKind.EqualRadius => 1,
-            CadSketchConstraintKind.EqualLength => 1,
+            CadSketchConstraintKind.EqualRadius => constraint.EntityIds.Count >= 2 ? 1 : 0,
+            CadSketchConstraintKind.EqualLength => constraint.EntityIds.Count >= 2 ? 1 : 0,
             CadSketchConstraintKind.Tangent => 1,
             CadSketchConstraintKind.Parallel => 1,
             CadSketchConstraintKind.Perpendicular => 1,
             _ => 0
         };
+    }
+
+    public static IReadOnlySet<Guid> ComputeConstrainedEntityIds(CadSketchSession session)
+    {
+        var dofMap = session.DraftEntities.ToDictionary(e => e.Id, e => SketchEntityDof(e));
+
+        foreach (var constraint in session.ManualConstraints)
+        {
+            var ids = constraint.EntityIds;
+            switch (constraint.Kind)
+            {
+                case CadSketchConstraintKind.Fixed:
+                    foreach (var id in ids.Where(dofMap.ContainsKey))
+                        dofMap[id] = 0;
+                    break;
+
+                case CadSketchConstraintKind.Horizontal:
+                case CadSketchConstraintKind.Vertical:
+                    if (ids.Count >= 1 && dofMap.ContainsKey(ids[0]))
+                        dofMap[ids[0]] = Math.Max(0, dofMap[ids[0]] - 1);
+                    break;
+
+                case CadSketchConstraintKind.Coincident:
+                case CadSketchConstraintKind.Concentric:
+                    if (ids.Count >= 2 && dofMap.ContainsKey(ids[1]))
+                        dofMap[ids[1]] = Math.Max(0, dofMap[ids[1]] - 2);
+                    break;
+
+                case CadSketchConstraintKind.EqualLength:
+                case CadSketchConstraintKind.EqualRadius:
+                case CadSketchConstraintKind.Parallel:
+                case CadSketchConstraintKind.Perpendicular:
+                case CadSketchConstraintKind.Tangent:
+                    if (ids.Count >= 2 && dofMap.ContainsKey(ids[1]))
+                        dofMap[ids[1]] = Math.Max(0, dofMap[ids[1]] - 1);
+                    break;
+            }
+        }
+
+        foreach (var dimension in session.ManualDimensions.Where(d => !d.IsDriven))
+        {
+            if (dimension.EntityIds.Count > 0 && dofMap.ContainsKey(dimension.EntityIds[0]))
+                dofMap[dimension.EntityIds[0]] = Math.Max(0, dofMap[dimension.EntityIds[0]] - 1);
+        }
+
+        return dofMap.Where(kvp => kvp.Value <= 0).Select(kvp => kvp.Key).ToHashSet();
     }
 
     private static (double X, double Y) ReflectPoint(double px, double py, double ax, double ay, double dNormX, double dNormY)
@@ -3744,7 +3790,7 @@ public sealed class CadProjectStore
         session.ManualConstraints.Add(constraint);
     }
 
-    private static void SolveSketchSession(CadSketchSession session, int iterations = 4)
+    private static void SolveSketchSession(CadSketchSession session, int iterations = 8)
     {
         if (session.DraftEntities.Count == 0)
         {

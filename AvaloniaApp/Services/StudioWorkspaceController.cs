@@ -764,7 +764,7 @@ public sealed class StudioWorkspaceController
             {
                 var probe = BuildSketchDefinitionProbe(sketch);
                 var displayConstraints = MergeDisplayConstraints(sketch.GetBasicConstraints(), sketch.Constraints);
-                var constrainedIds = BuildConstrainedEntityIds(displayConstraints, sketch.Dimensions);
+                var constrainedIds = BuildConstrainedEntityIds(sketch.Entities, displayConstraints, sketch.Dimensions);
                 var curves = BuildSketchCurves(sketch.PlaneName, sketch.Entities, constrainedIds);
                 if (curves.Count == 0)
                 {
@@ -791,7 +791,7 @@ public sealed class StudioWorkspaceController
         if (project.ActiveSketchSession is { } session)
         {
             var draftConstraints = MergeDisplayConstraints(new SketchFeature { Entities = session.DraftEntities.ToList() }.GetBasicConstraints(), session.ManualConstraints);
-            var draftConstrainedIds = BuildConstrainedEntityIds(draftConstraints, session.ManualDimensions);
+            var draftConstrainedIds = BuildConstrainedEntityIds(session.DraftEntities, draftConstraints, session.ManualDimensions);
             var curves = BuildSketchCurves(session.PlaneName, session.DraftEntities, draftConstrainedIds);
             if (curves.Count > 0)
             {
@@ -885,32 +885,17 @@ public sealed class StudioWorkspaceController
     }
 
     private static IReadOnlySet<Guid> BuildConstrainedEntityIds(
+        IReadOnlyList<CadSketchEntity> entities,
         IReadOnlyList<CadSketchConstraint> constraints,
         IReadOnlyList<CadSketchDimension> dimensions)
     {
-        var ids = new HashSet<Guid>();
-        foreach (var constraint in constraints)
+        var session = new CadSketchSession
         {
-            foreach (var id in constraint.EntityIds)
-            {
-                ids.Add(id);
-            }
-        }
-
-        foreach (var dimension in dimensions)
-        {
-            if (dimension.IsDriven)
-            {
-                continue;
-            }
-
-            foreach (var id in dimension.EntityIds)
-            {
-                ids.Add(id);
-            }
-        }
-
-        return ids;
+            DraftEntities = entities.ToList(),
+            ManualConstraints = constraints.ToList(),
+            ManualDimensions = dimensions.ToList()
+        };
+        return CadProjectStore.ComputeConstrainedEntityIds(session);
     }
 
     private static IReadOnlyList<CadSketchConstraint> MergeDisplayConstraints(
