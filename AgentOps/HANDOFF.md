@@ -1,19 +1,25 @@
 Done:
-- HoleFeatureDialog.axaml: Diameter NumericUpDown (min 0.01), CenterX/Y offsets, Through All/Blind radio, DepthValue (disabled when Through All), Cancel/OK
-- HoleFeatureDialog.axaml.cs: validation (diameter>0, depthValue>0 when blind), Close(result), OnDepthKindChanged toggles DepthValueInput.IsEnabled
-- Engine/CadModel.cs: HoleFeature, HoleDepthKind, CadFeatureKind.Hole, CadCommandActionKind.HoleSelectedBody (pre-existing)
-- Engine/CadProjectStore.cs: HandleHoleSelectedBody (diameter/centerX/Y/depthKind/depthValue; CSG subtract stubbed with Trace) (pre-existing)
-- StudioWorkspaceController.cs: FindHoleParams, EditHoleFeature, CadViewportCommandKind.HoleBody wired (pre-existing)
-- StudioShellViewModel.cs: HoleSelectedBodyAsync, GetHoleParams, UpdateHoleAsync; BuildFeatureSummary HoleFeature case (pre-existing)
-- MainWindow.axaml: Hole button (CanEdgeTools, ToolTip "Hole (H)", Click="OnHoleClick") after CP button
-- MainWindow.axaml.cs: OnHoleClick handler (opens dialog, calls HoleSelectedBodyAsync); H key shortcut (3D mode only, CanEdgeTools guard); OnFeatureTreeDoubleTapped updated to handle HoleFeature (checks GetHoleParams first, then CP fallback)
+- Engine/CadProjectStore.cs: Fixed SketchConstraintDofCost — EqualRadius and EqualLength with
+  a single entity now cost 0 DOF (previously 1), removing false DOF reduction from inferred
+  self-constraints on circles and arcs.
+- Engine/CadProjectStore.cs: Added public ComputeConstrainedEntityIds(CadSketchSession) —
+  per-entity DOF tracker using a dofMap; only entities with remaining DOF == 0 are returned
+  as "constrained" (dark colored). Each constraint kind allocates DOF cost to the correct
+  driven entity.
+- AvaloniaApp/Services/StudioWorkspaceController.cs: Updated BuildConstrainedEntityIds to
+  accept entities and delegate to CadProjectStore.ComputeConstrainedEntityIds. Now entities
+  only color dark when truly fully constrained, not just because they appear in any constraint.
+- Engine/CadProjectStore.cs: Increased solver iterations from 4 to 8 for better convergence
+  on multi-constraint chains.
 
 Not done:
-- Live viewport preview of cylinder during dialog open (no dialog→viewport bridge; same status as other ops)
-- Face-level hit-test (curved face rejection requires face-level picking not yet in codebase; dialog uses "first face of body" fallback per spec notes)
-
-Broken:
-- none expected
+- Build not verified (dotnet not installed in agent environment). Logic changes only.
+- No interactive drag-to-constrain; editing is still via parameter dialogs.
 
 Next:
-- Verifier: run build (0 errors expected); confirm Hole button appears active when a body exists; open dialog, Diameter=10, Through All → OK → tree shows "Hole (⌀10 × Through)"; blind mode → DepthValue field enables; double-click node → dialog re-opens; H shortcut only in 3D mode
+- Verifier: dotnet build → 0 errors expected.
+- Check: place a circle in sketch — should remain blue until Fixed or fully dimensioned.
+- Check: apply horizontal constraint to a line — line should remain blue (only 1 of 4 DOF removed).
+- Check: apply Fixed constraint to a circle — circle should turn dark (fully constrained).
+- Check: tree tooltip shows "Sketch fully defined." only when DOF == 0.
+- Remaining backlog: tasks 65, 67, 68.

@@ -1,3 +1,4 @@
+done: 66 — Sketch solver + definition behavior (2026-05-14) — SketchConstraintDofCost fixed for single-entity EqualRadius/EqualLength (0 cost not 1); ComputeConstrainedEntityIds added for per-entity DOF; BuildConstrainedEntityIds updated to use per-entity DOF so only 0-DOF entities color dark; solver iterations 4→8; commit 7dfacd9; build not verified (dotnet unavailable in env)
 done: 30 — Export panel STL/OBJ (2026-04-28) — ExportDialog, OnExportClick, Ctrl+E, ExportFormat ViewModel, WorkspaceController export methods, status-bar confirm; build 0 errors 0 warnings; commit 1f97318
 done: 29 — Hole feature (2026-04-27) — HoleFeature, HoleDepthKind, HoleSelectedBody; dialog (diameter/offset/depth); toolbar ⌀ button; H shortcut 3D-only; double-click edit; CSG stub with HANDOFF; 0 errors 0 warnings
 done: 28 — Circular Pattern feature (2026-04-27) — CircularPatternDialog, enum+wiring, ViewModel method, toolbar CP button, LP click wired, feature tree label; 0 errors

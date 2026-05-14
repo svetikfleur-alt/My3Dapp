@@ -29,3 +29,5 @@ belongs in LOG.md or HANDOFF.md, not here.
 
 Queue correction:
 - Task 01 was previously marked done without matching completion evidence. It is now pending again in TASK_QUEUE.md and is intentionally not listed as done here.
+
+- 66 - Sketch solver and definition behavior (2026-05-14) - Fixed SketchConstraintDofCost for single-entity EqualRadius/EqualLength (cost 0 instead of 1); added ComputeConstrainedEntityIds for per-entity DOF tracking; updated BuildConstrainedEntityIds to use per-entity DOF so only truly-constrained entities color dark; increased solver iterations from 4 to 8; commit 7dfacd9.
