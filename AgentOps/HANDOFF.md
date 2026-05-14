@@ -1,19 +1,26 @@
 Done:
-- HoleFeatureDialog.axaml: Diameter NumericUpDown (min 0.01), CenterX/Y offsets, Through All/Blind radio, DepthValue (disabled when Through All), Cancel/OK
-- HoleFeatureDialog.axaml.cs: validation (diameter>0, depthValue>0 when blind), Close(result), OnDepthKindChanged toggles DepthValueInput.IsEnabled
-- Engine/CadModel.cs: HoleFeature, HoleDepthKind, CadFeatureKind.Hole, CadCommandActionKind.HoleSelectedBody (pre-existing)
-- Engine/CadProjectStore.cs: HandleHoleSelectedBody (diameter/centerX/Y/depthKind/depthValue; CSG subtract stubbed with Trace) (pre-existing)
-- StudioWorkspaceController.cs: FindHoleParams, EditHoleFeature, CadViewportCommandKind.HoleBody wired (pre-existing)
-- StudioShellViewModel.cs: HoleSelectedBodyAsync, GetHoleParams, UpdateHoleAsync; BuildFeatureSummary HoleFeature case (pre-existing)
-- MainWindow.axaml: Hole button (CanEdgeTools, ToolTip "Hole (H)", Click="OnHoleClick") after CP button
-- MainWindow.axaml.cs: OnHoleClick handler (opens dialog, calls HoleSelectedBodyAsync); H key shortcut (3D mode only, CanEdgeTools guard); OnFeatureTreeDoubleTapped updated to handle HoleFeature (checks GetHoleParams first, then CP fallback)
+- Datum plane Create/Toggle/Delete engine handlers added (CadProjectStore).
+  All three actions were silently failing — fix committed 15eb909.
+- Extrude button tooltip now shows (E) shortcut.
+- Sweep tooltip and dialog subtitle corrected (honest about twist-extrude semantics).
 
-Not done:
-- Live viewport preview of cylinder during dialog open (no dialog→viewport bridge; same status as other ops)
-- Face-level hit-test (curved face rejection requires face-level picking not yet in codebase; dialog uses "first face of body" fallback per spec notes)
+Not done (needs Builder attention):
+- Sweep is a twisted extrude, not a path-following sweep. No guide-path input.
+  Rename or rebuild as proper sweep.
+- Loft "distance" is artificial. Should derive separation from sketch plane
+  WorldOrigins. Remove Distance dialog input when planes are distinct.
+- Fillet/Chamfer/Shell silently no-op on non-ExtrudeSolid bodies. Needs better
+  UX gating or notification.
+- SketchRotateToolButton lacks IsChecked binding — will not reflect external deactivation.
+- Sweep and Loft share icons with Extrude and Revolve (no dedicated SVGs exist).
+- DatumPlaneDialog uses plain StackPanel styling, not FeatureDialogPanel pattern.
+- Hole face-level picking still uses "first face of body" fallback.
 
 Broken:
-- none expected
+- None observed in code inspection. Runtime cannot be verified — .NET not in sandbox.
 
 Next:
-- Verifier: run build (0 errors expected); confirm Hole button appears active when a body exists; open dialog, Diameter=10, Through All → OK → tree shows "Hole (⌀10 × Through)"; blind mode → DepthValue field enables; double-click node → dialog re-opens; H shortcut only in 3D mode
+- Builder: address Sweep semantics (guide-path vs. twisted extrude)
+- Builder: fix Loft distance to derive from sketch plane separation
+- Builder: add SketchRotateToolButton IsChecked binding
+- Verifier: re-test datum plane creation on Windows build to confirm fix
