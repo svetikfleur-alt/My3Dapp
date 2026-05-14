@@ -76,7 +76,8 @@
           </Border>
 
           <Button Classes="CommandButton"
-                  Content="Commands - Ctrl+K"
+                  Content="Commands"
+                  ToolTip.Tip="Open command palette (Ctrl+K)"
                   Click="OnCommandPaletteClick" />
         </StackPanel>
 

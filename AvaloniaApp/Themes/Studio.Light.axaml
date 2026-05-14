@@ -444,6 +444,16 @@
     <Setter Property="FontWeight" Value="SemiBold" />
   </Style>
 
+  <Style Selector="Button.FeatureDialogButtonPrimary:pointerover">
+    <Setter Property="Background" Value="#ddeefb" />
+    <Setter Property="BorderBrush" Value="#0a70c2" />
+    <Setter Property="Foreground" Value="#0a70c2" />
+  </Style>
+
+  <Style Selector="Button.FeatureDialogButtonPrimary:pressed">
+    <Setter Property="Background" Value="#cce5f8" />
+  </Style>
+
   <Style Selector="Button.FeatureDialogButtonSecondary">
     <Setter Property="MinWidth" Value="84" />
     <Setter Property="Height" Value="32" />
@@ -453,6 +463,15 @@
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
     <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="Button.FeatureDialogButtonSecondary:pointerover">
+    <Setter Property="Background" Value="#edf3fb" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="Button.FeatureDialogButtonSecondary:pressed">
+    <Setter Property="Background" Value="#e0ecf8" />
   </Style>
 
   <Style Selector="Button.ToolbarMiniButton">
@@ -540,6 +559,7 @@
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="CornerRadius" Value="10" />
   </Style>
 
   <Style Selector="ToggleButton.ModeToggleButton:checked">
@@ -626,6 +646,7 @@
     <Setter Property="BorderBrush" Value="#d9e1ec" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="Padding" Value="10" />
+    <Setter Property="CornerRadius" Value="14" />
   </Style>
 
   <Style Selector="TextBlock.SketchTaskTitle">
@@ -743,6 +764,7 @@
 
   <Style Selector="TreeView.FeatureTree TreeViewItem:selected /template/ Border#PART_LayoutRoot">
     <Setter Property="Background" Value="#dcecfb" />
+    <Setter Property="BorderBrush" Value="#aac8e8" />
   </Style>
 
   <Style Selector="TreeView.FeatureTree TreeViewItem:selected:focus /template/ Border#PART_LayoutRoot">
@@ -816,7 +838,7 @@
 
   <Style Selector="TextBlock.TreeNodeSecondaryText">
     <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
-    <Setter Property="FontSize" Value="9.75" />
+    <Setter Property="FontSize" Value="10" />
   </Style>
 
   <Style Selector="TextBlock.TreeNodeSecondaryText.SketchUnderdefined">
@@ -1238,6 +1260,7 @@
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="Padding" Value="10,8" />
     <Setter Property="Margin" Value="0,6,0,0" />
+    <Setter Property="CornerRadius" Value="12" />
   </Style>
 
   <Style Selector="TextBlock.SketchSidePanelHeader">
