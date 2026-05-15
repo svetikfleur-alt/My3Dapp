@@ -1193,19 +1193,26 @@
             </TabItem.Header>
             <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Margin="10,8,10,8">
 
-              <!-- Header: title + Refresh + Clear -->
-              <Grid ColumnDefinitions="*,Auto,Auto">
+              <!-- Header: title + Config toggle + Refresh + Clear -->
+              <Grid ColumnDefinitions="*,Auto,Auto,Auto">
                 <TextBlock Text="AI Copilot"
                            FontSize="12"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource Studio.TextMutedBrush}"
                            VerticalAlignment="Center" />
-                <Button Grid.Column="1"
+                <ToggleButton x:Name="ConfigToggle"
+                              Grid.Column="1"
+                              Margin="0,0,6,0"
+                              Content="⚙"
+                              Classes="AssistantLinkButton"
+                              IsChecked="False"
+                              ToolTip.Tip="API settings" />
+                <Button Grid.Column="2"
                         Margin="0,0,6,0"
                         Content="Refresh"
                         Classes="AssistantLinkButton"
                         Click="OnAssistantRefreshClick" />
-                <Button Grid.Column="2"
+                <Button Grid.Column="3"
                         Content="Clear"
                         Classes="AssistantLinkButton"
                         Click="OnAssistantClearClick" />
@@ -1232,10 +1239,11 @@
                 </ListBox.ItemTemplate>
               </ListBox>
 
-              <!-- Row 2: Provider / model / key config -->
+              <!-- Row 2: Provider / model / key config (collapsed by default) -->
               <Border Grid.Row="2"
                       Classes="AssistantContextCard"
-                      Margin="0,8,0,0">
+                      Margin="0,8,0,0"
+                      IsVisible="{Binding #ConfigToggle.IsChecked}">
                 <StackPanel Spacing="6">
                   <Grid ColumnDefinitions="*,*">
                     <ComboBox ItemsSource="{Binding AssistantProviders}"

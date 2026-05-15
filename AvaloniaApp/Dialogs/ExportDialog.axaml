@@ -1,109 +1,93 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="My3DApp.AvaloniaApp.Dialogs.ExportDialog"
-        Width="480"
-        Height="420"
-        MinWidth="440"
-        MinHeight="380"
+        Width="430"
+        Height="370"
+        MinWidth="400"
+        MinHeight="340"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         Classes="FeatureDialogWindow"
         Title="Export Model">
   <Border Classes="FeatureDialogPanel" Margin="0">
-    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
+    <StackPanel Margin="16,14,16,16" Spacing="0">
 
-      <TextBlock Classes="FeatureDialogTitle" Text="Export Model" />
-      <TextBlock Grid.Row="1"
-                 Margin="0,6,0,0"
-                 Classes="FeatureDialogSubtitle"
-                 Text="Export the current model to a mesh file." />
-
-      <StackPanel Grid.Row="2" Margin="0,16,0,16" Spacing="10">
-
-        <!-- Format -->
-        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="12">
-          <StackPanel Spacing="8">
-            <TextBlock Text="Format" FontWeight="SemiBold" />
-            <StackPanel Orientation="Horizontal" Spacing="16">
-              <RadioButton x:Name="StlRadio"
-                           Content="STL"
-                           IsChecked="True"
-                           GroupName="ExportFormat"
-                           Checked="OnFormatChanged" />
-              <RadioButton x:Name="ObjRadio"
-                           Content="OBJ"
-                           GroupName="ExportFormat"
-                           Checked="OnFormatChanged" />
-            </StackPanel>
-          </StackPanel>
-        </Border>
-
-        <!-- Scope -->
-        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="12">
-          <StackPanel Spacing="8">
-            <TextBlock Text="Scope" FontWeight="SemiBold" />
-            <StackPanel Orientation="Horizontal" Spacing="16">
-              <RadioButton x:Name="AllBodiesRadio"
-                           Content="All bodies"
-                           IsChecked="True"
-                           GroupName="ExportScope" />
-              <RadioButton x:Name="SelectedBodyRadio"
-                           Content="Selected body"
-                           GroupName="ExportScope" />
-            </StackPanel>
-          </StackPanel>
-        </Border>
-
-        <!-- File path -->
-        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="12">
-          <StackPanel Spacing="8">
-            <TextBlock Text="File" FontWeight="SemiBold" />
-            <Grid ColumnDefinitions="*,8,Auto">
-              <TextBox x:Name="PathBox"
-                       Watermark="Choose a file path…"
-                       IsReadOnly="True" />
-              <Button x:Name="BrowseButton"
-                      Grid.Column="2"
-                      Content="Browse…"
-                      Click="OnBrowseClick" />
-            </Grid>
-          </StackPanel>
-        </Border>
-
-        <!-- Inline error -->
-        <TextBlock x:Name="ErrorLabel"
-                   Foreground="#e05252"
-                   FontSize="12"
-                   TextWrapping="Wrap"
-                   IsVisible="False" />
-
-      </StackPanel>
-
-      <!-- Action buttons -->
-      <StackPanel Grid.Row="3"
-                  Orientation="Horizontal"
-                  HorizontalAlignment="Right"
-                  Spacing="8">
-        <Button Content="Cancel"
-                Classes="FeatureDialogButtonSecondary"
-                Click="OnCancelClick" />
+      <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,12">
+        <TextBlock Classes="FeatureDialogTitle" Text="Export Model" VerticalAlignment="Center" />
         <Button x:Name="ExportButton"
-                Content="Export"
-                Classes="FeatureDialogButtonPrimary"
+                Grid.Column="1"
+                Classes="FeatureDialogConfirmBtn"
                 IsEnabled="False"
-                ToolTip.Tip="Choose a file path"
+                ToolTip.Tip="Choose a file path first"
                 Click="OnExportClick" />
-      </StackPanel>
+        <Button Grid.Column="2"
+                Margin="6,0,0,0"
+                Classes="FeatureDialogCancelBtn"
+                IsCancel="True"
+                Click="OnCancelClick" />
+      </Grid>
 
-    </Grid>
+      <!-- Format -->
+      <Border Classes="FeatureDialogSectionCard" Margin="0,0,0,8">
+        <StackPanel Spacing="0">
+          <TextBlock Text="Format" Classes="FeatureDialogFieldLabel" Margin="0,0,0,8" />
+          <StackPanel Orientation="Horizontal" Spacing="16">
+            <RadioButton x:Name="StlRadio"
+                         Classes="FeatureDialogCheckBox"
+                         Content="STL"
+                         IsChecked="True"
+                         GroupName="ExportFormat"
+                         Checked="OnFormatChanged" />
+            <RadioButton x:Name="ObjRadio"
+                         Classes="FeatureDialogCheckBox"
+                         Content="OBJ"
+                         GroupName="ExportFormat"
+                         Checked="OnFormatChanged" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- Scope -->
+      <Border Classes="FeatureDialogSectionCard" Margin="0,0,0,8">
+        <StackPanel Spacing="0">
+          <TextBlock Text="Scope" Classes="FeatureDialogFieldLabel" Margin="0,0,0,8" />
+          <StackPanel Orientation="Horizontal" Spacing="16">
+            <RadioButton x:Name="AllBodiesRadio"
+                         Classes="FeatureDialogCheckBox"
+                         Content="All bodies"
+                         IsChecked="True"
+                         GroupName="ExportScope" />
+            <RadioButton x:Name="SelectedBodyRadio"
+                         Classes="FeatureDialogCheckBox"
+                         Content="Selected body"
+                         GroupName="ExportScope" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- File path -->
+      <Border Classes="FeatureDialogSectionCard" Margin="0,0,0,8">
+        <StackPanel Spacing="6">
+          <TextBlock Text="Output file" Classes="FeatureDialogFieldLabel" />
+          <Grid ColumnDefinitions="*,8,Auto">
+            <TextBox x:Name="PathBox"
+                     Watermark="Choose a file path…"
+                     IsReadOnly="True" />
+            <Button x:Name="BrowseButton"
+                    Grid.Column="2"
+                    Content="Browse…"
+                    Classes="FeatureDialogButtonSecondary"
+                    Click="OnBrowseClick" />
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <TextBlock x:Name="ErrorLabel"
+                 Foreground="#e05252"
+                 FontSize="11.5"
+                 TextWrapping="Wrap"
+                 IsVisible="False" />
+
+    </StackPanel>
   </Border>
 </Window>

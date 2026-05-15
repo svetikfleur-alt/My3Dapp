@@ -1,87 +1,46 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="My3DApp.AvaloniaApp.Dialogs.BooleanBodyDialog"
-        Width="420"
-        Height="320"
-        MinWidth="380"
-        MinHeight="290"
+        Width="400"
+        Height="310"
+        MinWidth="370"
+        MinHeight="280"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         Classes="FeatureDialogWindow"
-        Title="Boolean Body Operation">
+        Title="Boolean Operation">
   <Border Classes="FeatureDialogPanel" Margin="0">
-    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
-      <TextBlock Classes="FeatureDialogTitle"
-                 Text="Boolean Body Operation" />
-      <TextBlock Grid.Row="1"
-                 Margin="0,6,0,0"
-                 Classes="FeatureDialogSubtitle"
-                 Text="Combine two solid bodies using a supported Boolean operation." />
+    <StackPanel Margin="16,14,16,16" Spacing="0">
 
-      <StackPanel Grid.Row="2"
-                  Margin="0,16,0,16"
-                  Spacing="12">
-        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="12">
-          <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="80,*">
-            <TextBlock Text="Body A"
-                       VerticalAlignment="Center"
-                       FontWeight="SemiBold" />
-            <ComboBox x:Name="BodyAComboBox"
-                      Grid.Column="1"
-                      HorizontalAlignment="Stretch"
-                      Margin="8,0,0,0" />
+      <!-- Header -->
+      <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
+        <TextBlock Classes="FeatureDialogTitle" Text="Boolean Operation" VerticalAlignment="Center" />
+        <Button Grid.Column="1" Classes="FeatureDialogConfirmBtn" IsDefault="True" Click="OnConfirmClick" />
+        <Button Grid.Column="2" Margin="6,0,0,0" Classes="FeatureDialogCancelBtn" IsCancel="True" Click="OnCancelClick" />
+      </Grid>
 
-            <TextBlock Grid.Row="1"
-                       Text="Body B"
-                       VerticalAlignment="Center"
-                       Margin="0,10,0,0"
-                       FontWeight="SemiBold" />
-            <ComboBox x:Name="BodyBComboBox"
-                      Grid.Row="1"
-                      Grid.Column="1"
-                      HorizontalAlignment="Stretch"
-                      Margin="8,10,0,0" />
-          </Grid>
-        </Border>
+      <!-- Operation tabs -->
+      <Border Classes="FeatureDialogTabBar" Margin="0,0,0,10">
+        <StackPanel Orientation="Horizontal" Spacing="0">
+          <ToggleButton x:Name="UnionTab" Classes="FeatureDialogOperationTab" Content="Union" IsChecked="True" Click="OnOpTabClicked" />
+          <ToggleButton x:Name="SubtractTab" Classes="FeatureDialogOperationTab" Content="Subtract" Click="OnOpTabClicked" />
+          <ToggleButton x:Name="IntersectTab" Classes="FeatureDialogOperationTab" Content="Intersect" Click="OnOpTabClicked" />
+        </StackPanel>
+      </Border>
 
-        <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-                BorderBrush="{DynamicResource Studio.BorderBrush}"
-                BorderThickness="1"
-                Padding="12">
-          <StackPanel Spacing="4">
-            <TextBlock Text="Operation"
-                       FontWeight="SemiBold"
-                       Margin="0,0,0,6" />
-            <RadioButton x:Name="UnionRadio"
-                         Content="Union - merge both bodies into one"
-                         GroupName="BoolOp"
-                         IsChecked="True" />
-            <RadioButton x:Name="SubtractRadio"
-                         Content="Subtract — cut Body B from Body A"
-                         GroupName="BoolOp"
-                         ToolTip.Tip="Remove the volume of Body B from Body A." />
-            <RadioButton x:Name="IntersectRadio"
-                         Content="Intersect — keep only the overlapping volume"
-                         GroupName="BoolOp"
-                         ToolTip.Tip="Retain only the region shared by both bodies." />
-          </StackPanel>
-        </Border>
-      </StackPanel>
+      <!-- Body A -->
+      <TextBlock Classes="FeatureDialogFieldLabel" Text="Body A" Margin="0,0,0,4" />
+      <ComboBox x:Name="BodyAComboBox"
+                Classes="FeatureDialogInput"
+                HorizontalAlignment="Stretch"
+                Margin="0,0,0,8" />
 
-      <StackPanel Grid.Row="3"
-                  Orientation="Horizontal"
-                  HorizontalAlignment="Right"
-                  Spacing="8">
-        <Button Content="Cancel"
-                Classes="FeatureDialogButtonSecondary"
-                Click="OnCancelClick" />
-        <Button Content="OK"
-                Classes="FeatureDialogButtonPrimary"
-                Click="OnConfirmClick" />
-      </StackPanel>
-    </Grid>
+      <!-- Body B -->
+      <TextBlock Classes="FeatureDialogFieldLabel" Text="Body B" Margin="0,0,0,4" />
+      <ComboBox x:Name="BodyBComboBox"
+                Classes="FeatureDialogInput"
+                HorizontalAlignment="Stretch" />
+
+    </StackPanel>
   </Border>
 </Window>

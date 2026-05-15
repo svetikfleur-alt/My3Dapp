@@ -24,7 +24,6 @@ public sealed partial class NumericFeatureDialog : AWindow
     {
         Title = title;
         TitleTextBlock.Text = title;
-        SubtitleTextBlock.Text = subtitle;
         ValueLabelTextBlock.Text = valueLabel;
         ValueInput.Minimum = (decimal)minimum;
         ValueInput.Maximum = (decimal)maximum;

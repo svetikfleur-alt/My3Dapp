@@ -1,108 +1,73 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="My3DApp.AvaloniaApp.Dialogs.CircularPatternDialog"
-        Width="420"
-        Height="300"
-        MinWidth="400"
-        MinHeight="280"
+        Width="390"
+        Height="290"
+        MinWidth="360"
+        MinHeight="265"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         Classes="FeatureDialogWindow"
         Title="Circular Pattern">
   <Border Classes="FeatureDialogPanel" Margin="0">
-    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
-      <Grid ColumnDefinitions="*,Auto">
-        <StackPanel Spacing="4">
-          <TextBlock Classes="FeatureDialogTitle"
-                     Text="Circular Pattern" />
-          <TextBlock Classes="FeatureDialogSubtitle"
-                     Text="Repeat the selected body N times around a coordinate axis." />
-        </StackPanel>
-        <Border Grid.Column="1"
-                Classes="FeatureDialogTag"
-                VerticalAlignment="Top">
-          <TextBlock Text="FEATURE"
-                     Classes="FeatureDialogTagText" />
-        </Border>
+    <StackPanel Margin="16,14,16,16" Spacing="0">
+
+      <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,12">
+        <TextBlock Classes="FeatureDialogTitle" Text="Circular Pattern" VerticalAlignment="Center" />
+        <Button Grid.Column="1" Classes="FeatureDialogConfirmBtn" IsDefault="True" Click="OnConfirmClick" />
+        <Button Grid.Column="2" Margin="6,0,0,0" Classes="FeatureDialogCancelBtn" IsCancel="True" Click="OnCancelClick" />
       </Grid>
 
-      <StackPanel Grid.Row="2"
-                  Margin="0,16,0,16"
-                  Spacing="12">
-        <Border Classes="FeatureDialogSectionCard">
-          <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="100,*">
-            <TextBlock Text="Count"
-                       Classes="FeatureDialogFieldLabel" />
-            <NumericUpDown x:Name="CountInput"
-                           Classes="FeatureDialogInput"
-                           Grid.Row="1"
-                           Width="130"
-                           HorizontalAlignment="Left"
-                           Margin="0,6,0,0"
-                           Increment="1"
-                           Minimum="2"
-                           Maximum="360"
-                           FormatString="0" />
+      <Border Classes="FeatureDialogSectionCard">
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,72">
 
-            <TextBlock Grid.Row="2"
-                       Text="Total Angle"
-                       Margin="0,12,0,0"
-                       Classes="FeatureDialogFieldLabel" />
-            <Grid Grid.Row="3"
-                  Grid.Column="0"
-                  Grid.ColumnSpan="2"
-                  ColumnDefinitions="130,80"
-                  Margin="0,6,0,0">
-              <NumericUpDown x:Name="AngleInput"
-                             Classes="FeatureDialogInput"
-                             Width="130"
-                             HorizontalAlignment="Left"
-                             Increment="15"
-                             Minimum="1"
-                             Maximum="360"
-                             FormatString="0.###" />
-              <Border Grid.Column="1"
-                      Classes="FeatureDialogUnitChip"
-                      Margin="8,0,0,0"
-                      HorizontalAlignment="Left"
-                      VerticalAlignment="Top">
-                <TextBlock HorizontalAlignment="Center"
-                           Text="°" />
-              </Border>
-            </Grid>
-          </Grid>
-        </Border>
+          <TextBlock Text="Count" Classes="FeatureDialogFieldLabel" />
+          <NumericUpDown x:Name="CountInput"
+                         Classes="FeatureDialogInput"
+                         Grid.Row="1"
+                         Width="130"
+                         HorizontalAlignment="Left"
+                         Margin="0,6,0,0"
+                         Increment="1"
+                         Minimum="2"
+                         Maximum="360"
+                         FormatString="0" />
 
-        <Border Classes="FeatureDialogSectionCard">
-          <Grid ColumnDefinitions="100,*" RowDefinitions="Auto,Auto">
-            <TextBlock Text="Axis"
-                       Classes="FeatureDialogFieldLabel" />
-            <ComboBox x:Name="AxisComboBox"
-                      Classes="FeatureDialogInput"
-                      Grid.Row="1"
-                      Width="130"
-                      HorizontalAlignment="Left"
-                      Margin="0,6,0,0"
-                      SelectedIndex="1">
-              <ComboBoxItem Content="X axis" Tag="x" />
-              <ComboBoxItem Content="Y axis" Tag="y" />
-              <ComboBoxItem Content="Z axis" Tag="z" />
-            </ComboBox>
-          </Grid>
-        </Border>
-      </StackPanel>
+          <TextBlock Grid.Row="2" Text="Total angle" Classes="FeatureDialogFieldLabel" Margin="0,12,0,0" />
+          <NumericUpDown x:Name="AngleInput"
+                         Classes="FeatureDialogInput"
+                         Grid.Row="3"
+                         Width="130"
+                         HorizontalAlignment="Left"
+                         Margin="0,6,0,0"
+                         Increment="15"
+                         Minimum="1"
+                         Maximum="360"
+                         FormatString="0.###" />
+          <Border Grid.Column="1" Grid.Row="3"
+                  Classes="FeatureDialogUnitChip"
+                  Margin="8,6,0,0"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Top">
+            <TextBlock HorizontalAlignment="Center" Text="°" />
+          </Border>
+        </Grid>
+      </Border>
 
-      <StackPanel Grid.Row="3"
-                  Orientation="Horizontal"
-                  HorizontalAlignment="Right"
-                  Spacing="8">
-        <Button Content="Cancel"
-                Classes="FeatureDialogButtonSecondary"
-                Click="OnCancelClick" />
-        <Button Content="Apply"
-                Classes="FeatureDialogButtonPrimary"
-                Click="OnConfirmClick" />
-      </StackPanel>
-    </Grid>
+      <Border Classes="FeatureDialogSectionCard" Margin="0,8,0,0">
+        <StackPanel Spacing="0">
+          <TextBlock Text="Rotation axis" Classes="FeatureDialogFieldLabel" Margin="0,0,0,6" />
+          <ComboBox x:Name="AxisComboBox"
+                    Classes="FeatureDialogInput"
+                    HorizontalAlignment="Stretch"
+                    SelectedIndex="1">
+            <ComboBoxItem Content="X axis" Tag="x" />
+            <ComboBoxItem Content="Y axis" Tag="y" />
+            <ComboBoxItem Content="Z axis" Tag="z" />
+          </ComboBox>
+        </StackPanel>
+      </Border>
+
+    </StackPanel>
   </Border>
 </Window>
