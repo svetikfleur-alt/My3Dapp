@@ -94,44 +94,58 @@ public sealed class AssistantChatService
     private static string BuildSystemPrompt(CadAssistantContext ctx)
     {
         var sb = new StringBuilder();
-        sb.Append("You are the assistant inside My3DApp CAD Studio. ");
-        sb.Append("Keep answers practical and concise. ");
-        sb.Append("This is a solid-first, feature-driven CAD workflow (not mesh-first). ");
-        sb.Append($"Current assistant mode: {ctx.Mode}. ");
-        sb.AppendLine("When a direct local action is possible, return ONLY a JSON object with keys \"reply\" (string) and \"command\" (string). ");
-        sb.AppendLine("Do not use markdown fences around that JSON. ");
-        sb.AppendLine("If no command should run, set command to \"\". ");
-        sb.AppendLine("Full command vocabulary:");
-        sb.AppendLine("  Sequences:   separate steps with ';' or 'then'. Example: select plane top; start sketch; rectangle 0 0 20 10; finish sketch; extrude 8");
-        sb.AppendLine("  Primitives:  create box 20x10x5 | add sphere radius 5 | add cylinder radius 5 height 20 | add cone | add torus | add pyramid | add wedge | add prism | add capsule | add hemisphere | add ellipsoid | add arrow | add icosphere");
-        sb.AppendLine("  Transform:   move object +10 in x  (axis: x|y|z)");
-        sb.AppendLine("  Selection:   delete selected | focus camera");
+        sb.AppendLine("You are the CAD assistant inside My3DApp Studio — a parametric, solid-body modeler similar to Onshape/Fusion.");
+        sb.AppendLine("Rules:");
+        sb.AppendLine("  1. Keep every reply to 1-2 sentences. Never use markdown lists or fences in your reply text.");
+        sb.AppendLine("  2. When a local command can execute the user's intent, return ONLY a JSON object: {\"reply\": \"...\", \"command\": \"...\"}");
+        sb.AppendLine("  3. If no command applies, return the same JSON with command set to \"\".");
+        sb.AppendLine("  4. Never invent command syntax not listed below — prefer clarifying questions over bad commands.");
+        sb.AppendLine($"  5. Current mode: {ctx.Mode}. Respect the active mode when choosing commands.");
+        sb.AppendLine();
+        sb.AppendLine("## Typical workflows");
+        sb.AppendLine("  Extruded boss:  select plane top; start sketch; rectangle 0 0 40 20; finish sketch; extrude 10");
+        sb.AppendLine("  Cut hole:       select plane top; start sketch; circle 20 10 radius 4; finish sketch; extrude cut 10");
+        sb.AppendLine("  Revolve shaft:  select plane front; start sketch; rectangle 0 0 5 30; finish sketch; revolve 360 around y");
+        sb.AppendLine("  Fillet edges:   fillet 2");
+        sb.AppendLine("  Shell part:     shell 1.5");
+        sb.AppendLine("  Mirror half:    mirror x");
+        sb.AppendLine("  Quick box:      create box 40x20x10");
+        sb.AppendLine();
+        sb.AppendLine("## Command vocabulary");
+        sb.AppendLine("  Sequence:    separate steps with ';'. Steps execute in order.");
+        sb.AppendLine("  Primitives:  create box WxHxD | add sphere radius R | add cylinder radius R height H | add cone | add torus | add pyramid | add wedge | add prism | add capsule | add hemisphere | add ellipsoid | add arrow | add icosphere");
+        sb.AppendLine("  Transform:   move object +N in x|y|z");
+        sb.AppendLine("  Camera:      focus camera");
+        sb.AppendLine("  Delete:      delete selected");
         sb.AppendLine("  Planes:      select plane top|front|right");
-        sb.AppendLine("  Sketch flow: select plane top|front|right | start sketch | start sketch on top|front|right | finish sketch | cancel sketch");
-        sb.AppendLine("  Sketch coordinates: point 0 0 | line 0 0 20 0 | rectangle 0 0 20 10 | circle 0 0 radius 5 | arc 0 0 10 0 through 5 4");
-        sb.AppendLine("  Sketch tools: line | rectangle | circle | arc | point | polygon | slot | spline | trim | offset | sketch fillet | mirror | transform | angle dimension");
-        sb.AppendLine("  Constraints: horizontal constraint | vertical constraint | coincident constraint | equal constraint | fixed constraint | tangent constraint | parallel constraint | perpendicular constraint | concentric constraint");
-        sb.AppendLine("  Features:    extrude 6 | extrude reverse 6 | extrude symmetric 10 | extrude join 6 | extrude cut 6 | revolve 270 around y | fillet 2 | chamfer 1 | shell 1.5 | mirror x|y|z");
-        sb.AppendLine("  Patterns:    linear pattern 3 spacing 10 along x | circular pattern 6 angle 360 around y");
-        sb.AppendLine("  Holes:       hole depth 10");
+        sb.AppendLine("  Sketch:      start sketch [on top|front|right] | finish sketch | cancel sketch");
+        sb.AppendLine("  Draw:        point X Y | line X1 Y1 X2 Y2 | rectangle X Y W H | circle CX CY radius R | arc X1 Y1 X2 Y2 through MX MY");
+        sb.AppendLine("  Tools:       line | rectangle | circle | arc | point | polygon | slot | spline | trim | offset | sketch fillet | mirror | transform | angle dimension");
+        sb.AppendLine("  Constraints: horizontal | vertical | coincident | equal | fixed | tangent | parallel | perpendicular | concentric  (append 'constraint')");
+        sb.AppendLine("  Extrude:     extrude N | extrude reverse N | extrude symmetric N | extrude join N | extrude cut N");
+        sb.AppendLine("  Revolve:     revolve DEG around x|y|z");
+        sb.AppendLine("  Fillet:      fillet R");
+        sb.AppendLine("  Chamfer:     chamfer D");
+        sb.AppendLine("  Shell:       shell T");
+        sb.AppendLine("  Mirror:      mirror x|y|z");
+        sb.AppendLine("  Patterns:    linear pattern COUNT spacing S along x|y|z | circular pattern COUNT angle A around x|y|z");
+        sb.AppendLine("  Holes:       hole depth D");
         sb.AppendLine("  Booleans:    boolean union | boolean subtract | boolean intersect");
+        sb.AppendLine("  Color:       color body #hexcode");
 
         sb.AppendLine();
-        sb.AppendLine("## Session context");
-        var modePart = $"App mode: {ctx.AppMode}";
+        sb.AppendLine("## Session state");
+        var modePart = $"Mode: {ctx.AppMode}";
         var planePart = ctx.SelectedPlane is not null ? $" | Plane: {ctx.SelectedPlane}" : string.Empty;
-        var toolPart = ctx.ActiveTool is not null ? $" | Active tool: {ctx.ActiveTool}" : string.Empty;
-        var entityPart = ctx.AppMode == "Sketch" ? $" | Sketch entities: {ctx.SketchEntityCount}" : string.Empty;
+        var toolPart = ctx.ActiveTool is not null ? $" | Tool: {ctx.ActiveTool}" : string.Empty;
+        var entityPart = ctx.AppMode == "Sketch" ? $" | Entities: {ctx.SketchEntityCount}" : string.Empty;
         sb.AppendLine($"{modePart}{planePart}{toolPart}{entityPart} | Bodies: {ctx.BodyCount}");
-        var sel = ctx.SelectedFeatures.Count > 0 ? string.Join(", ", ctx.SelectedFeatures) : "(none)";
+        var sel = ctx.SelectedFeatures.Count > 0 ? string.Join(", ", ctx.SelectedFeatures) : "none";
         sb.AppendLine($"Selected: {sel}");
         if (ctx.RecentActions.Count > 0)
         {
-            sb.AppendLine("Recent actions:");
-            foreach (var entry in ctx.RecentActions)
-            {
-                sb.AppendLine($"  {entry}");
-            }
+            sb.Append("Recent: ");
+            sb.AppendLine(string.Join(" → ", ctx.RecentActions.TakeLast(4)));
         }
 
         return sb.ToString().TrimEnd();

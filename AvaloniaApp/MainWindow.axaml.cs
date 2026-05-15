@@ -1211,6 +1211,7 @@ public sealed partial class MainWindow : Window
             if (_wiredViewModel.CanFinishSketch)
             {
                 await _wiredViewModel.FinishSketchAsync();
+                await TryAutoExtrudeAfterSketchAsync();
             }
             else
             {
@@ -1525,6 +1526,7 @@ public sealed partial class MainWindow : Window
         try
         {
             await _wiredViewModel.FinishSketchAsync();
+            await TryAutoExtrudeAfterSketchAsync();
         }
         catch (Exception ex)
         {
@@ -1532,6 +1534,23 @@ public sealed partial class MainWindow : Window
         }
 
         e.Handled = true;
+    }
+
+    private async Task TryAutoExtrudeAfterSketchAsync()
+    {
+        if (_wiredViewModel is null || !_wiredViewModel.CanProfileTools)
+        {
+            return;
+        }
+
+        var result = await ShowExtrudeFeatureDialogAsync();
+        ReturnFocusToViewport();
+        if (result is null)
+        {
+            return;
+        }
+
+        await _wiredViewModel.ExtrudeSelectedSketchAsync(result.Value.Distance, result.Value.Operation, result.Value.TargetBodyId);
     }
 
     private async void OnSketchCancelClick(object? sender, RoutedEventArgs e)
