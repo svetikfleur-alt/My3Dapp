@@ -770,29 +770,6 @@
     </Border>
 
     <Border DockPanel.Dock="Bottom"
-            IsVisible="{Binding HasNotification}"
-            Background="{Binding NotificationBackground}"
-            Height="32">
-      <Grid ColumnDefinitions="*,Auto" Margin="14,0">
-        <TextBlock Text="{Binding NotificationText}"
-                   Foreground="{Binding NotificationForeground}"
-                   FontSize="12"
-                   FontWeight="Medium"
-                   VerticalAlignment="Center"
-                   TextTrimming="CharacterEllipsis" />
-        <Button Grid.Column="1"
-                Content="✕"
-                Foreground="{Binding NotificationForeground}"
-                Background="Transparent"
-                BorderThickness="0"
-                Padding="8,0"
-                Height="32"
-                VerticalAlignment="Center"
-                Click="OnDismissNotificationClick" />
-      </Grid>
-    </Border>
-
-    <Border DockPanel.Dock="Bottom"
             Classes="PartStudioTabBar"
             Background="{DynamicResource Studio.PanelInsetBrush}"
             BorderBrush="{DynamicResource Studio.BorderBrush}"
@@ -835,6 +812,29 @@
                 Classes="PartStudioTabAdd"
                 Click="OnAddPartStudioClick"
                 ToolTip.Tip="Add a new part studio" />
+      </Grid>
+    </Border>
+
+    <Border DockPanel.Dock="Bottom"
+            IsVisible="{Binding HasNotification}"
+            Background="{Binding NotificationBackground}"
+            Height="32">
+      <Grid ColumnDefinitions="*,Auto" Margin="14,0">
+        <TextBlock Text="{Binding NotificationText}"
+                   Foreground="{Binding NotificationForeground}"
+                   FontSize="12"
+                   FontWeight="Medium"
+                   VerticalAlignment="Center"
+                   TextTrimming="CharacterEllipsis" />
+        <Button Grid.Column="1"
+                Content="✕"
+                Foreground="{Binding NotificationForeground}"
+                Background="Transparent"
+                BorderThickness="0"
+                Padding="8,0"
+                Height="32"
+                VerticalAlignment="Center"
+                Click="OnDismissNotificationClick" />
       </Grid>
     </Border>
 
