@@ -48,6 +48,7 @@ public sealed class StudioWorkspaceController
                 return;
             }
             _documentName = trimmed;
+            _mutationCount++;
             DocumentChanged?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -97,6 +98,7 @@ public sealed class StudioWorkspaceController
         _store = new CadProjectStore();
         _undoStack.Clear();
         _redoStack.Clear();
+        _mutationCount++;
         DocumentChanged?.Invoke(this, EventArgs.Empty);
         return PublishSuccess($"Added {newStudio.Name}.", mutated: false);
     }
@@ -148,6 +150,7 @@ public sealed class StudioWorkspaceController
             return PublishFailure($"A part studio named '{trimmed}' already exists.");
         }
         _partStudios[index].Name = trimmed;
+        _mutationCount++;
         DocumentChanged?.Invoke(this, EventArgs.Empty);
         return PublishSuccess($"Renamed studio to {trimmed}.", mutated: false);
     }
@@ -186,6 +189,7 @@ public sealed class StudioWorkspaceController
             _activeStudioIndex--;
         }
 
+        _mutationCount++;
         DocumentChanged?.Invoke(this, EventArgs.Empty);
         return PublishSuccess($"Deleted {name}.", mutated: false);
     }
