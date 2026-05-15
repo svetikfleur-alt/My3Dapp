@@ -839,7 +839,9 @@ public sealed class StudioWorkspaceController
             SelectedFeatures: selectedFeatures,
             RecentActions: _actionLog.TakeLast(10).ToArray(),
             SketchEntityCount: session?.DraftEntities.Count ?? 0,
-            BodyCount: project.Scene.Bodies.Count(b => b.Visible));
+            BodyCount: project.Scene.Bodies.Count(b => b.Visible),
+            DocumentName: _documentName,
+            PartStudioName: ActivePartStudioName);
     }
 
     private void AppendActionLog(string message)

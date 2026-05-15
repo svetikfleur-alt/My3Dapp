@@ -150,6 +150,7 @@ public sealed class AssistantChatService
 
         sb.AppendLine();
         sb.AppendLine("## Session state");
+        sb.AppendLine($"Document: {ctx.DocumentName} | Studio: {ctx.PartStudioName}");
         var modePart = $"Mode: {ctx.AppMode}";
         var planePart = ctx.SelectedPlane is not null ? $" | Plane: {ctx.SelectedPlane}" : string.Empty;
         var toolPart = ctx.ActiveTool is not null ? $" | Tool: {ctx.ActiveTool}" : string.Empty;
@@ -532,7 +533,9 @@ public sealed record CadAssistantContext(
     IReadOnlyList<string> SelectedFeatures,
     IReadOnlyList<string> RecentActions,
     int SketchEntityCount,
-    int BodyCount);
+    int BodyCount,
+    string DocumentName = "Untitled Document",
+    string PartStudioName = "Part Studio 1");
 
 public sealed class AssistantChatResult
 {

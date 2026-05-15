@@ -168,6 +168,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     {
         RefreshDocumentTabs();
         RaisePropertyChanged(nameof(DocumentName));
+        RaisePropertyChanged(nameof(WindowTitle));
     }
 
     private void RefreshDocumentTabs()
@@ -230,7 +231,16 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     }
 
     public string ProjectTitle => HasUnsavedChanges ? _projectTitle + " *" : _projectTitle;
-    public string WindowTitle => HasUnsavedChanges ? $"* {_projectTitle} — My3DApp" : $"{_projectTitle} — My3DApp";
+    public string WindowTitle
+    {
+        get
+        {
+            var doc = _workspaceController.DocumentName;
+            var studio = _workspaceController.ActivePartStudioName;
+            var label = string.IsNullOrEmpty(studio) ? doc : $"{doc} — {studio}";
+            return HasUnsavedChanges ? $"* {label} — My3DApp" : $"{label} — My3DApp";
+        }
+    }
     private string ProjectTitleBase
     {
         get => _projectTitle;

@@ -287,6 +287,91 @@ public static class CadRecipeLibrary
                     var t = a[4] > 0 ? a[4] : 2;
                     return $"create box {N(l)}x{N(w)}x{N(h)}; fillet {N(r)}; shell {N(t)}";
                 }),
+
+            new("hollow-cylinder",
+                "Hollow cylinder",
+                "Tube: outer radius Ro, inner radius Ri, height H.",
+                ["outer-radius", "inner-radius", "height"],
+                "recipe hollow-cylinder 12 9 25",
+                a =>
+                {
+                    var ro = a[0] > 0 ? a[0] : 12;
+                    var ri = a[1] > 0 && a[1] < a[0] ? a[1] : Math.Max(0.5, ro - 3);
+                    var h = a[2] > 0 ? a[2] : 25;
+                    var sb = new StringBuilder();
+                    sb.Append($"select plane top; start sketch; circle 0 0 radius {N(ro)}; finish sketch; extrude {N(h)}");
+                    sb.Append($"; select plane top; start sketch; circle 0 0 radius {N(ri)}; finish sketch; extrude cut {N(h)}");
+                    return sb.ToString();
+                }),
+
+            new("plate-with-hole",
+                "Plate with hole",
+                "Plate L × W × T with a centered through-hole of radius R.",
+                ["length", "width", "thickness", "hole-radius"],
+                "recipe plate-with-hole 50 30 5 4",
+                a =>
+                {
+                    var l = a[0] > 0 ? a[0] : 50;
+                    var w = a[1] > 0 ? a[1] : 30;
+                    var t = a[2] > 0 ? a[2] : 5;
+                    var r = a[3] > 0 ? a[3] : 4;
+                    var cx = l / 2;
+                    var cy = w / 2;
+                    var sb = new StringBuilder();
+                    sb.Append($"select plane top; start sketch; rectangle 0 0 {N(l)} {N(w)}; finish sketch; extrude {N(t)}");
+                    sb.Append($"; select plane top; start sketch; circle {N(cx)} {N(cy)} radius {N(r)}; finish sketch; extrude cut {N(t)}");
+                    return sb.ToString();
+                }),
+
+            new("filleted-shaft",
+                "Filleted shaft",
+                "Cylindrical shaft (R, H) with the top edge filleted to Rf.",
+                ["radius", "height", "fillet-radius"],
+                "recipe filleted-shaft 8 30 1.5",
+                a =>
+                {
+                    var r = a[0] > 0 ? a[0] : 8;
+                    var h = a[1] > 0 ? a[1] : 30;
+                    var rf = a[2] > 0 ? a[2] : 1.5;
+                    return $"select plane top; start sketch; circle 0 0 radius {N(r)}; finish sketch; extrude {N(h)}; fillet {N(rf)}";
+                }),
+
+            new("standoff",
+                "Standoff",
+                "Hollow standoff: outer Ro, inner Ri (clearance hole), height H.",
+                ["outer-radius", "inner-radius", "height"],
+                "recipe standoff 5 1.6 20",
+                a =>
+                {
+                    var ro = a[0] > 0 ? a[0] : 5;
+                    var ri = a[1] > 0 && a[1] < a[0] ? a[1] : Math.Max(0.5, ro - 2);
+                    var h = a[2] > 0 ? a[2] : 20;
+                    var sb = new StringBuilder();
+                    sb.Append($"select plane top; start sketch; circle 0 0 radius {N(ro)}; finish sketch; extrude {N(h)}");
+                    sb.Append($"; select plane top; start sketch; circle 0 0 radius {N(ri)}; finish sketch; extrude cut {N(h)}");
+                    return sb.ToString();
+                }),
+
+            new("channel",
+                "Channel",
+                "Rectangular trough: outer L × W × H with a centered cavity (T-wall thickness).",
+                ["length", "width", "height", "wall"],
+                "recipe channel 60 30 20 3",
+                a =>
+                {
+                    var l = a[0] > 0 ? a[0] : 60;
+                    var w = a[1] > 0 ? a[1] : 30;
+                    var h = a[2] > 0 ? a[2] : 20;
+                    var t = a[3] > 0 ? a[3] : 3;
+                    var ix = t;
+                    var iy = t;
+                    var iw = Math.Max(1, l - 2 * t);
+                    var ih = Math.Max(1, w - 2 * t);
+                    var sb = new StringBuilder();
+                    sb.Append($"select plane top; start sketch; rectangle 0 0 {N(l)} {N(w)}; finish sketch; extrude {N(h)}");
+                    sb.Append($"; select plane top; start sketch; rectangle {N(ix)} {N(iy)} {N(ix + iw)} {N(iy + ih)}; finish sketch; extrude cut {N(h - t)}");
+                    return sb.ToString();
+                }),
         };
     }
 }
