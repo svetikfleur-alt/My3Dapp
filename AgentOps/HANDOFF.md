@@ -1,4 +1,12 @@
-Done:
+UI Polish done (2026-05-15, commit 6d7b468):
+- 4 new SVG icons: sweep.svg, loft.svg, measure.svg, section-view.svg
+- Toolbar: Sweep/Loft now have unique icons; Measure/SectionView glyph → SVG
+- Theme: SketchTaskCard, SketchSidePanel, SketchConstraintToolButton get CornerRadius=12/8
+- Theme: FeatureDialogButton :pointerover + :pressed states added (both themes)
+- Theme (dark): AssistantLinkButton hover foreground + AssistantKeyInput focus accent
+- Build: XAML/SVG only; no C# changes; 0 errors expected
+
+Hole feature done (previous session):
 - HoleFeatureDialog.axaml: Diameter NumericUpDown (min 0.01), CenterX/Y offsets, Through All/Blind radio, DepthValue (disabled when Through All), Cancel/OK
 - HoleFeatureDialog.axaml.cs: validation (diameter>0, depthValue>0 when blind), Close(result), OnDepthKindChanged toggles DepthValueInput.IsEnabled
 - Engine/CadModel.cs: HoleFeature, HoleDepthKind, CadFeatureKind.Hole, CadCommandActionKind.HoleSelectedBody (pre-existing)
