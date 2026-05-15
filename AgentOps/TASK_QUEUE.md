@@ -67,8 +67,13 @@
 - [x] 64 — Double-click rename in feature tree           → F2 rename already wired; dbl-click opens param edit
 
 # Backlog (out of current cycle)
-- (empty — promote items from AUDIT.md as auditor finds them)
+- [ ] 69 — Sketch preview rendering fixes (Point / Line / Rectangle)  → TASKS/69-sketch-preview-rendering-fixes.md
 - [ ] 65 — CAD command dialog standardization                 → TASKS/65-cad-command-dialog-standardization.md
 - [ ] 66 — Sketch solver and definition behavior             → TASKS/66-sketch-solver-definition-behavior.md
 - [ ] 67 — Shell consistency pass (toolbar + viewport nav)   → TASKS/67-shell-consistency-toolbar-viewport.md
 - [ ] 68 — Copilot structured CAD assistance                 → TASKS/68-copilot-structured-cad-assistance.md
+
+# Closure notes
+- TASKS/53-hole-csg-geometry.md — implemented: CadProjectStore.cs lines 4873–4888 wire a real CylinderSolid subtract via BooleanSolid. No stub remains.
+- TASKS/54-boolean-csg-subtract-intersect.md — implemented: SolidMesher.cs CsgSubtract / CsgIntersect use triangle centroid ray-cast inside test. No NotSupportedException stub remains.
+- TASKS/55-polyline-sketch-tool.md — covered by task 62 (Line tool chaining via PendingLineStart).
