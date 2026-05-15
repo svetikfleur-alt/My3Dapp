@@ -137,6 +137,19 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public IReadOnlyList<string> AssistantModes { get; }
 
+    public IReadOnlyList<CadRecipe> AssistantRecipes { get; } = CadRecipeLibrary.All;
+
+    public void InsertAssistantRecipe(string recipeName)
+    {
+        var recipe = CadRecipeLibrary.Find(recipeName);
+        if (recipe is null)
+        {
+            return;
+        }
+
+        AssistantInput = recipe.Example;
+    }
+
     public ObservableCollection<AssistantMessageViewModel> AssistantMessages { get; }
 
     public ObservableCollection<string> AssistantProviders { get; }
@@ -1964,10 +1977,19 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 AddMessage("assistant", result.Reply);
                 if (!string.IsNullOrWhiteSpace(result.Command))
                 {
-                    var parsedSuggestion = _commandParser.Parse(result.Command);
-                    if (parsedSuggestion.IsSuccess && parsedSuggestion.Command is not null)
+                    var parsedSuggestionSequence = _commandParser.ParseSequence(result.Command);
+                    var allOk = parsedSuggestionSequence.Count > 0 &&
+                                parsedSuggestionSequence.All(step => step.Result.IsSuccess && step.Result.Commands.Count > 0);
+
+                    if (allOk)
                     {
-                        await HandleParsedCommandAsync(parsedSuggestion.Command, "Assistant command", cancellationToken);
+                        foreach (var step in parsedSuggestionSequence)
+                        {
+                            foreach (var command in step.Result.Commands)
+                            {
+                                await HandleParsedCommandAsync(command, $"Assistant step {step.Index}", cancellationToken);
+                            }
+                        }
                     }
                     else
                     {

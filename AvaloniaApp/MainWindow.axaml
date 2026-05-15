@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:My3DApp.AvaloniaApp.ViewModels"
         xmlns:controls="clr-namespace:My3DApp.AvaloniaApp.Controls"
+        xmlns:services="clr-namespace:My3DApp.AvaloniaApp.Services"
         xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Avalonia.Svg.Skia"
         x:Class="My3DApp.AvaloniaApp.MainWindow"
         x:DataType="vm:StudioShellViewModel"
@@ -1191,28 +1192,35 @@
                 <TextBlock Text="Copilot" />
               </StackPanel>
             </TabItem.Header>
-            <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Margin="10,8,10,8">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto" Margin="10,8,10,8">
 
-              <!-- Header: title + Config toggle + Refresh + Clear -->
-              <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+              <!-- Header: title + Recipes toggle + Config toggle + Refresh + Clear -->
+              <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
                 <TextBlock Text="AI Copilot"
                            FontSize="12"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource Studio.TextMutedBrush}"
                            VerticalAlignment="Center" />
-                <ToggleButton x:Name="ConfigToggle"
+                <ToggleButton x:Name="RecipesToggle"
                               Grid.Column="1"
+                              Margin="0,0,6,0"
+                              Content="Recipes"
+                              Classes="AssistantLinkButton"
+                              IsChecked="False"
+                              ToolTip.Tip="Insert a standard part recipe" />
+                <ToggleButton x:Name="ConfigToggle"
+                              Grid.Column="2"
                               Margin="0,0,6,0"
                               Content="⚙"
                               Classes="AssistantLinkButton"
                               IsChecked="False"
                               ToolTip.Tip="API settings" />
-                <Button Grid.Column="2"
+                <Button Grid.Column="3"
                         Margin="0,0,6,0"
                         Content="Refresh"
                         Classes="AssistantLinkButton"
                         Click="OnAssistantRefreshClick" />
-                <Button Grid.Column="3"
+                <Button Grid.Column="4"
                         Content="Clear"
                         Classes="AssistantLinkButton"
                         Click="OnAssistantClearClick" />
@@ -1275,8 +1283,39 @@
                 </StackPanel>
               </Border>
 
-              <!-- Row 3: Message area (fills space) -->
+              <!-- Row 3: Recipe catalog (collapsed by default) -->
               <Border Grid.Row="3"
+                      Classes="AssistantContextCard"
+                      Margin="0,8,0,0"
+                      IsVisible="{Binding #RecipesToggle.IsChecked}">
+                <StackPanel Spacing="6">
+                  <TextBlock Text="Insert a standard part — click to fill the prompt with sample parameters, then edit & send."
+                             Classes="AssistantHintText"
+                             TextWrapping="Wrap" />
+                  <ItemsControl ItemsSource="{Binding AssistantRecipes}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate DataType="services:CadRecipe">
+                        <Button Content="{Binding DisplayName}"
+                                Tag="{Binding Name}"
+                                Margin="0,0,4,4"
+                                Padding="9,4"
+                                FontSize="11"
+                                Classes="AssistantLinkButton"
+                                ToolTip.Tip="{Binding Description}"
+                                Click="OnAssistantRecipeClick" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </Border>
+
+              <!-- Row 4: Message area (fills space) -->
+              <Border Grid.Row="4"
                       Classes="AssistantMessagesHost"
                       Margin="0,8,0,0">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -1321,8 +1360,8 @@
                 </ScrollViewer>
               </Border>
 
-              <!-- Row 4: Pending command action chip -->
-              <Border Grid.Row="4"
+              <!-- Row 5: Pending command action chip -->
+              <Border Grid.Row="5"
                       Classes="AssistantPendingCard"
                       Margin="0,6,0,0"
                       IsVisible="{Binding HasPendingCommand}">
@@ -1340,8 +1379,8 @@
                 </Grid>
               </Border>
 
-              <!-- Row 5: Input bar -->
-              <Grid Grid.Row="5" ColumnDefinitions="*,Auto" Margin="0,6,0,0">
+              <!-- Row 6: Input bar -->
+              <Grid Grid.Row="6" ColumnDefinitions="*,Auto" Margin="0,6,0,0">
                 <TextBox x:Name="AssistantInputBox"
                          Grid.Column="0"
                          Margin="0,0,6,0"

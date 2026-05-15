@@ -100,7 +100,8 @@ public sealed class AssistantChatService
         sb.AppendLine("  2. When a local command can execute the user's intent, return ONLY a JSON object: {\"reply\": \"...\", \"command\": \"...\"}");
         sb.AppendLine("  3. If no command applies, return the same JSON with command set to \"\".");
         sb.AppendLine("  4. Never invent command syntax not listed below — prefer clarifying questions over bad commands.");
-        sb.AppendLine($"  5. Current mode: {ctx.Mode}. Respect the active mode when choosing commands.");
+        sb.AppendLine("  5. Prefer a single recipe over a long step sequence when the user describes a standard part.");
+        sb.AppendLine($"  6. Current mode: {ctx.Mode}. Respect the active mode when choosing commands.");
         sb.AppendLine();
         sb.AppendLine("## Typical workflows");
         sb.AppendLine("  Extruded boss:  select plane top; start sketch; rectangle 0 0 40 20; finish sketch; extrude 10");
@@ -132,6 +133,20 @@ public sealed class AssistantChatService
         sb.AppendLine("  Holes:       hole depth D");
         sb.AppendLine("  Booleans:    boolean union | boolean subtract | boolean intersect");
         sb.AppendLine("  Color:       color body #hexcode");
+
+        sb.AppendLine();
+        sb.AppendLine("## Built-in part recipes  (one-line shortcuts that expand to full sketch+feature sequences)");
+        foreach (var recipe in CadRecipeLibrary.All)
+        {
+            sb.Append("  ");
+            sb.Append(recipe.Signature.PadRight(60));
+            sb.Append("→ ");
+            sb.AppendLine(recipe.Description);
+        }
+        sb.AppendLine("  Use a recipe when the user describes one of these standard parts; pass numeric args in order.");
+        sb.AppendLine("  Examples:  \"a 50x30 mounting plate 4mm thick\" → recipe plate 50 30 4");
+        sb.AppendLine("             \"hollow case 60 by 40 by 25, walls 2mm\" → recipe shelled-box 60 40 25 2");
+        sb.AppendLine("             \"L bracket 40 wide 30 deep 25 tall 4 thick\" → recipe bracket 40 30 25 4");
 
         sb.AppendLine();
         sb.AppendLine("## Session state");

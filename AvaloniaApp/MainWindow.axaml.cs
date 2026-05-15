@@ -2379,6 +2379,18 @@ public sealed partial class MainWindow : Window
         e.Handled = true;
     }
 
+    private void OnAssistantRecipeClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not Button button || button.Tag is not string recipeName)
+        {
+            return;
+        }
+
+        _wiredViewModel.InsertAssistantRecipe(recipeName);
+        AssistantInputBox?.Focus();
+        e.Handled = true;
+    }
+
     private async void OnAssistantApplyCommandClick(object? sender, RoutedEventArgs e)
     {
         if (_wiredViewModel is null)
