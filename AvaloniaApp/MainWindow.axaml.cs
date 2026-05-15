@@ -2379,6 +2379,54 @@ public sealed partial class MainWindow : Window
         e.Handled = true;
     }
 
+    private void OnPartStudioTabClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not Button button || button.Tag is not string name)
+        {
+            return;
+        }
+        _wiredViewModel.ActivatePartStudio(name);
+        e.Handled = true;
+    }
+
+    private async void OnPartStudioTabRename(object? sender, Avalonia.Input.TappedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not Button button || button.Tag is not string oldName)
+        {
+            return;
+        }
+        try
+        {
+            var dialog = new RenameDialog(oldName);
+            var newName = await ShowAnchoredDialogAsync<string?>(dialog);
+            if (!string.IsNullOrWhiteSpace(newName) && newName != oldName)
+            {
+                _wiredViewModel.RenamePartStudioTab(oldName, newName);
+            }
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnPartStudioTabRename), ex);
+        }
+        e.Handled = true;
+    }
+
+    private void OnPartStudioTabClose(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not Button button || button.Tag is not string name)
+        {
+            return;
+        }
+        _wiredViewModel.DeletePartStudioTab(name);
+        e.Handled = true;
+    }
+
+    private void OnAddPartStudioClick(object? sender, RoutedEventArgs e)
+    {
+        _wiredViewModel?.AddPartStudioTab();
+        e.Handled = true;
+    }
+
     private void OnAssistantRecipeClick(object? sender, RoutedEventArgs e)
     {
         if (_wiredViewModel is null || sender is not Button button || button.Tag is not string recipeName)

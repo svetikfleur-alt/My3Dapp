@@ -29,8 +29,20 @@
           </Border>
 
           <StackPanel Grid.Column="1" Margin="14,0,0,0" Spacing="2" VerticalAlignment="Center">
-            <TextBlock Text="{Binding ProjectTitle}"
-                       Classes="ToolbarTitleText" />
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <TextBox Text="{Binding DocumentName, Mode=TwoWay}"
+                       Classes="DocumentTitleEdit"
+                       MinWidth="220"
+                       MaxWidth="440"
+                       HorizontalAlignment="Left"
+                       ToolTip.Tip="Document name" />
+              <TextBlock Text="•"
+                         Classes="ToolbarSubtleText"
+                         FontSize="14"
+                         VerticalAlignment="Center"
+                         IsVisible="{Binding HasUnsavedChanges}"
+                         ToolTip.Tip="Unsaved changes" />
+            </StackPanel>
             <TextBlock Text="{Binding StatusBarText}"
                        Classes="ToolbarSubtleText"
                        MaxWidth="640"
@@ -777,6 +789,52 @@
                 Height="32"
                 VerticalAlignment="Center"
                 Click="OnDismissNotificationClick" />
+      </Grid>
+    </Border>
+
+    <Border DockPanel.Dock="Bottom"
+            Classes="PartStudioTabBar"
+            Background="{DynamicResource Studio.PanelInsetBrush}"
+            BorderBrush="{DynamicResource Studio.BorderBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="10,4">
+      <Grid ColumnDefinitions="*,Auto">
+        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Disabled">
+          <ItemsControl ItemsSource="{Binding PartStudios}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="2" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="vm:PartStudioTabItem">
+                <Grid ColumnDefinitions="Auto,Auto">
+                  <Button Content="{Binding Name}"
+                          Tag="{Binding Name}"
+                          Classes="PartStudioTab"
+                          Classes.active="{Binding IsActive}"
+                          Click="OnPartStudioTabClick"
+                          DoubleTapped="OnPartStudioTabRename"
+                          ToolTip.Tip="Click to switch • Double-click to rename" />
+                  <Button Grid.Column="1"
+                          Content="✕"
+                          Tag="{Binding Name}"
+                          Classes="PartStudioTabClose"
+                          IsVisible="{Binding IsActive}"
+                          Click="OnPartStudioTabClose"
+                          ToolTip.Tip="Delete this part studio" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+        <Button Grid.Column="1"
+                Content="＋"
+                Margin="6,0,0,0"
+                Classes="PartStudioTabAdd"
+                Click="OnAddPartStudioClick"
+                ToolTip.Tip="Add a new part studio" />
       </Grid>
     </Border>
 

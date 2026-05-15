@@ -109,12 +109,77 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             "Think&Do"
         ];
 
+        PartStudios = new ObservableCollection<PartStudioTabItem>();
         ResetAssistantModelsForProvider(_selectedAssistantProvider, preserveSelection: false);
         RefreshRecentPrimitiveTools();
         _workspaceController.WorkspaceChanged += OnWorkspaceChanged;
+        _workspaceController.DocumentChanged += OnDocumentChanged;
         ApplyWorkspaceState(_workspaceController.CurrentState);
+        RefreshDocumentTabs();
         RefreshAssistantConfiguration();
         SeedAssistantHistory();
+    }
+
+    public ObservableCollection<PartStudioTabItem> PartStudios { get; }
+
+    public string DocumentName
+    {
+        get => _workspaceController.DocumentName;
+        set
+        {
+            if (_workspaceController.DocumentName == value)
+            {
+                return;
+            }
+            _workspaceController.DocumentName = value;
+            RaisePropertyChanged(nameof(DocumentName));
+        }
+    }
+
+    public void AddPartStudioTab()
+    {
+        _workspaceController.AddPartStudio();
+    }
+
+    public void ActivatePartStudio(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return;
+        }
+        _workspaceController.SwitchPartStudio(name);
+    }
+
+    public void DeletePartStudioTab(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return;
+        }
+        _workspaceController.DeletePartStudio(name);
+    }
+
+    public void RenamePartStudioTab(string oldName, string newName)
+    {
+        _workspaceController.RenamePartStudio(oldName, newName);
+    }
+
+    private void OnDocumentChanged(object? sender, EventArgs e)
+    {
+        RefreshDocumentTabs();
+        RaisePropertyChanged(nameof(DocumentName));
+    }
+
+    private void RefreshDocumentTabs()
+    {
+        var names = _workspaceController.PartStudioNames;
+        var active = _workspaceController.ActivePartStudioName;
+
+        PartStudios.Clear();
+        foreach (var n in names)
+        {
+            PartStudios.Add(new PartStudioTabItem(n, string.Equals(n, active, StringComparison.OrdinalIgnoreCase)));
+        }
     }
 
     public event EventHandler<ViewportRenderState>? ViewportStateChanged;
@@ -3293,6 +3358,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         }
 
         _workspaceController.WorkspaceChanged -= OnWorkspaceChanged;
+        _workspaceController.DocumentChanged -= OnDocumentChanged;
         _autoDismissCts?.Cancel();
         _isDisposed = true;
     }
@@ -3318,3 +3384,5 @@ public sealed class SketchDimensionDisplayItem
     public bool IsEditable { get; init; }
     public string Unit { get; init; } = "mm";
 }
+
+public sealed record PartStudioTabItem(string Name, bool IsActive);

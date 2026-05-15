@@ -28,15 +28,175 @@ public sealed class StudioWorkspaceController
     private int _mutationCount;
     private int _savedMutationCount;
 
+    private readonly List<PartStudioRecord> _partStudios = new();
+    private int _activeStudioIndex;
+    private int _studioNamingCounter;
+    private string _documentName = "Untitled Document";
+
     public bool CanUndo => _undoStack.Count > 0;
     public bool CanRedo => _redoStack.Count > 0;
     public bool HasUnsavedChanges => _mutationCount != _savedMutationCount;
 
+    public string DocumentName
+    {
+        get => _documentName;
+        set
+        {
+            var trimmed = string.IsNullOrWhiteSpace(value) ? "Untitled Document" : value.Trim();
+            if (_documentName == trimmed)
+            {
+                return;
+            }
+            _documentName = trimmed;
+            DocumentChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    public IReadOnlyList<string> PartStudioNames => _partStudios.Select(s => s.Name).ToArray();
+
+    public string ActivePartStudioName =>
+        _partStudios.Count > 0 && _activeStudioIndex >= 0 && _activeStudioIndex < _partStudios.Count
+            ? _partStudios[_activeStudioIndex].Name
+            : string.Empty;
+
+    public event EventHandler? DocumentChanged;
+
+    private sealed class PartStudioRecord
+    {
+        public string Name { get; set; } = "Part Studio 1";
+        public string Snapshot { get; set; } = string.Empty;
+    }
+
     public StudioWorkspaceController()
     {
+        _partStudios.Add(new PartStudioRecord { Name = NextStudioName() });
+        _activeStudioIndex = 0;
         CurrentState = BuildState("Studio ready.");
         AppendActionLog(CurrentState.StatusMessage);
         CurrentState = BuildState(CurrentState.StatusMessage);
+    }
+
+    private string NextStudioName()
+    {
+        _studioNamingCounter++;
+        var candidate = $"Part Studio {_studioNamingCounter}";
+        while (_partStudios.Any(s => string.Equals(s.Name, candidate, StringComparison.OrdinalIgnoreCase)))
+        {
+            _studioNamingCounter++;
+            candidate = $"Part Studio {_studioNamingCounter}";
+        }
+        return candidate;
+    }
+
+    public StudioWorkspaceActionResult AddPartStudio()
+    {
+        SnapshotActiveStudio();
+        var newStudio = new PartStudioRecord { Name = NextStudioName() };
+        _partStudios.Add(newStudio);
+        _activeStudioIndex = _partStudios.Count - 1;
+        _store = new CadProjectStore();
+        _undoStack.Clear();
+        _redoStack.Clear();
+        DocumentChanged?.Invoke(this, EventArgs.Empty);
+        return PublishSuccess($"Added {newStudio.Name}.", mutated: false);
+    }
+
+    public StudioWorkspaceActionResult SwitchPartStudio(string name)
+    {
+        var index = _partStudios.FindIndex(s => string.Equals(s.Name, name, StringComparison.OrdinalIgnoreCase));
+        if (index < 0)
+        {
+            return PublishFailure($"Part studio '{name}' not found.");
+        }
+        if (index == _activeStudioIndex)
+        {
+            return PublishSuccess($"Already on {name}.", mutated: false);
+        }
+
+        SnapshotActiveStudio();
+        _activeStudioIndex = index;
+        var target = _partStudios[_activeStudioIndex];
+        if (string.IsNullOrEmpty(target.Snapshot))
+        {
+            _store = new CadProjectStore();
+        }
+        else
+        {
+            RestoreFromJson(target.Snapshot);
+        }
+        _undoStack.Clear();
+        _redoStack.Clear();
+        DocumentChanged?.Invoke(this, EventArgs.Empty);
+        return PublishSuccess($"Switched to {target.Name}.", mutated: false);
+    }
+
+    public StudioWorkspaceActionResult RenamePartStudio(string oldName, string newName)
+    {
+        var index = _partStudios.FindIndex(s => string.Equals(s.Name, oldName, StringComparison.OrdinalIgnoreCase));
+        if (index < 0)
+        {
+            return PublishFailure($"Part studio '{oldName}' not found.");
+        }
+        var trimmed = (newName ?? string.Empty).Trim();
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            return PublishFailure("Part studio name cannot be empty.");
+        }
+        if (_partStudios.Any(s => !ReferenceEquals(s, _partStudios[index]) &&
+                                  string.Equals(s.Name, trimmed, StringComparison.OrdinalIgnoreCase)))
+        {
+            return PublishFailure($"A part studio named '{trimmed}' already exists.");
+        }
+        _partStudios[index].Name = trimmed;
+        DocumentChanged?.Invoke(this, EventArgs.Empty);
+        return PublishSuccess($"Renamed studio to {trimmed}.", mutated: false);
+    }
+
+    public StudioWorkspaceActionResult DeletePartStudio(string name)
+    {
+        if (_partStudios.Count <= 1)
+        {
+            return PublishFailure("A document must keep at least one part studio.");
+        }
+        var index = _partStudios.FindIndex(s => string.Equals(s.Name, name, StringComparison.OrdinalIgnoreCase));
+        if (index < 0)
+        {
+            return PublishFailure($"Part studio '{name}' not found.");
+        }
+
+        var wasActive = index == _activeStudioIndex;
+        _partStudios.RemoveAt(index);
+        if (wasActive)
+        {
+            _activeStudioIndex = Math.Max(0, Math.Min(index, _partStudios.Count - 1));
+            var target = _partStudios[_activeStudioIndex];
+            if (string.IsNullOrEmpty(target.Snapshot))
+            {
+                _store = new CadProjectStore();
+            }
+            else
+            {
+                RestoreFromJson(target.Snapshot);
+            }
+            _undoStack.Clear();
+            _redoStack.Clear();
+        }
+        else if (index < _activeStudioIndex)
+        {
+            _activeStudioIndex--;
+        }
+
+        DocumentChanged?.Invoke(this, EventArgs.Empty);
+        return PublishSuccess($"Deleted {name}.", mutated: false);
+    }
+
+    private void SnapshotActiveStudio()
+    {
+        if (_activeStudioIndex < 0 || _activeStudioIndex >= _partStudios.Count)
+        {
+            return;
+        }
+        _partStudios[_activeStudioIndex].Snapshot = JsonSerializer.Serialize(_store.Project, ProjectJsonOptions);
     }
 
     public StudioWorkspaceState CurrentState { get; private set; }
