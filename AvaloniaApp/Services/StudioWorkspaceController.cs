@@ -203,7 +203,7 @@ public sealed class StudioWorkspaceController
 
     public event EventHandler<StudioWorkspaceState>? WorkspaceChanged;
 
-    private const int CurrentSchemaVersion = 1;
+    private const int CurrentSchemaVersion = 2;
 
     public void SaveProject(string path)
     {
@@ -218,15 +218,31 @@ public sealed class StudioWorkspaceController
             Directory.CreateDirectory(directory);
         }
 
+        SnapshotActiveStudio();
+
+        var studios = new List<DocumentStudioEntry>();
+        foreach (var s in _partStudios)
+        {
+            CadProject? project = null;
+            if (!string.IsNullOrEmpty(s.Snapshot))
+            {
+                project = JsonSerializer.Deserialize<CadProject>(s.Snapshot, ProjectJsonOptions);
+            }
+            studios.Add(new DocumentStudioEntry { Name = s.Name, Project = project });
+        }
+
         var envelope = new ProjectFileEnvelope
         {
             SchemaVersion = CurrentSchemaVersion,
+            DocumentName = _documentName,
+            ActiveStudio = ActivePartStudioName,
+            Studios = studios,
             Project = _store.Project
         };
         var json = JsonSerializer.Serialize(envelope, ProjectJsonOptions);
         File.WriteAllText(path, json, Encoding.UTF8);
         _savedMutationCount = _mutationCount;
-        PublishSuccess($"Saved project to {Path.GetFileName(path)}.", mutated: false);
+        PublishSuccess($"Saved document to {Path.GetFileName(path)}.", mutated: false);
     }
 
     public StudioWorkspaceActionResult OpenProject(string path)
@@ -245,18 +261,52 @@ public sealed class StudioWorkspaceController
         {
             var json = File.ReadAllText(path, Encoding.UTF8);
 
-            // Try versioned envelope first; fall back to raw CadProject for backwards compat.
             CadProject? project = null;
             using var doc = JsonDocument.Parse(json);
             if (doc.RootElement.TryGetProperty("schemaVersion", out var versionEl))
             {
                 var version = versionEl.GetInt32();
-                if (version != CurrentSchemaVersion)
+                if (version > CurrentSchemaVersion)
                 {
                     return PublishFailure(
-                        $"Project was saved with schema version {version}, but this build expects version {CurrentSchemaVersion}. Please update the app.");
+                        $"Document was saved with schema version {version}, but this build expects version {CurrentSchemaVersion} or lower. Please update the app.");
                 }
                 var envelope = JsonSerializer.Deserialize<ProjectFileEnvelope>(json, ProjectJsonOptions);
+                if (envelope?.Studios is { Count: > 0 })
+                {
+                    _partStudios.Clear();
+                    _studioNamingCounter = 0;
+                    foreach (var entry in envelope.Studios)
+                    {
+                        var studioName = string.IsNullOrWhiteSpace(entry.Name) ? NextStudioName() : entry.Name.Trim();
+                        var rec = new PartStudioRecord { Name = studioName };
+                        if (entry.Project is not null)
+                        {
+                            NormalizeProjectForLoad(entry.Project);
+                            rec.Snapshot = JsonSerializer.Serialize(entry.Project, ProjectJsonOptions);
+                        }
+                        _partStudios.Add(rec);
+                    }
+                    var activeIndex = _partStudios.FindIndex(s =>
+                        string.Equals(s.Name, envelope.ActiveStudio, StringComparison.OrdinalIgnoreCase));
+                    _activeStudioIndex = activeIndex >= 0 ? activeIndex : 0;
+
+                    var active = _partStudios[_activeStudioIndex];
+                    if (string.IsNullOrEmpty(active.Snapshot))
+                    {
+                        _store = new CadProjectStore();
+                    }
+                    else
+                    {
+                        RestoreFromJson(active.Snapshot);
+                    }
+                    DocumentName = string.IsNullOrWhiteSpace(envelope.DocumentName) ? "Untitled Document" : envelope.DocumentName;
+                    _savedMutationCount = _mutationCount;
+                    _undoStack.Clear();
+                    _redoStack.Clear();
+                    DocumentChanged?.Invoke(this, EventArgs.Empty);
+                    return PublishSuccess($"Opened {Path.GetFileName(path)} ({_partStudios.Count} part studios).", mutated: false);
+                }
                 project = envelope?.Project;
             }
             else
@@ -271,7 +321,12 @@ public sealed class StudioWorkspaceController
 
             NormalizeProjectForLoad(project);
             _store = new CadProjectStore(project);
+            _partStudios.Clear();
+            _studioNamingCounter = 0;
+            _partStudios.Add(new PartStudioRecord { Name = NextStudioName() });
+            _activeStudioIndex = 0;
             _savedMutationCount = _mutationCount;
+            DocumentChanged?.Invoke(this, EventArgs.Empty);
             return PublishSuccess($"Opened project {Path.GetFileName(path)}.", mutated: false);
         }
         catch (JsonException ex)
@@ -291,6 +346,15 @@ public sealed class StudioWorkspaceController
     private sealed class ProjectFileEnvelope
     {
         public int SchemaVersion { get; set; } = CurrentSchemaVersion;
+        public string DocumentName { get; set; } = "Untitled Document";
+        public string ActiveStudio { get; set; } = string.Empty;
+        public List<DocumentStudioEntry>? Studios { get; set; }
+        public CadProject? Project { get; set; }
+    }
+
+    private sealed class DocumentStudioEntry
+    {
+        public string Name { get; set; } = string.Empty;
         public CadProject? Project { get; set; }
     }
 
