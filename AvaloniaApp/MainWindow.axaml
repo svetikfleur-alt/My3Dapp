@@ -390,6 +390,7 @@
                         IsEnabled="{Binding IsThreeDMode}"
                         IsVisible="{Binding ElementName=SectionViewToggle, Path=IsChecked}"
                         SelectedIndex="2"
+                        SelectionChanged="OnSectionAxisChanged"
                         ToolTip.Tip="Section plane axis">
                 <ComboBoxItem Content="X" />
                 <ComboBoxItem Content="Y" />

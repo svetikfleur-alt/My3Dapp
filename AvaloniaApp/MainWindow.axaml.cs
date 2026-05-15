@@ -901,6 +901,18 @@ public sealed partial class MainWindow : Window
         catch (Exception ex) { LogHandlerFailure(nameof(OnSectionOffsetChanged), ex); }
     }
 
+    private async void OnSectionAxisChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_viewportHost is null || _sectionViewToggle?.IsChecked != true) return;
+        try
+        {
+            var axis = (_sectionAxisCombo?.SelectedItem as Avalonia.Controls.ComboBoxItem)?.Content?.ToString() ?? "Z";
+            var offset = (double)(_sectionOffsetSpin?.Value ?? 0m);
+            await _viewportHost.SetSectionPlaneAsync(true, axis, offset);
+        }
+        catch (Exception ex) { LogHandlerFailure(nameof(OnSectionAxisChanged), ex); }
+    }
+
     private async void OnMeasureToolToggleClick(object? sender, RoutedEventArgs e)
     {
         if (_viewportHost is null) return;

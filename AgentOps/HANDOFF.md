@@ -1,19 +1,18 @@
-Done:
-- HoleFeatureDialog.axaml: Diameter NumericUpDown (min 0.01), CenterX/Y offsets, Through All/Blind radio, DepthValue (disabled when Through All), Cancel/OK
-- HoleFeatureDialog.axaml.cs: validation (diameter>0, depthValue>0 when blind), Close(result), OnDepthKindChanged toggles DepthValueInput.IsEnabled
-- Engine/CadModel.cs: HoleFeature, HoleDepthKind, CadFeatureKind.Hole, CadCommandActionKind.HoleSelectedBody (pre-existing)
-- Engine/CadProjectStore.cs: HandleHoleSelectedBody (diameter/centerX/Y/depthKind/depthValue; CSG subtract stubbed with Trace) (pre-existing)
-- StudioWorkspaceController.cs: FindHoleParams, EditHoleFeature, CadViewportCommandKind.HoleBody wired (pre-existing)
-- StudioShellViewModel.cs: HoleSelectedBodyAsync, GetHoleParams, UpdateHoleAsync; BuildFeatureSummary HoleFeature case (pre-existing)
-- MainWindow.axaml: Hole button (CanEdgeTools, ToolTip "Hole (H)", Click="OnHoleClick") after CP button
-- MainWindow.axaml.cs: OnHoleClick handler (opens dialog, calls HoleSelectedBodyAsync); H key shortcut (3D mode only, CanEdgeTools guard); OnFeatureTreeDoubleTapped updated to handle HoleFeature (checks GetHoleParams first, then CP fallback)
+Done (this session):
+- SectionAxisCombo: added SelectionChanged="OnSectionAxisChanged" in XAML and matching handler
+  in MainWindow.axaml.cs. Section plane now updates when user changes X/Y/Z axis while
+  section view is active. Previously only the offset spinner change triggered a viewport update.
 
 Not done:
-- Live viewport preview of cylinder during dialog open (no dialog→viewport bridge; same status as other ops)
-- Face-level hit-test (curved face rejection requires face-level picking not yet in codebase; dialog uses "first face of body" fallback per spec notes)
+- Build confirmation (dotnet not available in cloud env)
 
 Broken:
-- none expected
+- None expected from this change (isolated fix, same pattern as OnSectionOffsetChanged)
 
 Next:
-- Verifier: run build (0 errors expected); confirm Hole button appears active when a body exists; open dialog, Diameter=10, Through All → OK → tree shows "Hole (⌀10 × Through)"; blind mode → DepthValue field enables; double-click node → dialog re-opens; H shortcut only in 3D mode
+- Builder: create sweep.svg + loft.svg icons (Sweep button uses extrude.svg, Loft uses revolve.svg)
+- Builder: spline profile rejection — add user-visible hint when a spline is drawn in sketch
+  that it cannot feed an extrude profile
+- Builder: feature tree chronological grouping (sketch + derived feature as timeline unit)
+- Builder: constraint application on selected entity, not last-drawn entity
+- Verifier: run build and confirm 0 errors; test section view axis toggle in viewport
