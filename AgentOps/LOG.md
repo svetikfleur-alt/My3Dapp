@@ -1,3 +1,4 @@
+done: 65 — CAD command dialog standardization (2026-05-15) — Recipe debug rows removed from 5 dialogs; debug/verbose text cleaned in Fillet+Revolve; BooleanBodyDialog and DatumPlaneDialog both ported to shared FeatureDialog visual language; 8 axaml files changed.
 done: 30 — Export panel STL/OBJ (2026-04-28) — ExportDialog, OnExportClick, Ctrl+E, ExportFormat ViewModel, WorkspaceController export methods, status-bar confirm; build 0 errors 0 warnings; commit 1f97318
 done: 29 — Hole feature (2026-04-27) — HoleFeature, HoleDepthKind, HoleSelectedBody; dialog (diameter/offset/depth); toolbar ⌀ button; H shortcut 3D-only; double-click edit; CSG stub with HANDOFF; 0 errors 0 warnings
 done: 28 — Circular Pattern feature (2026-04-27) — CircularPatternDialog, enum+wiring, ViewModel method, toolbar CP button, LP click wired, feature tree label; 0 errors

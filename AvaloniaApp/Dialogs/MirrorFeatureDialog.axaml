@@ -2,9 +2,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="My3DApp.AvaloniaApp.Dialogs.MirrorFeatureDialog"
         Width="420"
-        Height="340"
+        Height="300"
         MinWidth="400"
-        MinHeight="320"
+        MinHeight="280"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
@@ -32,7 +32,7 @@
                   Margin="0,16,0,16"
                   Spacing="12">
         <Border Classes="FeatureDialogSectionCard">
-          <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="110,*">
+          <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="110,*">
             <TextBlock Text="Mirror plane"
                        Classes="FeatureDialogFieldLabel"
                        VerticalAlignment="Center" />
@@ -51,17 +51,7 @@
                        Margin="0,10,0,0"
                        Classes="FeatureDialogHelpText"
                        TextWrapping="Wrap"
-                       Text="The selected body is reflected across the chosen plane through the world origin." />
-            <TextBlock Grid.Row="2"
-                       Text="Recipe"
-                       Margin="0,10,0,0"
-                       Classes="FeatureDialogFieldLabel" />
-            <TextBlock Grid.Row="2"
-                       Grid.Column="1"
-                       Margin="0,10,0,0"
-                       TextWrapping="Wrap"
-                       Classes="FeatureDialogHelpText"
-                       Text="mirror(body, plane)" />
+                       Text="Reflects the selected body across the chosen plane through the world origin." />
           </Grid>
         </Border>
       </StackPanel>

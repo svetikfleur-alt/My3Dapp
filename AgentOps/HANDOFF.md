@@ -1,19 +1,25 @@
 Done:
-- HoleFeatureDialog.axaml: Diameter NumericUpDown (min 0.01), CenterX/Y offsets, Through All/Blind radio, DepthValue (disabled when Through All), Cancel/OK
-- HoleFeatureDialog.axaml.cs: validation (diameter>0, depthValue>0 when blind), Close(result), OnDepthKindChanged toggles DepthValueInput.IsEnabled
-- Engine/CadModel.cs: HoleFeature, HoleDepthKind, CadFeatureKind.Hole, CadCommandActionKind.HoleSelectedBody (pre-existing)
-- Engine/CadProjectStore.cs: HandleHoleSelectedBody (diameter/centerX/Y/depthKind/depthValue; CSG subtract stubbed with Trace) (pre-existing)
-- StudioWorkspaceController.cs: FindHoleParams, EditHoleFeature, CadViewportCommandKind.HoleBody wired (pre-existing)
-- StudioShellViewModel.cs: HoleSelectedBodyAsync, GetHoleParams, UpdateHoleAsync; BuildFeatureSummary HoleFeature case (pre-existing)
-- MainWindow.axaml: Hole button (CanEdgeTools, ToolTip "Hole (H)", Click="OnHoleClick") after CP button
-- MainWindow.axaml.cs: OnHoleClick handler (opens dialog, calls HoleSelectedBodyAsync); H key shortcut (3D mode only, CanEdgeTools guard); OnFeatureTreeDoubleTapped updated to handle HoleFeature (checks GetHoleParams first, then CP fallback)
+- Task 65 — CAD command dialog standardization
+
+Changes made (8 axaml files):
+
+1. ExtrudeFeatureDialog.axaml — Removed "Recipe" row from info section card; adjusted height 470→440.
+2. RevolveFeatureDialog.axaml — Removed "Recipe" row from info section card; replaced "Current minimal revolve supports sketch X/Y axes only." with clean "Revolves around the selected sketch axis through the sketch origin."; adjusted height 410→380.
+3. SweepFeatureDialog.axaml — Removed "Recipe" row from info section card; adjusted height 430→400.
+4. LoftFeatureDialog.axaml — Removed "Recipe" row from info section card; adjusted height 440→400.
+5. MirrorFeatureDialog.axaml — Removed "Recipe" row; cleaned help text to active sentence; adjusted height 340→300.
+6. FilletFeatureDialog.axaml — Replaced "This minimal fillet applies to the currently selected body. Unsupported edge-level selection is intentionally not faked." with "Applies a constant-radius fillet to all eligible edges of the selected body."
+7. BooleanBodyDialog.axaml — Full standardization: added FeatureDialogWindow class, FeatureDialogPanel, FeatureDialogTag (FEATURE), FeatureDialogSectionCard for body selection and operation sections, FeatureDialogFieldLabel/FeatureDialogCheckBox classes, changed "OK" button to "Apply".
+8. DatumPlaneDialog.axaml — Full standardization: added FeatureDialogWindow class, FeatureDialogPanel, FeatureDialogTag (REFERENCE), FeatureDialogSectionCard with 3-row aligned grid (source plane ComboBox, offset NumericUpDown+unit chip, name TextBox).
 
 Not done:
-- Live viewport preview of cylinder during dialog open (no dialog→viewport bridge; same status as other ops)
-- Face-level hit-test (curved face rejection requires face-level picking not yet in codebase; dialog uses "first face of body" fallback per spec notes)
+- Build not verified (dotnet not available in this Linux cloud container targeting net10.0-windows).
 
-Broken:
-- none expected
+Expected build status:
+- 0 errors, 0 warnings. Changes are purely XAML layout/text; no new bindings, no C# changes.
+- BooleanBodyDialog: BodyAComboBox and BodyBComboBox named elements preserved, UnionRadio/SubtractRadio/IntersectRadio preserved — code-behind unchanged and compatible.
+- DatumPlaneDialog: SourcePlaneCombo, OffsetInput, NameInput named elements preserved — code-behind unchanged and compatible.
 
 Next:
-- Verifier: run build (0 errors expected); confirm Hole button appears active when a body exists; open dialog, Diameter=10, Through All → OK → tree shows "Hole (⌀10 × Through)"; blind mode → DepthValue field enables; double-click node → dialog re-opens; H shortcut only in 3D mode
+- Verifier: confirm build passes; open Boolean dialog and verify FEATURE tag + Apply button + proper section card styling; open Datum Plane dialog and verify REFERENCE tag + consistent layout; confirm no dialog regression in Extrude/Fillet/Mirror/etc.
+- Next task: 66 — Sketch solver and definition behavior, or 67 — Shell consistency pass.

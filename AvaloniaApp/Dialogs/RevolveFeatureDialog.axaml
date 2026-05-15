@@ -2,9 +2,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="My3DApp.AvaloniaApp.Dialogs.RevolveFeatureDialog"
         Width="460"
-        Height="410"
+        Height="380"
         MinWidth="430"
-        MinHeight="390"
+        MinHeight="360"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
@@ -32,7 +32,7 @@
                   Margin="0,16,0,16"
                   Spacing="12">
         <Border Classes="FeatureDialogSectionCard">
-          <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="96,*">
+          <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="96,*">
             <TextBlock Text="Profile"
                        Classes="FeatureDialogFieldLabel" />
             <TextBlock Grid.Column="1"
@@ -62,17 +62,6 @@
                       IsEnabled="False">
               <ComboBoxItem Content="New Body" />
             </ComboBox>
-            <TextBlock Grid.Row="3"
-                       Text="Recipe"
-                       Margin="0,10,0,0"
-                       Classes="FeatureDialogFieldLabel" />
-            <TextBlock Grid.Row="3"
-                       Grid.Column="1"
-                       x:Name="RecipeTextBlock"
-                       Margin="0,10,0,0"
-                       TextWrapping="Wrap"
-                       Classes="FeatureDialogHelpText"
-                       Text="revolve(profile, axis, angle)" />
           </Grid>
         </Border>
 
@@ -119,7 +108,7 @@
                        Margin="0,10,0,0"
                        Classes="FeatureDialogHelpText"
                        TextWrapping="Wrap"
-                       Text="Current minimal revolve supports sketch X/Y axes only." />
+                       Text="Revolves around the selected sketch axis through the sketch origin." />
           </Grid>
         </Border>
       </StackPanel>

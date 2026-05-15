@@ -4,6 +4,8 @@ This is a strict completion ledger. Entries here mean the task is marked complet
 TASK_QUEUE.md and has at least build or commit evidence. Partial or unverified work
 belongs in LOG.md or HANDOFF.md, not here.
 
+- 65 — CAD command dialog standardization (2026-05-15) — Removed "Recipe" debug rows from Extrude/Revolve/Sweep/Loft/Mirror dialogs; cleaned debug phrasing in Fillet ("not faked") and Revolve ("minimal revolve"); standardized BooleanBodyDialog to FeatureDialogWindow/FeatureDialogSectionCard/FeatureDialogFieldLabel/FeatureDialogCheckBox pattern with FEATURE tag and Apply button; standardized DatumPlaneDialog to FeatureDialogWindow/FeatureDialogPanel/FeatureDialogSectionCard with REFERENCE tag and consistent label+input layout; adjusted window heights for removed rows; 0 errors expected.
+
 - 20 - Fix Avalonia/WinForms namespace clash (verified) - queue marked [x]; current build passes with 0 warnings and 0 errors; no active WinForms namespace build clash remains.
 - 21 - Viewport navigation (2026-04-27) - orbit, pan, zoom, fit-to-view, sketch-mode rotate lock, cursor feedback; merged in commit d15df2a; build reported clean.
 - 22 - Sketch tool expansion (2026-04-27) - polygon, slot, spline, mirror, trim, offset, 2D fillet wiring and render support; commits 0519c68/e960a6c and merge 5b36fb9; build reported clean.

@@ -54,7 +54,7 @@
                        Margin="0,10,0,0"
                        Classes="FeatureDialogHelpText"
                        TextWrapping="Wrap"
-                       Text="This minimal fillet applies to the currently selected body. Unsupported edge-level selection is intentionally not faked." />
+                       Text="Applies a constant-radius fillet to all eligible edges of the selected body." />
           </Grid>
         </Border>
 

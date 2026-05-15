@@ -2,57 +2,99 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="My3DApp.AvaloniaApp.Dialogs.DatumPlaneDialog"
         Title="Create Datum Plane"
-        Width="360"
-        Height="240"
+        Width="380"
+        Height="280"
+        MinWidth="360"
+        MinHeight="260"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
-        ShowInTaskbar="False">
-  <StackPanel Margin="20" Spacing="14">
-    <TextBlock Text="Create Datum Plane — Offset Method"
-               FontWeight="SemiBold"
-               FontSize="13" />
+        ShowInTaskbar="False"
+        Classes="FeatureDialogWindow">
+  <Border Classes="FeatureDialogPanel" Margin="0">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="18">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock Classes="FeatureDialogTitle"
+                     Text="Datum Plane" />
+          <TextBlock Classes="FeatureDialogSubtitle"
+                     TextWrapping="Wrap"
+                     Text="Create an offset reference plane from an existing plane." />
+        </StackPanel>
+        <Border Grid.Column="1"
+                Classes="FeatureDialogTag"
+                VerticalAlignment="Top">
+          <TextBlock Text="REFERENCE"
+                     Classes="FeatureDialogTagText" />
+        </Border>
+      </Grid>
 
-    <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto">
-      <TextBlock Grid.Row="0" Grid.Column="0" Text="Source plane"
-                 VerticalAlignment="Center" />
-      <ComboBox Grid.Row="0" Grid.Column="1"
-                x:Name="SourcePlaneCombo"
-                HorizontalAlignment="Stretch">
-        <ComboBoxItem Content="Top" Tag="Top" />
-        <ComboBoxItem Content="Front" Tag="Front" />
-        <ComboBoxItem Content="Right" Tag="Right" />
-      </ComboBox>
+      <Border Grid.Row="1"
+              Margin="0,16,0,16"
+              Classes="FeatureDialogSectionCard">
+        <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto">
+          <TextBlock Text="Source plane"
+                     Classes="FeatureDialogFieldLabel"
+                     VerticalAlignment="Center" />
+          <ComboBox x:Name="SourcePlaneCombo"
+                    Classes="FeatureDialogInput"
+                    Grid.Column="1"
+                    HorizontalAlignment="Stretch"
+                    Margin="8,0,0,0">
+            <ComboBoxItem Content="Top" Tag="Top" />
+            <ComboBoxItem Content="Front" Tag="Front" />
+            <ComboBoxItem Content="Right" Tag="Right" />
+          </ComboBox>
 
-      <TextBlock Grid.Row="1" Grid.Column="0" Text="Offset (mm)"
-                 VerticalAlignment="Center"
-                 Margin="0,10,0,0" />
-      <NumericUpDown Grid.Row="1" Grid.Column="1"
-                     x:Name="OffsetInput"
-                     Value="10"
-                     Minimum="-10000"
-                     Maximum="10000"
-                     Increment="1"
-                     FormatString="0.##"
-                     HorizontalAlignment="Stretch"
-                     Margin="0,10,0,0" />
+          <TextBlock Grid.Row="1"
+                     Text="Offset"
+                     Classes="FeatureDialogFieldLabel"
+                     VerticalAlignment="Center"
+                     Margin="0,12,0,0" />
+          <StackPanel Grid.Row="1"
+                      Grid.Column="1"
+                      Orientation="Horizontal"
+                      Margin="8,10,0,0"
+                      Spacing="8">
+            <NumericUpDown x:Name="OffsetInput"
+                           Classes="FeatureDialogInput"
+                           Value="10"
+                           Minimum="-10000"
+                           Maximum="10000"
+                           Increment="1"
+                           FormatString="0.##"
+                           Width="130" />
+            <Border Classes="FeatureDialogUnitChip"
+                    VerticalAlignment="Top">
+              <TextBlock HorizontalAlignment="Center"
+                         Text="mm" />
+            </Border>
+          </StackPanel>
 
-      <TextBlock Grid.Row="2" Grid.Column="0" Text="Name"
-                 VerticalAlignment="Center"
-                 Margin="0,10,0,0" />
-      <TextBox Grid.Row="2" Grid.Column="1"
-               x:Name="NameInput"
-               HorizontalAlignment="Stretch"
-               Margin="0,10,0,0" />
+          <TextBlock Grid.Row="2"
+                     Text="Name"
+                     Classes="FeatureDialogFieldLabel"
+                     VerticalAlignment="Center"
+                     Margin="0,12,0,0" />
+          <TextBox Grid.Row="2"
+                   Grid.Column="1"
+                   x:Name="NameInput"
+                   HorizontalAlignment="Stretch"
+                   Margin="8,10,0,0" />
+        </Grid>
+      </Border>
+
+      <StackPanel Grid.Row="2"
+                  Orientation="Horizontal"
+                  HorizontalAlignment="Right"
+                  Spacing="8">
+        <Button Content="Cancel"
+                Classes="FeatureDialogButtonSecondary"
+                Click="OnCancelClick" />
+        <Button Content="Create"
+                Classes="FeatureDialogButtonPrimary"
+                Click="OnCreateClick"
+                IsDefault="True" />
+      </StackPanel>
     </Grid>
-
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,4,0,0">
-      <Button Content="Cancel"
-              Classes="FeatureDialogButtonSecondary"
-              Click="OnCancelClick" />
-      <Button Content="Create"
-              Classes="FeatureDialogButtonPrimary"
-              Click="OnCreateClick"
-              IsDefault="True" />
-    </StackPanel>
-  </StackPanel>
+  </Border>
 </Window>
