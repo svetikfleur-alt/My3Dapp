@@ -349,15 +349,15 @@
                   </Button>
                   <Button Classes="ToolbarActionButton"
                           IsEnabled="{Binding CanProfileTools}"
-                          ToolTip.Tip="Sweep selected profile"
+                          ToolTip.Tip="Sweep selected profile along a path"
                           Click="OnSweepClick">
-                    <svg:Svg Path="avares://My3DApp/Assets/Icons/extrude.svg" Width="16" Height="16" />
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/sweep.svg" Width="16" Height="16" />
                   </Button>
                   <Button Classes="ToolbarActionButton"
                           IsEnabled="{Binding CanLoftTools}"
                           ToolTip.Tip="Loft between two closed profiles"
                           Click="OnLoftClick">
-                    <svg:Svg Path="avares://My3DApp/Assets/Icons/revolve.svg" Width="16" Height="16" />
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/loft.svg" Width="16" Height="16" />
                   </Button>
                 </StackPanel>
               </Border>
@@ -374,7 +374,7 @@
                             ToolTip.Tip="Measure point-to-point distance"
                             IsEnabled="{Binding IsThreeDMode}"
                             Click="OnMeasureToolToggleClick">
-                <TextBlock Text="⇿" FontSize="14" FontWeight="Bold" />
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/measure.svg" Width="16" Height="16" />
               </ToggleButton>
 
               <ToggleButton x:Name="SectionViewToggle"
@@ -382,7 +382,7 @@
                             ToolTip.Tip="Section view — toggle cross-section clipping plane"
                             IsEnabled="{Binding IsThreeDMode}"
                             Click="OnSectionViewToggleClick">
-                <TextBlock Text="§" FontSize="14" FontWeight="Bold" />
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/section-view.svg" Width="16" Height="16" />
               </ToggleButton>
               <ComboBox x:Name="SectionAxisCombo"
                         Width="42"

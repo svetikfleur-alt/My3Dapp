@@ -444,6 +444,14 @@
     <Setter Property="FontWeight" Value="SemiBold" />
   </Style>
 
+  <Style Selector="Button.FeatureDialogButtonPrimary:pointerover">
+    <Setter Property="Background" Value="#deedf9" />
+  </Style>
+
+  <Style Selector="Button.FeatureDialogButtonPrimary:pressed">
+    <Setter Property="Background" Value="#cde4f7" />
+  </Style>
+
   <Style Selector="Button.FeatureDialogButtonSecondary">
     <Setter Property="MinWidth" Value="84" />
     <Setter Property="Height" Value="32" />
@@ -453,6 +461,14 @@
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
     <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="Button.FeatureDialogButtonSecondary:pointerover">
+    <Setter Property="Background" Value="#edf3fb" />
+  </Style>
+
+  <Style Selector="Button.FeatureDialogButtonSecondary:pressed">
+    <Setter Property="Background" Value="#e0ecf9" />
   </Style>
 
   <Style Selector="Button.ToolbarMiniButton">
@@ -625,6 +641,7 @@
     <Setter Property="Background" Value="#f9fbfe" />
     <Setter Property="BorderBrush" Value="#d9e1ec" />
     <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
     <Setter Property="Padding" Value="10" />
   </Style>
 
@@ -1236,6 +1253,7 @@
     <Setter Property="Background" Value="{DynamicResource Studio.PanelInsetBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
     <Setter Property="Padding" Value="10,8" />
     <Setter Property="Margin" Value="0,6,0,0" />
   </Style>
@@ -1278,6 +1296,7 @@
     <Setter Property="FontSize" Value="11" />
     <Setter Property="FontWeight" Value="Bold" />
     <Setter Property="Padding" Value="0" />
+    <Setter Property="CornerRadius" Value="8" />
     <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
