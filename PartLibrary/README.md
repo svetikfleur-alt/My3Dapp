@@ -2,7 +2,10 @@
 
 `PartLibrary/` is the contributor-facing documentation and structure for the UMX1 maker template library.
 
-The **runtime registry** lives in [`AvaloniaApp/Services/MakerTemplateLibrary.cs`](../AvaloniaApp/Services/MakerTemplateLibrary.cs).
+The **runtime registry** is manifest-driven:
+- public manifests live in `Templates/*/template.json`
+- runtime loading and builder mapping live in [`AvaloniaApp/Services/MakerTemplateLibrary.cs`](../AvaloniaApp/Services/MakerTemplateLibrary.cs)
+
 This folder documents each template for contributors and reviewers.
 
 ---
@@ -17,27 +20,32 @@ This folder documents each template for contributors and reviewers.
 | [L-Bracket](Templates/LBracket/template.md) | `l-bracket` | Brackets | width, height, depth, thickness, holes |
 | [Fan Adapter Plate](Templates/FanAdapter/template.md) | `fan-adapter` | Plates & mounts | fan size, thickness, screw holes, center opening |
 | [Cable Clip](Templates/CableClip/template.md) | `cable-clip` | Clips & routing | cable diameter, clip width, wall thickness, gap |
+| [DIN Rail Clip](Templates/DinRailClip/template.md) | `din-rail-clip` | Mounts & fixtures | rail width, clip height, lip depth |
+| [T-Slot Nut](Templates/TSlotNut/template.md) | `t-slot-nut` | Fasteners & hardware | slot width, nut length, hole |
+| [Box Enclosure](Templates/BoxEnclosure/template.md) | `box-enclosure` | Enclosures | inner size, wall thickness, corner radius |
+| [Hinge Bracket](Templates/HingeBracket/template.md) | `hinge-bracket` | Brackets | leaf size, thickness, pin diameter |
+| [PCB Tray](Templates/PcbTray/template.md) | `pcb-tray` | Electronics | board size, wall height, standoffs |
 
 ---
 
 ## How templates work
 
-Each template is a C# record in `MakerTemplateLibrary.cs` that specifies:
+Each template is an external manifest plus a runtime builder mapping:
 
 1. **Metadata** — id, display name, category, description, tags
 2. **Parameters** — list of named, typed, range-validated values
-3. **BuildCommand** — a function that takes the user's parameter values and returns a CAD command string
+3. **Builder id** — maps the manifest to a generation function that returns a CAD command string
 
 The app reads the template list on startup, shows it in the Templates workspace,
-lets the user edit parameters, and executes the BuildCommand to generate the part.
+lets the user edit parameters, and executes the mapped command builder to generate the part.
 
 ---
 
 ## Adding a new template
 
-1. Add a `MakerTemplateDefinition` entry to `BuildTemplates()` in `MakerTemplateLibrary.cs`
-2. Create a folder here: `Templates/MyTemplate/`
-3. Add a `template.md` documenting the template (see any existing template for format)
+1. Add `template.json` to `Templates/MyTemplate/`
+2. Create or update `template.md`
+3. Map the builder id in `MakerTemplateLibrary.cs`
 4. Run `dotnet build` and verify it compiles
 5. Test: select the template in the UI, edit parameters, generate, check the part
 6. Export STL and verify the output is sensible
@@ -64,13 +72,14 @@ Templates/
 You can describe a part in natural language to Claude / Codex / GPT and ask it to:
 
 1. Define the parameters
-2. Write the `MakerTemplateDefinition` C# record
-3. Write the `template.md` documentation
-4. Generate a test preset
+2. Write the `template.json` manifest
+3. Map the builder id
+4. Write the `template.md` documentation
+5. Generate a test preset
 
 This is a valid and encouraged contribution workflow.
 Example prompt:
 
-> "Write a MakerTemplateDefinition for UMX1 for a DIN rail clip.
+> "Write a template.json and builder mapping for UMX1 for a DIN rail clip.
 > Parameters: rail width (35mm default), clip depth (20mm), wall thickness (3mm), screw hole diameter (4mm).
-> Use the same pattern as the existing MountingPlate template."
+> Use the same pattern as the existing MountingPlate manifest and builder."

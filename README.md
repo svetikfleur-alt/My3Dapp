@@ -96,6 +96,19 @@ Starter parametric templates you can select, configure, and generate:
 | L-Bracket | Brackets | width, height, depth, thickness, holes |
 | Fan Adapter Plate | Plates & mounts | fan size, thickness, screw holes, center opening |
 | Cable Clip | Clips & routing | cable diameter, clip width, wall thickness, gap |
+| DIN Rail Clip | Mounts & fixtures | rail width, clip height, lip depth, screw hole |
+| T-Slot Nut | Fasteners & hardware | slot width, nut length, hole |
+| Box Enclosure | Enclosures | inner size, wall thickness, corner radius |
+| Hinge Bracket | Brackets | leaf size, thickness, pin diameter |
+| PCB Tray | Electronics | board size, wall height, standoffs |
+
+### UMX1 language
+- Direct CAD commands for sketching and feature work
+- `recipe ...` macros for reusable modeling sequences
+- `template ...` / `part ...` invocations for parameterized maker parts
+- script envelopes with comments for AI-generated command blocks
+
+See [Docs/UMX1_LANGUAGE.md](Docs/UMX1_LANGUAGE.md).
 
 ### Export
 - STL export (Ctrl+E → Export dialog)
@@ -162,44 +175,40 @@ My3DApp/
 
 ## How to add a new template
 
-Templates are defined in [`AvaloniaApp/Services/MakerTemplateLibrary.cs`](AvaloniaApp/Services/MakerTemplateLibrary.cs).
+Templates are defined by:
+- a manifest in `PartLibrary/Templates/<TemplateName>/template.json`
+- a runtime loader and builder mapping in [`AvaloniaApp/Services/MakerTemplateLibrary.cs`](AvaloniaApp/Services/MakerTemplateLibrary.cs)
+- the UMX1 command language described in [Docs/UMX1_LANGUAGE.md](Docs/UMX1_LANGUAGE.md)
 
-Each template is a `MakerTemplateDefinition` record with:
+Each template includes:
 - `id` — unique string key
-- `DisplayName` — shown in the UI
-- `Category` — groups templates in the list
-- `Description` — one-line summary
-- `Tags` — searchable keywords
-- `Parameters` — list of `MakerTemplateParameter` (key, display name, default, min, max, unit)
-- `BuildCommand` — a function that takes the user's parameter values and returns a CAD command string
+- `displayName` — shown in the UI
+- `category` — groups templates in the list
+- `description` — one-line summary
+- `tags` — searchable keywords
+- `parameters` — named values with default/min/max/unit
+- `builder` — maps the manifest to a stable CAD command builder
 
 ### Minimal example
 
-```csharp
-new(
-    "my-bracket",
-    "My Bracket",
-    "Brackets",
-    "A simple custom bracket.",
-    ["bracket", "custom"],
-    [
-        P("width",     "Width",     60, 10, 200, "mm", "Bracket width"),
-        P("height",    "Height",    40, 10, 200, "mm", "Bracket height"),
-        P("thickness", "Thickness",  4,  1,  20, "mm", "Wall thickness"),
-    ],
-    "Starter bracket shape.",
-    values =>
-    {
-        var w = V(values, "width");
-        var h = V(values, "height");
-        var t = V(values, "thickness");
-        return $"recipe bracket {N(w)} {N(t)} {N(h)} {N(t)}";
-    })
+```json
+{
+  "id": "my-bracket",
+  "displayName": "My Bracket",
+  "category": "Brackets",
+  "description": "A simple custom bracket.",
+  "tags": ["bracket", "custom"],
+  "previewSummary": "Starter bracket shape.",
+  "builder": "my-bracket",
+  "parameters": [
+    { "key": "width", "displayName": "Width", "defaultValue": 60, "minValue": 10, "maxValue": 200, "unit": "mm", "description": "Bracket width" }
+  ]
+}
 ```
 
 Then:
-1. Add the template to the list in `BuildTemplates()`
-2. Create `PartLibrary/Templates/MyBracket/template.md` documenting it
+1. Add `template.json` and `template.md` in `PartLibrary/Templates/MyBracket/`
+2. Map the `builder` id in `MakerTemplateLibrary.cs`
 3. Run `dotnet build` and test it
 4. Submit a PR
 

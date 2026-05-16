@@ -1,0 +1,15 @@
+{
+  "id": "spacer",
+  "displayName": "Spacer / Standoff",
+  "category": "Disks & spacers",
+  "description": "Round standoff body generated as a simple cylinder with optional center hole.",
+  "tags": ["spacer", "standoff", "hardware"],
+  "previewSummary": "Quick standoff for electronics and panel spacing.",
+  "builder": "spacer",
+  "parameters": [
+    { "key": "outerDiameter", "displayName": "Outer Diameter", "defaultValue": 12, "minValue": 4, "maxValue": 80, "unit": "mm", "description": "Outside diameter" },
+    { "key": "innerDiameter", "displayName": "Inner Diameter", "defaultValue": 4, "minValue": 0, "maxValue": 40, "unit": "mm", "description": "Center bore diameter" },
+    { "key": "height", "displayName": "Height", "defaultValue": 16, "minValue": 2, "maxValue": 120, "unit": "mm", "description": "Spacer height" },
+    { "key": "chamfer", "displayName": "Chamfer", "defaultValue": 0.5, "minValue": 0, "maxValue": 8, "unit": "mm", "description": "Simple edge break" }
+  ]
+}

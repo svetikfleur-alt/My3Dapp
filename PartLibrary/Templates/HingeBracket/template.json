@@ -1,0 +1,16 @@
+{
+  "id": "hinge-bracket",
+  "displayName": "Hinge Bracket",
+  "category": "Brackets",
+  "description": "Two-leaf printable hinge bracket for panels, lids, and folding mechanisms.",
+  "tags": ["hinge", "bracket", "pivot", "door", "lid"],
+  "previewSummary": "Printable two-leaf hinge for doors and enclosure lids.",
+  "builder": "hinge-bracket",
+  "parameters": [
+    { "key": "leafWidth", "displayName": "Leaf Width", "defaultValue": 30, "minValue": 10, "maxValue": 100, "unit": "mm", "description": "Width of each hinge leaf" },
+    { "key": "leafLength", "displayName": "Leaf Length", "defaultValue": 40, "minValue": 15, "maxValue": 150, "unit": "mm", "description": "Length of each hinge leaf" },
+    { "key": "thickness", "displayName": "Thickness", "defaultValue": 3, "minValue": 1.5, "maxValue": 8, "unit": "mm", "description": "Leaf plate thickness" },
+    { "key": "pinDiameter", "displayName": "Pin Diameter", "defaultValue": 5, "minValue": 2, "maxValue": 12, "unit": "mm", "description": "Hinge pin outer diameter" },
+    { "key": "knuckleCount", "displayName": "Knuckle Count", "defaultValue": 3, "minValue": 2, "maxValue": 5, "unit": "count", "description": "Number of knuckle cylinders" }
+  ]
+}

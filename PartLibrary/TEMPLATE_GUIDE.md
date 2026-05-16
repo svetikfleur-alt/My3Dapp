@@ -30,40 +30,33 @@ Good template candidates:
 
 ## Step-by-step: adding a template
 
-### 1. Define the C# record
+### 1. Create the manifest
 
-Open [`AvaloniaApp/Services/MakerTemplateLibrary.cs`](../AvaloniaApp/Services/MakerTemplateLibrary.cs)
-and add a new `MakerTemplateDefinition` to the list in `BuildTemplates()`.
+Create `PartLibrary/Templates/MyTemplate/template.json`:
 
-```csharp
-new(
-    "my-template",            // unique lowercase-kebab-case id
-    "My Template",            // display name shown in UI
-    "Category Name",          // groups templates in the list
-    "One-line description.",  // shown below the template name
-    ["tag1", "tag2"],         // searchable keywords
-    [
-        // Parameters: key, display name, default, min, max, unit, description
-        P("width",     "Width",     60, 10, 300, "mm", "Overall width"),
-        P("height",    "Height",    40, 10, 300, "mm", "Overall height"),
-        P("thickness", "Thickness",  4,  1,  30, "mm", "Wall thickness"),
-    ],
-    "Preview summary shown in the template card.",
-    values =>
-    {
-        // Extract parameter values (returns 0.0 if key is missing)
-        var w = V(values, "width");
-        var h = V(values, "height");
-        var t = V(values, "thickness");
-
-        // Return a CAD command string
-        return $"select plane top; start sketch; rectangle 0 0 {N(w)} {N(h)}; finish sketch; extrude {N(t)}";
-    })
+```json
+{
+  "id": "my-template",
+  "displayName": "My Template",
+  "category": "Category Name",
+  "description": "One-line description.",
+  "tags": ["tag1", "tag2"],
+  "previewSummary": "Preview summary shown in the template card.",
+  "builder": "my-template",
+  "parameters": [
+    { "key": "width", "displayName": "Width", "defaultValue": 60, "minValue": 10, "maxValue": 300, "unit": "mm", "description": "Overall width" }
+  ]
+}
 ```
 
-### 2. Parameter helpers
+### 2. Map the builder
 
-The library provides three helpers you can use inside `BuildTemplates()`:
+Open [`AvaloniaApp/Services/MakerTemplateLibrary.cs`](../AvaloniaApp/Services/MakerTemplateLibrary.cs)
+and map the new `builder` id to a generation function.
+
+### 3. Parameter helpers
+
+The library provides helper functions you can use inside the builder methods:
 
 | Helper | Purpose |
 |---|---|
@@ -71,9 +64,9 @@ The library provides three helpers you can use inside `BuildTemplates()`:
 | `V(values, key)` | Gets a parameter value (returns 0.0 if missing) |
 | `N(double)` | Formats a number for a CAD command string (invariant culture, 3 decimal places) |
 
-### 3. CAD command syntax
+### 4. CAD command syntax
 
-The `BuildCommand` function returns a string of semicolon-separated CAD commands.
+Each builder returns a string of semicolon-separated CAD commands.
 Common patterns:
 
 ```
@@ -93,7 +86,7 @@ select plane top; start sketch; circle 0 0 radius {r}; finish sketch; extrude {h
 recipe bracket {w} {d} {h} {t}
 ```
 
-### 4. Create the template.md
+### 5. Create the template.md
 
 Create a file at `PartLibrary/Templates/MyTemplate/template.md`:
 
@@ -136,7 +129,7 @@ not full boolean subtracts."
 | Large bracket | width=100, height=60, thickness=5 |
 ```
 
-### 5. Build and test
+### 6. Build and test
 
 ```powershell
 dotnet build .\My3DApp.csproj -c Debug
@@ -148,10 +141,11 @@ Check:
 - Parameters within the defined range don't crash the app
 - Export STL produces a non-empty file
 
-### 6. Submit a PR
+### 7. Submit a PR
 
 PRs adding templates are welcome. Include:
-- The C# changes to `MakerTemplateLibrary.cs`
+- The `template.json` manifest
+- The builder mapping in `MakerTemplateLibrary.cs`
 - The `template.md` documentation file
 - A brief description of what the template generates
 
@@ -202,9 +196,9 @@ If your template uses simplified geometry, add a note to `template.md`:
 
 You can prompt Claude or GPT to write templates for you:
 
-> "Write a MakerTemplateDefinition for UMX1 for a DIN rail clip.
+> "Write a template.json and builder mapping for UMX1 for a DIN rail clip.
 > Parameters: rail width (35mm default, min 10, max 60), clip depth (20mm, min 10, max 60), wall thickness (3mm, min 1, max 10).
-> Follow the same structure as the MountingPlate template in MakerTemplateLibrary.cs."
+> Follow the same structure as the existing MountingPlate manifest and builder."
 
 This is a valid and encouraged contribution workflow.
 The AI output will need minor review and testing before submission.

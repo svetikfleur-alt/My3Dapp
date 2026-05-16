@@ -1,0 +1,16 @@
+{
+  "id": "din-rail-clip",
+  "displayName": "DIN Rail Clip",
+  "category": "Mounts & fixtures",
+  "description": "Printable spring-style DIN rail clip for control cabinets and panel electronics.",
+  "tags": ["din-rail", "clip", "panel", "electronics", "mount"],
+  "previewSummary": "35mm DIN rail mounting clip for panel electronics.",
+  "builder": "din-rail-clip",
+  "parameters": [
+    { "key": "railWidth", "displayName": "Rail Width", "defaultValue": 35, "minValue": 20, "maxValue": 60, "unit": "mm", "description": "DIN rail body width" },
+    { "key": "clipHeight", "displayName": "Clip Height", "defaultValue": 28, "minValue": 12, "maxValue": 80, "unit": "mm", "description": "Overall clip height" },
+    { "key": "wallThickness", "displayName": "Wall Thickness", "defaultValue": 3, "minValue": 1.5, "maxValue": 10, "unit": "mm", "description": "Printable clip wall thickness" },
+    { "key": "lipDepth", "displayName": "Lip Depth", "defaultValue": 7, "minValue": 4, "maxValue": 14, "unit": "mm", "description": "Rail retention lip depth" },
+    { "key": "screwHoleDiameter", "displayName": "Screw Hole Dia.", "defaultValue": 3.5, "minValue": 0, "maxValue": 6, "unit": "mm", "description": "Mounting screw hole (0=none)" }
+  ]
+}

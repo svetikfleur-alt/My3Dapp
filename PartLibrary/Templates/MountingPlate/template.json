@@ -1,0 +1,18 @@
+{
+  "id": "mounting-plate",
+  "displayName": "Mounting Plate",
+  "category": "Plates & mounts",
+  "description": "Rectangular maker plate with optional symmetric hole pattern.",
+  "tags": ["plate", "mount", "panel", "maker"],
+  "previewSummary": "Simple printable mounting plate with lightweight hole support.",
+  "builder": "mounting-plate",
+  "parameters": [
+    { "key": "width", "displayName": "Width", "defaultValue": 80, "minValue": 20, "maxValue": 240, "unit": "mm", "description": "Overall width" },
+    { "key": "height", "displayName": "Height", "defaultValue": 50, "minValue": 20, "maxValue": 240, "unit": "mm", "description": "Overall height" },
+    { "key": "thickness", "displayName": "Thickness", "defaultValue": 4, "minValue": 1, "maxValue": 25, "unit": "mm", "description": "Plate thickness" },
+    { "key": "cornerRadius", "displayName": "Corner Radius", "defaultValue": 4, "minValue": 0, "maxValue": 30, "unit": "mm", "description": "Rounded corner radius" },
+    { "key": "holeDiameter", "displayName": "Hole Diameter", "defaultValue": 5, "minValue": 0, "maxValue": 20, "unit": "mm", "description": "Fastener hole diameter" },
+    { "key": "holeMargin", "displayName": "Hole Margin", "defaultValue": 10, "minValue": 2, "maxValue": 40, "unit": "mm", "description": "Hole offset from edges" },
+    { "key": "holeCount", "displayName": "Hole Count", "defaultValue": 4, "minValue": 0, "maxValue": 4, "unit": "count", "description": "0, 2, or 4 holes" }
+  ]
+}

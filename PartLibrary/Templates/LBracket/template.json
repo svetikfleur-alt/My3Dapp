@@ -1,0 +1,17 @@
+{
+  "id": "l-bracket",
+  "displayName": "L-Bracket",
+  "category": "Brackets",
+  "description": "General-purpose maker bracket built from two joined plates.",
+  "tags": ["bracket", "support", "angle", "mount"],
+  "previewSummary": "Starter support bracket for mounts and enclosures.",
+  "builder": "l-bracket",
+  "parameters": [
+    { "key": "width", "displayName": "Width", "defaultValue": 60, "minValue": 10, "maxValue": 200, "unit": "mm", "description": "Bracket width" },
+    { "key": "height", "displayName": "Height", "defaultValue": 50, "minValue": 10, "maxValue": 200, "unit": "mm", "description": "Bracket upright height" },
+    { "key": "depth", "displayName": "Depth", "defaultValue": 40, "minValue": 10, "maxValue": 200, "unit": "mm", "description": "Bracket base depth" },
+    { "key": "thickness", "displayName": "Thickness", "defaultValue": 4, "minValue": 1, "maxValue": 30, "unit": "mm", "description": "Wall thickness" },
+    { "key": "holeDiameter", "displayName": "Hole Diameter", "defaultValue": 5, "minValue": 0, "maxValue": 18, "unit": "mm", "description": "Mounting hole diameter" },
+    { "key": "holeCount", "displayName": "Hole Count", "defaultValue": 2, "minValue": 0, "maxValue": 4, "unit": "count", "description": "Approximate hole feature count" }
+  ]
+}

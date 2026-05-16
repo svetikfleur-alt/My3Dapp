@@ -262,7 +262,7 @@ public sealed class CadCommandParser
 
     public IReadOnlyList<CadCommandSequenceStep> ParseSequence(string input)
     {
-        var expanded = CadRecipeLibrary.ExpandSequence(input);
+        var expanded = CadScriptLibrary.ExpandSequence(input);
 
         var parts = CommandSeparatorPattern
             .Split(expanded)
