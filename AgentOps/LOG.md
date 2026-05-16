@@ -1,3 +1,4 @@
+inspector-fix: 2026-05-16 — M key move tool now guarded to 3D mode only (was activating gizmo in sketch mode); Hole dialog default changed from "Blind" to "ThroughAll"; VERIFICATION.md written; 3 architectural issues reported to Builder
 done: 30 — Export panel STL/OBJ (2026-04-28) — ExportDialog, OnExportClick, Ctrl+E, ExportFormat ViewModel, WorkspaceController export methods, status-bar confirm; build 0 errors 0 warnings; commit 1f97318
 done: 29 — Hole feature (2026-04-27) — HoleFeature, HoleDepthKind, HoleSelectedBody; dialog (diameter/offset/depth); toolbar ⌀ button; H shortcut 3D-only; double-click edit; CSG stub with HANDOFF; 0 errors 0 warnings
 done: 28 — Circular Pattern feature (2026-04-27) — CircularPatternDialog, enum+wiring, ViewModel method, toolbar CP button, LP click wired, feature tree label; 0 errors

@@ -1027,7 +1027,7 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        if (e.Key == Key.M)
+        if (e.Key == Key.M && _wiredViewModel?.IsSketchMode == false)
         {
             if (_moveToolButton is null || _viewportHost is null)
             {
@@ -1865,7 +1865,7 @@ public sealed partial class MainWindow : Window
 
         try
         {
-            var dialog = new HoleFeatureDialog(10d, "Blind", 20d, 0d, 0d);
+            var dialog = new HoleFeatureDialog(10d, "ThroughAll", 20d, 0d, 0d);
             var result = await ShowAnchoredDialogAsync<HoleFeatureDialogResult?>(dialog);
             if (result is null)
             {
