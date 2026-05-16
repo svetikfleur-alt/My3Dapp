@@ -2381,7 +2381,7 @@ public sealed partial class MainWindow : Window
 
     private void OnPartStudioTabClick(object? sender, RoutedEventArgs e)
     {
-        if (_wiredViewModel is null || sender is not Button button || button.Tag is not string name)
+        if (_wiredViewModel is null || sender is not AButton button || button.Tag is not string name)
         {
             return;
         }
@@ -2391,7 +2391,7 @@ public sealed partial class MainWindow : Window
 
     private async void OnPartStudioTabRename(object? sender, Avalonia.Input.TappedEventArgs e)
     {
-        if (_wiredViewModel is null || sender is not Button button || button.Tag is not string oldName)
+        if (_wiredViewModel is null || sender is not AButton button || button.Tag is not string oldName)
         {
             return;
         }
@@ -2413,7 +2413,7 @@ public sealed partial class MainWindow : Window
 
     private void OnPartStudioTabClose(object? sender, RoutedEventArgs e)
     {
-        if (_wiredViewModel is null || sender is not Button button || button.Tag is not string name)
+        if (_wiredViewModel is null || sender is not AButton button || button.Tag is not string name)
         {
             return;
         }
@@ -2429,7 +2429,7 @@ public sealed partial class MainWindow : Window
 
     private void OnAssistantRecipeClick(object? sender, RoutedEventArgs e)
     {
-        if (_wiredViewModel is null || sender is not Button button || button.Tag is not string recipeName)
+        if (_wiredViewModel is null || sender is not AButton button || button.Tag is not string recipeName)
         {
             return;
         }

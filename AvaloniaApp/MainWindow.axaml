@@ -1347,7 +1347,7 @@
                       Margin="0,8,0,0"
                       IsVisible="{Binding #RecipesToggle.IsChecked}">
                 <StackPanel Spacing="6">
-                  <TextBlock Text="Insert a standard part — click to fill the prompt with sample parameters, then edit & send."
+                  <TextBlock Text="Insert a standard part — click to fill the prompt with sample parameters, then edit &amp; send."
                              Classes="AssistantHintText"
                              TextWrapping="Wrap" />
                   <ItemsControl ItemsSource="{Binding AssistantRecipes}">
