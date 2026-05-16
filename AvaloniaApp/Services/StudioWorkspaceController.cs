@@ -27,6 +27,7 @@ public sealed class StudioWorkspaceController
     private const int MaxUndoDepth = 50;
     private int _mutationCount;
     private int _savedMutationCount;
+    private readonly Dictionary<Guid, MeshProperties> _meshPropertiesCache = new();
 
     private readonly List<PartStudioRecord> _partStudios = new();
     private int _activeStudioIndex;
@@ -36,6 +37,9 @@ public sealed class StudioWorkspaceController
     public bool CanUndo => _undoStack.Count > 0;
     public bool CanRedo => _redoStack.Count > 0;
     public bool HasUnsavedChanges => _mutationCount != _savedMutationCount;
+
+    public MeshProperties? GetBodyMeshProperties(Guid bodyId) =>
+        _meshPropertiesCache.GetValueOrDefault(bodyId);
 
     public string DocumentName
     {
@@ -820,6 +824,7 @@ public sealed class StudioWorkspaceController
             try
             {
                 var mesh = _mesher.Tessellate(compiledBody.Solid);
+                _meshPropertiesCache[compiledBody.BodyId] = MeshAnalyzer.Analyze(mesh);
                 var translation = GetBodyTranslation(sourceBody);
                 renderBodies.Add(new ViewportRenderBody
                 {

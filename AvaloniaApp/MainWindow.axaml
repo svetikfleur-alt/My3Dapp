@@ -190,6 +190,13 @@
                 <svg:Svg Path="avares://My3DApp/Assets/Icons/export.svg" Width="16" Height="16" />
               </Button>
 
+              <Button Classes="ToolbarActionButton"
+                      ToolTip.Tip="FormaScript editor — parametric CAD scripting (Ctrl+F5)"
+                      Click="OnFormaScriptClick">
+                <TextBlock Text="{ }" FontFamily="Consolas,monospace" FontSize="13" FontWeight="Bold"
+                           VerticalAlignment="Center" />
+              </Button>
+
               <Border Classes="ToolbarDivider" />
 
               <TextBlock Text="Shapes" Classes="ToolbarGroupLabel" />

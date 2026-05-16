@@ -640,6 +640,17 @@ public sealed partial class MainWindow : Window
         await dialog.ShowDialog<bool?>(this);
     }
 
+    private async void OnFormaScriptClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null) return;
+        var dialog = new FormaScriptDialog();
+        var confirmed = await dialog.ShowDialog<bool?>(this);
+        if (confirmed == true && dialog.Result is { } result)
+        {
+            _ = _wiredViewModel.RunFormaScriptAsync(result);
+        }
+    }
+
     private async void OnViewportDeleteRequested(object? sender, EventArgs e)
     {
         if (_wiredViewModel is null)
@@ -1050,6 +1061,13 @@ public sealed partial class MainWindow : Window
         if (!e.Handled && e.KeyModifiers == KeyModifiers.Control && e.Key == Key.E)
         {
             OnExportClick(this, new RoutedEventArgs());
+            e.Handled = true;
+            return;
+        }
+
+        if (!e.Handled && e.KeyModifiers == KeyModifiers.Control && e.Key == Key.F5)
+        {
+            OnFormaScriptClick(this, new RoutedEventArgs());
             e.Handled = true;
             return;
         }

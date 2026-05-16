@@ -2202,6 +2202,62 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         }
     }
 
+    public async Task<string> RunFormaScriptAsync(FormaScriptResult scriptResult, CancellationToken cancellationToken = default)
+    {
+        if (!scriptResult.IsSuccess || scriptResult.Commands.Count == 0)
+            return scriptResult.ErrorMessage;
+
+        var report = new StringBuilder();
+        AppendToLog($"FormaScript: executing {scriptResult.Commands.Count} command(s) from {scriptResult.LinesExecuted} script lines.");
+        ShowNotification($"Running FormaScript ({scriptResult.Commands.Count} commands)…", NotificationSeverity.Info);
+
+        int succeeded = 0;
+        foreach (var cmdText in scriptResult.Commands)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                AppendToLog("FormaScript: canceled.");
+                return $"Script canceled after {succeeded} command(s).";
+            }
+
+            var steps = _commandParser.ParseSequence(cmdText);
+            foreach (var step in steps)
+            {
+                if (!step.Result.IsSuccess || step.Result.Commands.Count == 0)
+                {
+                    var msg = $"Cannot parse '{step.Text}': {step.Result.Message}";
+                    AppendToLog($"FormaScript failed: {msg}");
+                    report.AppendLine(msg);
+                    ShowNotification(msg, NotificationSeverity.Warning);
+                    return report.ToString().TrimEnd();
+                }
+
+                foreach (var command in step.Result.Commands)
+                {
+                    var result = await ExecuteWorkspaceCommandAsync(command, cancellationToken);
+                    if (!result.Success)
+                    {
+                        var msg = $"'{step.Text}' failed: {result.Message}";
+                        AppendToLog($"FormaScript failed: {msg}");
+                        report.AppendLine(msg);
+                        ShowNotification(result.Message, NotificationSeverity.Warning);
+                        return report.ToString().TrimEnd();
+                    }
+                    succeeded++;
+                }
+            }
+        }
+
+        if (scriptResult.Warnings.Count > 0)
+            AppendToLog($"FormaScript warnings: {string.Join("; ", scriptResult.Warnings)}");
+
+        var summary = $"FormaScript completed: {succeeded} command(s) executed.";
+        ShowNotification(summary, NotificationSeverity.Info);
+        AppendToLog(summary);
+        ShowPropertiesPanel();
+        return summary;
+    }
+
     public async Task<string> ExecuteLocalCommandTextAsync(string input, CancellationToken cancellationToken = default)
     {
         var commandText = input.Trim();
@@ -2503,6 +2559,16 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 if (compiledBody is not null)
                 {
                     AddParameter("Kind", "Kind", FormatFeatureName(compiledBody.SourceKind.ToString()), false);
+                }
+
+                var mp = _workspaceController.GetBodyMeshProperties(body.Id);
+                if (mp is not null && mp.TriangleCount > 0)
+                {
+                    AddParameter("Volume", "Volume", $"{mp.VolumeCm3:0.###} cm³  ({mp.Volume:0.#} mm³)", false);
+                    AddParameter("Surface Area", "SurfaceArea", $"{mp.SurfaceAreaCm2:0.###} cm²", false);
+                    AddParameter("Bounding Box", "BBox",
+                        $"{mp.BBoxWidth:0.#} × {mp.BBoxDepth:0.#} × {mp.BBoxHeight:0.#} mm", false);
+                    AddParameter("Triangles", "Triangles", mp.TriangleCount.ToString("N0"), false);
                 }
 
                 return;
