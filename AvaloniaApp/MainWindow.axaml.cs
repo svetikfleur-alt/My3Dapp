@@ -82,6 +82,30 @@ public sealed partial class MainWindow : Window
         AvaloniaXamlLoader.Load(this);
     }
 
+    private bool _forceClose;
+
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        base.OnClosing(e);
+        if (_forceClose || _wiredViewModel is null || !_wiredViewModel.HasUnsavedChanges)
+        {
+            return;
+        }
+
+        e.Cancel = true;
+        _ = ConfirmCloseAsync();
+    }
+
+    private async Task ConfirmCloseAsync()
+    {
+        var confirm = await ConfirmDiscardAsync();
+        if (confirm)
+        {
+            _forceClose = true;
+            Close();
+        }
+    }
+
     protected override void OnClosed(EventArgs e)
     {
         var disposableViewModel = DataContext as IDisposable;
@@ -473,6 +497,16 @@ public sealed partial class MainWindow : Window
     {
         if (_wiredViewModel is null)
             return;
+
+        if (_wiredViewModel.HasUnsavedChanges)
+        {
+            var confirm = await ConfirmDiscardAsync();
+            if (!confirm)
+            {
+                e.Handled = true;
+                return;
+            }
+        }
 
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
