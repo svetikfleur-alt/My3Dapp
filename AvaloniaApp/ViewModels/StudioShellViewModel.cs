@@ -2083,11 +2083,14 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
                     if (allOk)
                     {
-                        foreach (var step in parsedSuggestionSequence)
+                        if (ModeExecutesCommands(SelectedAssistantMode))
                         {
-                            foreach (var command in step.Result.Commands)
+                            foreach (var step in parsedSuggestionSequence)
                             {
-                                await HandleParsedCommandAsync(command, $"Assistant step {step.Index}", cancellationToken);
+                                foreach (var command in step.Result.Commands)
+                                {
+                                    await HandleParsedCommandAsync(command, $"Assistant step {step.Index}", cancellationToken);
+                                }
                             }
                         }
                     }
@@ -2322,7 +2325,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     private void ShowAssistantPanel() => SelectedInspectorTabIndex = 1;
 
     private static bool ModeExecutesCommands(string mode) =>
-        mode is "Auto" or "Do" or "Think&Do";
+        mode is "Auto" or "Do" or "Think" or "Think&Do";
 
     private static string MaskApiKey(string apiKey)
     {
