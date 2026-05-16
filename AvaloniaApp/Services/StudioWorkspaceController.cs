@@ -873,7 +873,9 @@ public sealed class StudioWorkspaceController
                 })
                 .ToList(),
             Sketches = renderSketches,
-            Bodies = renderBodies
+            Bodies = _sculptedBodies.Count > 0
+                ? [.. renderBodies, .. _sculptedBodies]
+                : renderBodies
         };
     }
 
@@ -2502,6 +2504,32 @@ public sealed class StudioWorkspaceController
                 return _mesher.Tessellate(body.Solid);
         }
         throw new InvalidOperationException("Selected body not found in the current project.");
+    }
+
+    // ── SolidSculpt mesh injection ───────────────────────────────────────────
+
+    private readonly List<ViewportRenderBody> _sculptedBodies = new();
+
+    /// <summary>
+    /// Injects a sculpted mesh directly into the viewport as a non-parametric overlay body.
+    /// Returns the new body's ID so the caller can reference it.
+    /// </summary>
+    public Guid InjectSculptedMesh(Mesh mesh, string name)
+    {
+        var bodyId = Guid.NewGuid();
+        _sculptedBodies.Add(new ViewportRenderBody
+        {
+            BodyId = bodyId,
+            Name = name,
+            Kind = "SolidSculpt",
+            Positions = BuildLocalPositions(mesh, new Vector3D(0, 0, 0)),
+            Indices = BuildIndices(mesh),
+            Color = "#7ecaff"
+        });
+        _meshPropertiesCache[bodyId] = MeshAnalyzer.Analyze(mesh);
+        _mutationCount++;
+        PublishSuccess("SolidSculpt mesh added.", mutated: true);
+        return bodyId;
     }
 
     private Mesh BuildExportMesh()

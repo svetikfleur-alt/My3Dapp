@@ -197,6 +197,12 @@
                            VerticalAlignment="Center" />
               </Button>
 
+              <Button Classes="ToolbarActionButton"
+                      ToolTip.Tip="SolidSculpt — organic mesh sculpting language (Ctrl+F6)"
+                      Click="OnSolidSculptClick">
+                <TextBlock Text="~" FontSize="15" FontWeight="Black" VerticalAlignment="Center" />
+              </Button>
+
               <Border Classes="ToolbarDivider" />
 
               <TextBlock Text="Shapes" Classes="ToolbarGroupLabel" />
@@ -855,6 +861,7 @@
       </Grid>
     </Border>
 
+    <Panel>
     <Grid ColumnDefinitions="320,8,*,8,320" Margin="10,10,10,8">
       <Border Grid.Column="0"
               Classes="StudioPanelSurface"
@@ -1509,5 +1516,215 @@
         </TabControl>
       </Border>
     </Grid>
+
+    <!-- ══ Start Page Overlay ══ -->
+    <Border Classes="StartPageOverlay"
+            IsVisible="{Binding IsStartPageVisible}">
+      <Grid ColumnDefinitions="340,*">
+
+        <!-- Left sidebar: brand + actions + recent files -->
+        <Border Classes="StartPageSidebar">
+          <DockPanel>
+
+            <!-- Brand mark -->
+            <StackPanel DockPanel.Dock="Top" Spacing="0" Margin="0,0,0,48">
+              <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <Border Background="{DynamicResource Studio.AccentBrush}"
+                        CornerRadius="10"
+                        Width="44" Height="44">
+                  <TextBlock Text="M3"
+                             FontSize="18"
+                             FontWeight="Black"
+                             Foreground="#0f1520"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center" />
+                </Border>
+                <StackPanel VerticalAlignment="Center" Spacing="2">
+                  <TextBlock Text="My3DApp" Classes="StartPageAppName" />
+                  <TextBlock Text="Parametric 3D Studio" Classes="StartPageTagline" />
+                </StackPanel>
+              </StackPanel>
+            </StackPanel>
+
+            <!-- Quick actions -->
+            <StackPanel DockPanel.Dock="Top" Spacing="8" Margin="0,0,0,36">
+              <Button Classes="StartPagePrimaryAction"
+                      Click="OnStartPageNewClick">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <TextBlock Text="+" FontSize="17" FontWeight="Bold" VerticalAlignment="Center" />
+                  <TextBlock Text="New Document" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+              <Button Classes="StartPageSecondaryAction"
+                      Click="OnStartPageOpenClick">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <TextBlock Text="⊙" FontSize="14" VerticalAlignment="Center"
+                             Foreground="{DynamicResource Studio.TextMutedBrush}" />
+                  <TextBlock Text="Open Project…" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+              <Button Classes="StartPageSecondaryAction"
+                      Click="OnStartPageFormaScriptClick">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <TextBlock Text="{ }" FontFamily="Consolas,monospace" FontSize="13"
+                             FontWeight="Bold" VerticalAlignment="Center"
+                             Foreground="{DynamicResource Studio.AccentBrush}" />
+                  <TextBlock Text="FormaScript Editor" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+              <Button Classes="StartPageSecondaryAction"
+                      Click="OnStartPageSolidSculptClick">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <TextBlock Text="~" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"
+                             Foreground="{DynamicResource Studio.TextMutedBrush}" />
+                  <TextBlock Text="SolidSculpt Editor" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+
+            <!-- Recent files -->
+            <StackPanel DockPanel.Dock="Top" Spacing="2">
+              <TextBlock Classes="StartPageSectionHeader" Text="Recent" />
+              <ItemsControl ItemsSource="{Binding RecentFiles}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Button Classes="StartPageRecentFile"
+                            Tag="{Binding}"
+                            Click="OnStartPageRecentFileClick">
+                      <TextBlock Text="{Binding}"
+                                 TextTrimming="CharacterEllipsis"
+                                 MaxWidth="240" />
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <TextBlock Text="No recent files"
+                         Classes="StartPageTemplateDesc"
+                         Margin="6,4,0,0"
+                         IsVisible="{Binding !HasRecentFiles}" />
+            </StackPanel>
+
+            <StackPanel DockPanel.Dock="Bottom" Spacing="4">
+              <TextBlock Text="© 2026 My3DApp Studio"
+                         FontSize="10"
+                         Foreground="{DynamicResource Studio.TextMutedBrush}" />
+            </StackPanel>
+
+            <Panel />
+          </DockPanel>
+        </Border>
+
+        <!-- Right area: templates grid -->
+        <ScrollViewer Grid.Column="1" Padding="40,40,40,40">
+          <StackPanel Spacing="32">
+            <StackPanel Spacing="8">
+              <TextBlock Text="Start from a template"
+                         FontSize="22"
+                         FontWeight="SemiBold"
+                         Foreground="{DynamicResource Studio.TextPrimaryBrush}" />
+              <TextBlock Text="Choose a starting point or begin with an empty document."
+                         Foreground="{DynamicResource Studio.TextMutedBrush}"
+                         FontSize="13" />
+            </StackPanel>
+
+            <UniformGrid Columns="3" Rows="2">
+              <Border Classes="StartPageTemplateCard" Margin="6" Tag="box" Tapped="OnStartPageTemplateTapped">
+                <StackPanel>
+                  <TextBlock Text="⬜" Classes="StartPageTemplateIcon" />
+                  <TextBlock Text="Box" Classes="StartPageTemplateName" />
+                  <TextBlock Text="Start with a parametric rectangular solid ready for features."
+                             Classes="StartPageTemplateDesc" />
+                </StackPanel>
+              </Border>
+
+              <Border Classes="StartPageTemplateCard" Margin="6" Tag="cylinder" Tapped="OnStartPageTemplateTapped">
+                <StackPanel>
+                  <TextBlock Text="⭕" Classes="StartPageTemplateIcon" />
+                  <TextBlock Text="Cylinder" Classes="StartPageTemplateName" />
+                  <TextBlock Text="Round stock ready for revolve, shell, or bore operations."
+                             Classes="StartPageTemplateDesc" />
+                </StackPanel>
+              </Border>
+
+              <Border Classes="StartPageTemplateCard" Margin="6" Tag="sphere" Tapped="OnStartPageTemplateTapped">
+                <StackPanel>
+                  <TextBlock Text="🔵" Classes="StartPageTemplateIcon" />
+                  <TextBlock Text="Sphere" Classes="StartPageTemplateName" />
+                  <TextBlock Text="Organic starting point for sculpt, shell, or CSG operations."
+                             Classes="StartPageTemplateDesc" />
+                </StackPanel>
+              </Border>
+
+              <Border Classes="StartPageTemplateCard" Margin="6" Tag="forma:bolt" Tapped="OnStartPageTemplateTapped">
+                <StackPanel>
+                  <TextBlock Text="⬡" Classes="StartPageTemplateIcon" />
+                  <TextBlock Text="Hex Bolt" Classes="StartPageTemplateName" />
+                  <TextBlock Text="Parametric bolt head generated via FormaScript — fully editable."
+                             Classes="StartPageTemplateDesc" />
+                </StackPanel>
+              </Border>
+
+              <Border Classes="StartPageTemplateCard" Margin="6" Tag="forma:tower" Tapped="OnStartPageTemplateTapped">
+                <StackPanel>
+                  <TextBlock Text="🏛" Classes="StartPageTemplateIcon" />
+                  <TextBlock Text="Parametric Tower" Classes="StartPageTemplateName" />
+                  <TextBlock Text="Multi-floor shell structure generated by a FormaScript loop."
+                             Classes="StartPageTemplateDesc" />
+                </StackPanel>
+              </Border>
+
+              <Border Classes="StartPageTemplateCard" Margin="6" Tag="forma:gear" Tapped="OnStartPageTemplateTapped">
+                <StackPanel>
+                  <TextBlock Text="⚙" Classes="StartPageTemplateIcon" />
+                  <TextBlock Text="Gear Blank" Classes="StartPageTemplateName" />
+                  <TextBlock Text="Circular tooth pattern with hub — a classic mechanical starting point."
+                             Classes="StartPageTemplateDesc" />
+                </StackPanel>
+              </Border>
+            </UniformGrid>
+
+            <!-- SolidSculpt promo card -->
+            <Border Background="{DynamicResource Studio.PanelBackgroundBrush}"
+                    BorderBrush="{DynamicResource Studio.BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="24,20">
+              <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Spacing="6">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="~" FontSize="18" FontWeight="Black"
+                               Foreground="{DynamicResource Studio.AccentBrush}" />
+                    <TextBlock Text="SolidSculpt"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Studio.TextPrimaryBrush}" />
+                    <Border Background="{DynamicResource Studio.AccentBrush}"
+                            CornerRadius="4" Padding="6,2">
+                      <TextBlock Text="NEW" FontSize="9" FontWeight="Black" Foreground="#0f1520" />
+                    </Border>
+                  </StackPanel>
+                  <TextBlock Text="Organic mesh sculpting via a dedicated scripting language. Use subdivide, smooth, inflate, noise, twist, and more to shape organic geometry procedurally."
+                             Foreground="{DynamicResource Studio.TextMutedBrush}"
+                             FontSize="12"
+                             TextWrapping="Wrap"
+                             MaxWidth="500" />
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Classes="StartPageSecondaryAction"
+                        Width="160"
+                        HorizontalContentAlignment="Center"
+                        VerticalAlignment="Center"
+                        Click="OnStartPageSolidSculptClick">
+                  Open SolidSculpt
+                </Button>
+              </Grid>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+
+      </Grid>
+    </Border>
+
+    </Panel>
   </DockPanel>
 </Window>

@@ -128,6 +128,20 @@ public sealed partial class FormaScriptDialog : AWindow
         ScriptEditor.Text = _lastScript;
     }
 
+    public void LoadTemplate(string key)
+    {
+        var script = key switch
+        {
+            "bolt" => Examples[2].Code,   // Hex Bolt Head
+            "tower" => Examples[4].Code,  // Tower with Floors
+            "gear" => Examples[3].Code,   // Gear Blank
+            "hollow" => Examples[1].Code, // Hollow Cylinder
+            "grid" => Examples[0].Code,   // Parametric Box Grid
+            _ => _lastScript
+        };
+        ScriptEditor.Text = script;
+    }
+
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 
     // Expose the parsed + executed commands.

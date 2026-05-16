@@ -88,6 +88,20 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     private bool _isSelectingSketchPlane;
     private bool _hasExplicitSketchBaseSelection;
     private readonly List<string> _recentPrimitiveKinds = ["box", "cylinder", "sphere"];
+    private bool _isStartPageVisible = true;
+
+    public bool IsStartPageVisible
+    {
+        get => _isStartPageVisible;
+        private set
+        {
+            if (_isStartPageVisible == value) return;
+            _isStartPageVisible = value;
+            RaisePropertyChanged(nameof(IsStartPageVisible));
+        }
+    }
+
+    public void DismissStartPage() => IsStartPageVisible = false;
 
     public StudioShellViewModel()
     {
@@ -1684,6 +1698,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public void NewDocument()
     {
+        DismissStartPage();
         _workspaceController.NewDocument();
         CurrentProjectPath = string.Empty;
         ProjectTitleBase = "My3DApp Project / unsaved.my3dapp";
@@ -1724,6 +1739,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         var result = _workspaceController.OpenProject(path);
         if (result.Success)
         {
+            DismissStartPage();
             CurrentProjectPath = path;
             ProjectTitleBase = BuildProjectTitle(path);
             _appSettings.AddRecentFile(path);
@@ -2310,6 +2326,23 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         ShowPropertiesPanel();
         AppendToLog($"Command palette sequence completed: {steps.Count.ToString(CultureInfo.InvariantCulture)} step(s).");
         return report.ToString().TrimEnd();
+    }
+
+    public async Task RunSolidSculptAsync(Services.SolidSculptResult sculptResult)
+    {
+        if (!sculptResult.IsSuccess || sculptResult.Mesh is null)
+        {
+            ShowNotification($"SolidSculpt error: {sculptResult.ErrorMessage}", NotificationSeverity.Error);
+            return;
+        }
+        DismissStartPage();
+        await Task.Yield(); // allow UI to update before potentially heavy work
+        var bodyId = _workspaceController.InjectSculptedMesh(sculptResult.Mesh, "SolidSculpt Mesh");
+        ShowNotification($"SolidSculpt mesh added ({sculptResult.Mesh.Triangles.Count:N0} triangles, {sculptResult.LinesExecuted} script lines).", NotificationSeverity.Info);
+        AppendToLog($"SolidSculpt: {sculptResult.LinesExecuted} lines executed. Body ID: {bodyId}");
+        if (!string.IsNullOrEmpty(sculptResult.Log))
+            AppendToLog(sculptResult.Log);
+        ShowPropertiesPanel();
     }
 
     private Task<StudioWorkspaceActionResult> ExecuteWorkspaceCommandAsync(CadViewportCommand command, CancellationToken cancellationToken)

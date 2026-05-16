@@ -1,0 +1,137 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="My3DApp.AvaloniaApp.Dialogs.SolidSculptDialog"
+        Title="SolidSculpt — Organic Mesh Sculpting"
+        Width="820"
+        Height="640"
+        MinWidth="640"
+        MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True">
+
+  <Grid RowDefinitions="Auto,*,Auto,Auto">
+
+    <!-- Header -->
+    <Border Grid.Row="0"
+            Background="{DynamicResource Studio.ToolbarBackgroundBrush}"
+            BorderBrush="{DynamicResource Studio.BorderBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="20,14">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <StackPanel Spacing="2">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="~"
+                       FontSize="18"
+                       FontWeight="Black"
+                       Foreground="{DynamicResource Studio.AccentBrush}"
+                       VerticalAlignment="Center" />
+            <TextBlock Text="SolidSculpt"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center"
+                       Foreground="{DynamicResource Studio.TextPrimaryBrush}" />
+          </StackPanel>
+          <TextBlock Text="Organic mesh sculpting DSL — define a base shape, then apply sculpt operations."
+                     FontSize="11"
+                     Foreground="{DynamicResource Studio.TextMutedBrush}" />
+        </StackPanel>
+        <Button Grid.Column="2"
+                x:Name="ExamplesButton"
+                Content="Examples ▾"
+                FontSize="11"
+                Padding="10,6"
+                VerticalAlignment="Center"
+                Click="OnExamplesClick" />
+      </Grid>
+    </Border>
+
+    <!-- Code editor + output split -->
+    <Grid Grid.Row="1" ColumnDefinitions="*,200">
+
+      <!-- Script editor -->
+      <Border Classes="SolidSculptEditorSurface"
+              Margin="12,12,6,12">
+        <TextBox x:Name="ScriptEditor"
+                 AcceptsReturn="True"
+                 TextWrapping="NoWrap"
+                 FontFamily="Cascadia Code, Consolas, Courier New, monospace"
+                 FontSize="13"
+                 Padding="14"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 Foreground="{DynamicResource Studio.TextPrimaryBrush}"
+                 VerticalScrollBarVisibility="Auto"
+                 HorizontalScrollBarVisibility="Auto"
+                 KeyDown="OnEditorKeyDown" />
+      </Border>
+
+      <!-- Reference panel -->
+      <Border Grid.Column="1"
+              Margin="0,12,12,12"
+              Background="{DynamicResource Studio.PanelBackgroundBrush}"
+              BorderBrush="{DynamicResource Studio.BorderBrush}"
+              BorderThickness="1"
+              CornerRadius="8"
+              Padding="12">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel Spacing="10">
+            <TextBlock Text="COMMANDS"
+                       FontSize="9"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource Studio.TextMutedBrush}"
+                       LetterSpacing="2" />
+            <TextBox IsReadOnly="True"
+                     FontFamily="Consolas, monospace"
+                     FontSize="10"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Foreground="{DynamicResource Studio.TextSecondaryBrush}"
+                     TextWrapping="Wrap"
+                     Text="base sphere [r]&#10;base box [w] [h] [d]&#10;base cylinder [r] [h]&#10;&#10;subdivide [n]&#10;smooth [iters] [str]&#10;inflate [amount]&#10;noise [scale] [str] [seed]&#10;pinch [str] [falloff]&#10;twist [degrees]&#10;bend [degrees]&#10;taper [top] [bot]&#10;spherize [str] [r]&#10;&#10;var name = expr&#10;repeat N&#10;  ...&#10;end&#10;&#10;// comment" />
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+
+    <!-- Status bar -->
+    <Border Grid.Row="2"
+            Background="{DynamicResource Studio.PanelInsetBrush}"
+            Padding="16,8">
+      <TextBlock x:Name="StatusText"
+                 FontSize="11"
+                 Foreground="{DynamicResource Studio.TextMutedBrush}"
+                 TextTrimming="CharacterEllipsis" />
+    </Border>
+
+    <!-- Action buttons -->
+    <Border Grid.Row="3"
+            Background="{DynamicResource Studio.ToolbarBackgroundBrush}"
+            BorderBrush="{DynamicResource Studio.BorderBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="16,10">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+        <TextBlock Grid.Column="0"
+                   Text="Ctrl+Enter to run"
+                   FontSize="10"
+                   Foreground="{DynamicResource Studio.TextMutedBrush}"
+                   VerticalAlignment="Center" />
+        <Button Grid.Column="2"
+                Content="Clear"
+                Margin="0,0,8,0"
+                Padding="14,6"
+                Click="OnClearClick" />
+        <Button Grid.Column="3"
+                Content="Cancel"
+                Margin="0,0,8,0"
+                Padding="14,6"
+                Click="OnCancelClick" />
+        <Button Grid.Column="4"
+                Content="Apply Sculpt"
+                Classes="FeatureDialogButtonPrimary"
+                Padding="18,6"
+                Click="OnApplyClick" />
+      </Grid>
+    </Border>
+
+  </Grid>
+</Window>

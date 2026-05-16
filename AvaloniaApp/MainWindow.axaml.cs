@@ -468,6 +468,79 @@ public sealed partial class MainWindow : Window
         OnToggleConstructionModeClick(sender, new RoutedEventArgs());
     }
 
+    // ── Start Page handlers ──────────────────────────────────────────────────
+
+    private void OnStartPageNewClick(object? sender, RoutedEventArgs e)
+    {
+        _wiredViewModel?.NewDocument();
+    }
+
+    private async void OnStartPageOpenClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null) return;
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Open My3DApp project",
+            AllowMultiple = false,
+            FileTypeFilter = [ProjectFileType]
+        });
+        var path = files.Count > 0 ? files[0].TryGetLocalPath() : null;
+        if (!string.IsNullOrWhiteSpace(path))
+            _wiredViewModel.OpenProject(path);
+    }
+
+    private void OnStartPageRecentFileClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null) return;
+        var path = (sender as Avalonia.Controls.Button)?.Tag as string;
+        if (!string.IsNullOrWhiteSpace(path))
+            _wiredViewModel.OpenProject(path);
+    }
+
+    private async void OnStartPageFormaScriptClick(object? sender, RoutedEventArgs e)
+    {
+        _wiredViewModel?.DismissStartPage();
+        if (_wiredViewModel is null) return;
+        var dialog = new Dialogs.FormaScriptDialog();
+        var confirmed = await dialog.ShowDialog<bool?>(this);
+        if (confirmed == true && dialog.Result is { } result)
+            _ = _wiredViewModel.RunFormaScriptAsync(result);
+    }
+
+    private async void OnStartPageSolidSculptClick(object? sender, RoutedEventArgs e)
+    {
+        _wiredViewModel?.DismissStartPage();
+        if (_wiredViewModel is null) return;
+        var dialog = new Dialogs.SolidSculptDialog();
+        var confirmed = await dialog.ShowDialog<bool?>(this);
+        if (confirmed == true && dialog.Result is { } result)
+            _ = _wiredViewModel.RunSolidSculptAsync(result);
+    }
+
+    private async void OnStartPageTemplateTapped(object? sender, Avalonia.Input.TappedEventArgs e)
+    {
+        if (_wiredViewModel is null) return;
+        var tag = (sender as Avalonia.Controls.Border)?.Tag as string ?? "";
+        _wiredViewModel.DismissStartPage();
+        _wiredViewModel.NewDocument();
+
+        if (tag.StartsWith("forma:"))
+        {
+            var key = tag["forma:".Length..];
+            var dialog = new Dialogs.FormaScriptDialog();
+            dialog.LoadTemplate(key);
+            var confirmed = await dialog.ShowDialog<bool?>(this);
+            if (confirmed == true && dialog.Result is { } result)
+                _ = _wiredViewModel.RunFormaScriptAsync(result);
+        }
+        else if (!string.IsNullOrEmpty(tag))
+        {
+            _ = _wiredViewModel.CreatePrimitiveAsync(tag);
+        }
+    }
+
+    // ── Toolbar New/Open (original handlers kept) ────────────────────────────
+
     private async void OnNewDocumentClick(object? sender, RoutedEventArgs e)
     {
         if (_wiredViewModel is null)
@@ -649,6 +722,16 @@ public sealed partial class MainWindow : Window
         {
             _ = _wiredViewModel.RunFormaScriptAsync(result);
         }
+    }
+
+    private async void OnSolidSculptClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null) return;
+        _wiredViewModel.DismissStartPage();
+        var dialog = new Dialogs.SolidSculptDialog();
+        var confirmed = await dialog.ShowDialog<bool?>(this);
+        if (confirmed == true && dialog.Result is { } result)
+            _ = _wiredViewModel.RunSolidSculptAsync(result);
     }
 
     private async void OnViewportDeleteRequested(object? sender, EventArgs e)
@@ -1068,6 +1151,13 @@ public sealed partial class MainWindow : Window
         if (!e.Handled && e.KeyModifiers == KeyModifiers.Control && e.Key == Key.F5)
         {
             OnFormaScriptClick(this, new RoutedEventArgs());
+            e.Handled = true;
+            return;
+        }
+
+        if (!e.Handled && e.KeyModifiers == KeyModifiers.Control && e.Key == Key.F6)
+        {
+            OnSolidSculptClick(this, new RoutedEventArgs());
             e.Handled = true;
             return;
         }

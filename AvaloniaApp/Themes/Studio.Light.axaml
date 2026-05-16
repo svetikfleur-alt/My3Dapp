@@ -1463,4 +1463,124 @@
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
   </Style>
 
+  <!-- ══ Start Page ══ -->
+  <Style Selector="Border.StartPageOverlay">
+    <Setter Property="Background" Value="#eef3f9" />
+    <Setter Property="ZIndex" Value="100" />
+  </Style>
+
+  <Style Selector="Border.StartPageSidebar">
+    <Setter Property="Background" Value="#e3eaf3" />
+    <Setter Property="Width" Value="340" />
+    <Setter Property="Padding" Value="40,48,40,40" />
+  </Style>
+
+  <Style Selector="TextBlock.StartPageAppName">
+    <Setter Property="FontSize" Value="28" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="LetterSpacing" Value="1" />
+  </Style>
+
+  <Style Selector="TextBlock.StartPageTagline">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="Margin" Value="0,4,0,0" />
+  </Style>
+
+  <Style Selector="Button.StartPagePrimaryAction">
+    <Setter Property="Background" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="Foreground" Value="#ffffff" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Height" Value="40" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Left" />
+    <Setter Property="Padding" Value="14,0" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="Button.StartPagePrimaryAction:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#0970c0" />
+  </Style>
+
+  <Style Selector="Button.StartPageSecondaryAction">
+    <Setter Property="Background" Value="#ffffff" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Height" Value="40" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Left" />
+    <Setter Property="Padding" Value="14,0" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+  </Style>
+  <Style Selector="Button.StartPageSecondaryAction:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#f0f5fb" />
+  </Style>
+
+  <Style Selector="TextBlock.StartPageSectionHeader">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+    <Setter Property="LetterSpacing" Value="2" />
+    <Setter Property="TextTransform" Value="Uppercase" />
+    <Setter Property="Margin" Value="0,0,0,6" />
+  </Style>
+
+  <Style Selector="Button.StartPageRecentFile">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Left" />
+    <Setter Property="Padding" Value="6,0" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="Button.StartPageRecentFile:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#dde7f2" />
+  </Style>
+
+  <Style Selector="Border.StartPageTemplateCard">
+    <Setter Property="Background" Value="#ffffff" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="16,14" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+  <Style Selector="Border.StartPageTemplateCard:pointerover">
+    <Setter Property="Background" Value="#f0f5fb" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.StartPageTemplateName">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="Margin" Value="0,0,0,3" />
+  </Style>
+
+  <Style Selector="TextBlock.StartPageTemplateDesc">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <Style Selector="TextBlock.StartPageTemplateIcon">
+    <Setter Property="FontSize" Value="22" />
+    <Setter Property="Margin" Value="0,0,0,8" />
+  </Style>
+
+  <!-- ══ SolidSculpt Dialog ══ -->
+  <Style Selector="Border.SolidSculptEditorSurface">
+    <Setter Property="Background" Value="#f5f8fc" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+  </Style>
+
 </Styles>
