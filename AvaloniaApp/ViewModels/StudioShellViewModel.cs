@@ -1692,6 +1692,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         IsSelectingSketchPlane = false;
         HasExplicitSketchBaseSelection = false;
         ClearAssistantHistory();
+        ShowNotification("New document created.", NotificationSeverity.Info);
         AppendToLog("New document created.");
     }
 

@@ -13,6 +13,8 @@ public sealed record CadRecipe(
     Func<double[], string> Build)
 {
     public string Signature => $"recipe {Name} {string.Join(' ', Parameters.Select(p => p.ToLowerInvariant()))}";
+
+    public string Tooltip => $"{Description}\nUsage: {Signature}\nExample: {Example}";
 }
 
 public static class CadRecipeLibrary

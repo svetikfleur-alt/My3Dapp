@@ -38,6 +38,7 @@ public sealed partial class MainWindow : Window
     private Avalonia.Controls.ComboBox? _sectionAxisCombo;
     private ANumericUpDown? _sectionOffsetSpin;
     private Avalonia.Controls.TreeView? _featureTree;
+    private Avalonia.Controls.ScrollViewer? _assistantScrollViewer;
     private static readonly Dictionary<string, string> SketchToolHints = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Line"]             = "Line — click to place segment endpoints  ·  Esc to finish",
@@ -111,6 +112,7 @@ public sealed partial class MainWindow : Window
         _sectionAxisCombo = this.FindControl<Avalonia.Controls.ComboBox>("SectionAxisCombo");
         _sectionOffsetSpin = this.FindControl<ANumericUpDown>("SectionOffsetSpin");
         _featureTree = this.FindControl<Avalonia.Controls.TreeView>("FeatureTreeView");
+        _assistantScrollViewer = this.FindControl<Avalonia.Controls.ScrollViewer>("AssistantScrollViewer");
 
         if (_viewportHost is null)
         {
@@ -192,6 +194,7 @@ public sealed partial class MainWindow : Window
         _wiredViewModel.ViewportStateChanged += OnViewportStateChanged;
         _wiredViewModel.FocusSelectionRequested += OnFocusSelectionRequested;
         _wiredViewModel.FeatureNodes.CollectionChanged += OnFeatureNodesChanged;
+        _wiredViewModel.AssistantMessages.CollectionChanged += OnAssistantMessagesChanged;
         RequestFeatureTreeExpansion();
         _ = ApplyViewportStateAsync(_wiredViewModel.CurrentViewportState);
     }
@@ -206,12 +209,21 @@ public sealed partial class MainWindow : Window
         _wiredViewModel.ViewportStateChanged -= OnViewportStateChanged;
         _wiredViewModel.FocusSelectionRequested -= OnFocusSelectionRequested;
         _wiredViewModel.FeatureNodes.CollectionChanged -= OnFeatureNodesChanged;
+        _wiredViewModel.AssistantMessages.CollectionChanged -= OnAssistantMessagesChanged;
         _wiredViewModel = null;
     }
 
     private void OnFeatureNodesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         RequestFeatureTreeExpansion();
+    }
+
+    private void OnAssistantMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.Action == NotifyCollectionChangedAction.Add && _assistantScrollViewer is not null)
+        {
+            Dispatcher.UIThread.Post(() => _assistantScrollViewer.ScrollToEnd(), DispatcherPriority.Background);
+        }
     }
 
     private void RequestFeatureTreeExpansion()
