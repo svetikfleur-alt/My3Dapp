@@ -29,9 +29,13 @@
     <Compile Remove="ThirdParty\**\*.cs" />
     <EmbeddedResource Remove="temp_*\**\*" />
     <EmbeddedResource Remove="cloud_sync_mirror\**\*" />
+    <EmbeddedResource Remove="ThirdParty\**\*" />
     <None Remove="temp_*\**\*" />
     <None Remove="cloud_sync_mirror\**\*" />
+    <None Remove="ThirdParty\**\*" />
+    <AvaloniaXaml Remove="temp_*\**\*.axaml" />
     <AvaloniaXaml Remove="cloud_sync_mirror\**\*.axaml" />
+    <AvaloniaXaml Remove="ThirdParty\**\*.axaml" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(StudioUiHost)' == 'WinForms'">

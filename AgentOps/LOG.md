@@ -26,3 +26,4 @@ done: 23 — Additional 3D operators (2026-04-27) — Revolve/3D Fillet/Chamfer/
 done: 24 — Move tool (2026-04-27) — toggle gizmo on/off via M key + ToggleButton; Esc cancels, Enter commits
 accepted: post-merge CS0104 fix on new sketch dialogs
 done: 27 — Sketch grid and snap markers (2026-04-27) — region-based grid, snap markers (endpoint/midpoint/center/grid), G key + toggle button, software fallback grid; build green (commit 01624dd)
+publishable-mvp: 2026-05-16 — merged clean GitHub branches into main, realigned local repo, fixed nested temp_main_clean_export Avalonia/XAML collision in My3DApp.csproj, added MakerTemplateLibrary + Templates/Prepare/AI Chat workspace tabs, left-side template picker, template generation overlay, prepare/export overlay, root README, PartLibrary docs, and six starter template folders; build 0 errors 0 warnings

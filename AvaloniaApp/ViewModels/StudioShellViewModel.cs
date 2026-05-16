@@ -72,6 +72,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     private string _logText = string.Empty;
     private int _selectedInspectorTabIndex;
     private int _selectedBottomTabIndex;
+    private string _selectedWorkspaceKind = "PartStudio";
     private bool _canPrimitiveTools = true;
     private bool _canStartSketch = true;
     private bool _canFinishSketch;
@@ -88,6 +89,8 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     private bool _isSelectingSketchPlane;
     private bool _hasExplicitSketchBaseSelection;
     private readonly List<string> _recentPrimitiveKinds = ["box", "cylinder", "sphere"];
+    private MakerTemplateDefinition? _selectedMakerTemplate;
+    private string _templateStatus = "Choose a starter template to generate a maker part.";
 
     public StudioShellViewModel()
     {
@@ -110,17 +113,28 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         ];
 
         PartStudios = new ObservableCollection<PartStudioTabItem>();
+        WorkspaceTabs = new ObservableCollection<StudioWorkspaceTabItem>();
+        TemplateCatalog = new ObservableCollection<MakerTemplateDefinition>(MakerTemplateLibrary.All);
+        TemplateParameters = new ObservableCollection<ParameterItemViewModel>();
         ResetAssistantModelsForProvider(_selectedAssistantProvider, preserveSelection: false);
         RefreshRecentPrimitiveTools();
         _workspaceController.WorkspaceChanged += OnWorkspaceChanged;
         _workspaceController.DocumentChanged += OnDocumentChanged;
         ApplyWorkspaceState(_workspaceController.CurrentState);
         RefreshDocumentTabs();
+        if (TemplateCatalog.Count > 0)
+        {
+            SelectMakerTemplate(TemplateCatalog[0].Id);
+        }
+        RefreshWorkspaceTabs();
         RefreshAssistantConfiguration();
         SeedAssistantHistory();
     }
 
     public ObservableCollection<PartStudioTabItem> PartStudios { get; }
+    public ObservableCollection<StudioWorkspaceTabItem> WorkspaceTabs { get; }
+    public ObservableCollection<MakerTemplateDefinition> TemplateCatalog { get; }
+    public ObservableCollection<ParameterItemViewModel> TemplateParameters { get; }
 
     public string DocumentName
     {
@@ -167,6 +181,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     private void OnDocumentChanged(object? sender, EventArgs e)
     {
         RefreshDocumentTabs();
+        RefreshWorkspaceTabs();
         RaisePropertyChanged(nameof(DocumentName));
         RaisePropertyChanged(nameof(WindowTitle));
     }
@@ -181,6 +196,19 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         {
             PartStudios.Add(new PartStudioTabItem(n, string.Equals(n, active, StringComparison.OrdinalIgnoreCase)));
         }
+
+        RefreshWorkspaceTabs();
+    }
+
+    private void RefreshWorkspaceTabs()
+    {
+        WorkspaceTabs.Clear();
+        WorkspaceTabs.Add(new StudioWorkspaceTabItem(_workspaceController.ActivePartStudioName, "PartStudio", IsPartStudioWorkspace));
+        WorkspaceTabs.Add(new StudioWorkspaceTabItem("Sketch", "Sketch", IsSketchWorkspace));
+        WorkspaceTabs.Add(new StudioWorkspaceTabItem("Templates", "Templates", IsTemplatesWorkspace));
+        WorkspaceTabs.Add(new StudioWorkspaceTabItem("Prepare", "Prepare", IsPrepareWorkspace));
+        WorkspaceTabs.Add(new StudioWorkspaceTabItem("AI Chat", "Assistant", IsAssistantWorkspace));
+        WorkspaceTabs.Add(new StudioWorkspaceTabItem("+", "Add", false, IsAddButton: true));
     }
 
     public event EventHandler<ViewportRenderState>? ViewportStateChanged;
@@ -205,6 +233,76 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public IReadOnlyList<CadRecipe> AssistantRecipes { get; } = CadRecipeLibrary.All;
 
+    public MakerTemplateDefinition? SelectedMakerTemplate
+    {
+        get => _selectedMakerTemplate;
+        private set
+        {
+            if (SetProperty(ref _selectedMakerTemplate, value))
+            {
+                RebuildTemplateParameters();
+                RaisePropertyChanged(nameof(SelectedMakerTemplateName));
+                RaisePropertyChanged(nameof(SelectedMakerTemplateDescription));
+                RaisePropertyChanged(nameof(SelectedMakerTemplateCategory));
+                RaisePropertyChanged(nameof(SelectedMakerTemplateTags));
+                RaisePropertyChanged(nameof(CanApplySelectedTemplate));
+                RaisePropertyChanged(nameof(WorkspaceSurfaceSummary));
+            }
+        }
+    }
+
+    public string SelectedMakerTemplateName => SelectedMakerTemplate?.DisplayName ?? "No template selected";
+
+    public string SelectedMakerTemplateDescription => SelectedMakerTemplate?.Description ?? "Choose a template to start building a maker-friendly part.";
+
+    public string SelectedMakerTemplateCategory => SelectedMakerTemplate?.Category ?? "Templates";
+
+    public string SelectedMakerTemplateTags => SelectedMakerTemplate?.TagSummary ?? string.Empty;
+
+    public string TemplateStatus
+    {
+        get => _templateStatus;
+        private set => SetProperty(ref _templateStatus, value);
+    }
+
+    public bool CanApplySelectedTemplate => SelectedMakerTemplate is not null && TemplateParameters.Count > 0;
+
+    public string PrepareWorkspaceSummary
+    {
+        get
+        {
+            var state = _workspaceController.CurrentState;
+            var partCount = state.CompileResult.Bodies.Count;
+            if (partCount == 0)
+            {
+                return "No printable body yet. Create a part from a template or sketch feature first.";
+            }
+
+            var selection = state.Project.Selection;
+            var selectionLabel = selection.IsEmpty ? "all visible bodies" : selection.Name;
+            return $"{partCount.ToString(CultureInfo.InvariantCulture)} part(s) ready. Export the current body set as STL/OBJ or review the active selection ({selectionLabel}).";
+        }
+    }
+
+    public string PrepareWorkspaceWarnings
+    {
+        get
+        {
+            var state = _workspaceController.CurrentState;
+            if (state.CompileResult.Bodies.Count == 0)
+            {
+                return "No active part. Generate a template body or finish an extrude before export.";
+            }
+
+            if (IsSketchMode)
+            {
+                return "Finish the active sketch before exporting so the solid stays consistent.";
+            }
+
+            return "STEP and slicer handoff are not in this MVP yet. STL and OBJ are the recommended output paths.";
+        }
+    }
+
     public void InsertAssistantRecipe(string recipeName)
     {
         var recipe = CadRecipeLibrary.Find(recipeName);
@@ -214,6 +312,104 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         }
 
         AssistantInput = recipe.Example;
+    }
+
+    public void SelectMakerTemplate(string templateId)
+    {
+        var next = MakerTemplateLibrary.Find(templateId);
+        if (next is null)
+        {
+            return;
+        }
+
+        SelectedMakerTemplate = next;
+        TemplateStatus = $"Ready: {next.DisplayName} template loaded.";
+    }
+
+    public void SelectWorkspace(string workspaceKind)
+    {
+        switch (workspaceKind)
+        {
+            case "Add":
+                AddPartStudioTab();
+                SelectedWorkspaceKind = "PartStudio";
+                break;
+            case "Assistant":
+                SelectedWorkspaceKind = "Assistant";
+                ShowAssistantPanel();
+                break;
+            case "Sketch":
+                SelectedWorkspaceKind = "Sketch";
+                break;
+            case "Templates":
+                SelectedWorkspaceKind = "Templates";
+                ShowPropertiesPanel();
+                break;
+            case "Prepare":
+                SelectedWorkspaceKind = "Prepare";
+                ShowPropertiesPanel();
+                break;
+            default:
+                SelectedWorkspaceKind = "PartStudio";
+                break;
+        }
+    }
+
+    public async Task<string> ApplySelectedTemplateAsync(CancellationToken cancellationToken = default)
+    {
+        if (SelectedMakerTemplate is null)
+        {
+            TemplateStatus = "Select a maker template first.";
+            return TemplateStatus;
+        }
+
+        var values = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in TemplateParameters)
+        {
+            if (!double.TryParse(item.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) &&
+                !double.TryParse(item.Value, NumberStyles.Float, CultureInfo.CurrentCulture, out parsed))
+            {
+                TemplateStatus = $"Invalid value for {item.Name}.";
+                ShowNotification(TemplateStatus, NotificationSeverity.Warning);
+                return TemplateStatus;
+            }
+
+            values[item.Key] = parsed;
+        }
+
+        var commandText = SelectedMakerTemplate.BuildCommand(values);
+        var result = await ExecuteLocalCommandTextAsync(commandText, cancellationToken);
+        if (result.Contains("failed", StringComparison.OrdinalIgnoreCase) ||
+            result.Contains("cannot parse", StringComparison.OrdinalIgnoreCase))
+        {
+            TemplateStatus = $"Template failed: {result}";
+            ShowNotification("Template generation failed. Check the status for details.", NotificationSeverity.Warning);
+            return TemplateStatus;
+        }
+
+        TemplateStatus = $"{SelectedMakerTemplate.DisplayName} generated. Review it in the part studio, then use Prepare to export.";
+        SelectedWorkspaceKind = "PartStudio";
+        ShowPropertiesPanel();
+        ShowNotification($"{SelectedMakerTemplate.DisplayName} created.", NotificationSeverity.Success);
+        return result;
+    }
+
+    private void RebuildTemplateParameters()
+    {
+        TemplateParameters.Clear();
+        if (SelectedMakerTemplate is null)
+        {
+            return;
+        }
+
+        foreach (var parameter in SelectedMakerTemplate.Parameters)
+        {
+            TemplateParameters.Add(new ParameterItemViewModel(
+                parameter.DisplayName,
+                parameter.Key,
+                parameter.DefaultValue.ToString("0.###", CultureInfo.InvariantCulture),
+                true));
+        }
     }
 
     public ObservableCollection<AssistantMessageViewModel> AssistantMessages { get; }
@@ -337,6 +533,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public IBrush NotificationBackground => _currentNotification?.Severity switch
     {
+        NotificationSeverity.Success => new SolidColorBrush(Avalonia.Media.Color.Parse("#1a6e2e")),
         NotificationSeverity.Info    => new SolidColorBrush(Avalonia.Media.Color.Parse("#1f6e1f")),
         NotificationSeverity.Warning => new SolidColorBrush(Avalonia.Media.Color.Parse("#7a5500")),
         NotificationSeverity.Error   => new SolidColorBrush(Avalonia.Media.Color.Parse("#8a1500")),
@@ -396,6 +593,66 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         get => _selectedBottomTabIndex;
         set => SetProperty(ref _selectedBottomTabIndex, value);
     }
+
+    public string SelectedWorkspaceKind
+    {
+        get => _selectedWorkspaceKind;
+        private set
+        {
+            if (SetProperty(ref _selectedWorkspaceKind, value))
+            {
+                RaisePropertyChanged(nameof(IsPartStudioWorkspace));
+                RaisePropertyChanged(nameof(IsSketchWorkspace));
+                RaisePropertyChanged(nameof(IsTemplatesWorkspace));
+                RaisePropertyChanged(nameof(IsPrepareWorkspace));
+                RaisePropertyChanged(nameof(IsAssistantWorkspace));
+                RaisePropertyChanged(nameof(IsCadWorkspaceVisible));
+                RaisePropertyChanged(nameof(IsFeatureTreeVisible));
+                RaisePropertyChanged(nameof(IsTemplateOverlayVisible));
+                RaisePropertyChanged(nameof(IsPrepareOverlayVisible));
+                RaisePropertyChanged(nameof(WorkspaceSurfaceTitle));
+                RaisePropertyChanged(nameof(WorkspaceSurfaceSummary));
+                RefreshWorkspaceTabs();
+            }
+        }
+    }
+
+    public bool IsPartStudioWorkspace => string.Equals(SelectedWorkspaceKind, "PartStudio", StringComparison.Ordinal);
+
+    public bool IsSketchWorkspace => string.Equals(SelectedWorkspaceKind, "Sketch", StringComparison.Ordinal);
+
+    public bool IsTemplatesWorkspace => string.Equals(SelectedWorkspaceKind, "Templates", StringComparison.Ordinal);
+
+    public bool IsPrepareWorkspace => string.Equals(SelectedWorkspaceKind, "Prepare", StringComparison.Ordinal);
+
+    public bool IsAssistantWorkspace => string.Equals(SelectedWorkspaceKind, "Assistant", StringComparison.Ordinal);
+
+    public bool IsCadWorkspaceVisible => !IsTemplatesWorkspace && !IsPrepareWorkspace;
+
+    public bool IsFeatureTreeVisible => !IsTemplatesWorkspace;
+
+    public bool IsTemplateOverlayVisible => IsTemplatesWorkspace;
+
+    public bool IsPrepareOverlayVisible => IsPrepareWorkspace;
+
+    public string WorkspaceSurfaceTitle => SelectedWorkspaceKind switch
+    {
+        "Templates" => "Template Library",
+        "Prepare" => "Prepare for export",
+        "Assistant" => "AI copilot workspace",
+        "Sketch" when IsSketchMode => "Sketch workspace",
+        _ => "CAD Workspace"
+    };
+
+    public string WorkspaceSurfaceSummary => SelectedWorkspaceKind switch
+    {
+        "Templates" => SelectedMakerTemplate?.Description ?? "Choose a maker template, edit parameters, and generate a printable starter part.",
+        "Prepare" => PrepareWorkspaceSummary,
+        "Assistant" => "Use the copilot to explain features, suggest templates, or generate local CAD command sequences.",
+        "Sketch" when IsSelectingSketchPlane => "Select a reference plane or planar face to begin sketching.",
+        "Sketch" when IsSketchMode => ViewportSketchSessionSummary,
+        _ => AssistantWorkspaceSummary
+    };
 
     public bool CanPrimitiveTools
     {
@@ -2554,6 +2811,9 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         RaisePropertyChanged(nameof(ViewportSketchEntryLabel));
         RaisePropertyChanged(nameof(ViewportSketchSessionTitle));
         RaisePropertyChanged(nameof(ViewportSketchSessionSummary));
+        RaisePropertyChanged(nameof(PrepareWorkspaceSummary));
+        RaisePropertyChanged(nameof(PrepareWorkspaceWarnings));
+        RaisePropertyChanged(nameof(WorkspaceSurfaceSummary));
     }
 
     private void UpdateToolAvailability(CadProject project, CadCompileResult compileResult)
@@ -3374,7 +3634,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     }
 }
 
-public enum NotificationSeverity { Info, Warning, Error }
+public enum NotificationSeverity { Success, Info, Warning, Error }
 
 internal sealed record StudioNotification(string Text, NotificationSeverity Severity);
 
@@ -3396,3 +3656,5 @@ public sealed class SketchDimensionDisplayItem
 }
 
 public sealed record PartStudioTabItem(string Name, bool IsActive);
+
+public sealed record StudioWorkspaceTabItem(string Title, string Kind, bool IsActive, bool IsAddButton = false);

@@ -25,3 +25,18 @@ Next:
 - Builder: create sweep.svg and loft.svg icons, or assign placeholder icons from existing set
 - Builder: add status bar text "Click a reference plane to place sketch" during IsSelectingSketchPlane
 - Verifier (next run): confirm build with dotnet if available; test Hole dialog ThroughAll default; confirm M key blocked in sketch mode
+
+2026-05-16 publishable MVP pass:
+- Synced local repo to GitHub main after clean branch merge.
+- Fixed launch/build mismatch caused by nested temp snapshot XAML files being included by Avalonia globs.
+- Added maker-product layer on top of the existing CAD shell:
+  - `AvaloniaApp/Services/MakerTemplateLibrary.cs`
+  - bottom workspace tabs for Part Studio / Sketch / Templates / Prepare / AI Chat / +
+  - template workspace overlay and left-side starter template list
+  - prepare workspace overlay with export entry point
+  - root README and PartLibrary contributor docs
+- Build currently passes: `dotnet build .\\My3DApp.csproj -c Debug -p:StudioUiHost=Avalonia`
+- Remaining biggest gaps:
+  - template generation is command-driven and some parts are simplified MVP solids
+  - feature tree does not yet show template/export sections as first-class nodes
+  - prepare workspace is useful but not yet a full manufacturing review panel
