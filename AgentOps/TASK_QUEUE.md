@@ -67,8 +67,14 @@
 - [x] 64 — Double-click rename in feature tree           → F2 rename already wired; dbl-click opens param edit
 
 # Backlog (out of current cycle)
-- (empty — promote items from AUDIT.md as auditor finds them)
-- [ ] 65 — CAD command dialog standardization                 → TASKS/65-cad-command-dialog-standardization.md
-- [ ] 66 — Sketch solver and definition behavior             → TASKS/66-sketch-solver-definition-behavior.md
-- [ ] 67 — Shell consistency pass (toolbar + viewport nav)   → TASKS/67-shell-consistency-toolbar-viewport.md
-- [ ] 68 — Copilot structured CAD assistance                 → TASKS/68-copilot-structured-cad-assistance.md
+
+## Completed on remote branches (not yet merged to main)
+- [x] 65 — CAD command dialog standardization     → TASKS/65-cad-command-dialog-standardization.md  *(done on origin/claude/youthful-hawking-wrm4i, commit 6d3ebf9)*
+- [x] 66 — Sketch solver and definition behavior  → TASKS/66-sketch-solver-definition-behavior.md   *(done on origin/claude/youthful-hawking-AsO6w, commit 7dfacd9)*
+
+## Active backlog (promote to queue in priority order)
+- [ ] 69 — Hole feature — real CSG subtract geometry          → TASKS/69-hole-csg-geometry.md           *(PRIORITY 1: stub in HandleHoleSelectedBody; hole appears in tree but no geometry removed)*
+- [ ] 70 — Boolean Subtract / Intersect — real mesh CSG       → TASKS/70-boolean-csg-subtract-intersect.md *(PRIORITY 1: NotSupportedException stub; only Union works)*
+- [ ] 71 — Polyline sketch tool                               → TASKS/71-polyline-sketch-tool.md         *(PRIORITY 2: multi-click line chain; sketch foundation)*
+- [ ] 67 — Shell consistency pass (toolbar + viewport nav)    → TASKS/67-shell-consistency-toolbar-viewport.md *(UI polish)*
+- [ ] 68 — Copilot structured CAD assistance                  → TASKS/68-copilot-structured-cad-assistance.md  *(UI polish)*
