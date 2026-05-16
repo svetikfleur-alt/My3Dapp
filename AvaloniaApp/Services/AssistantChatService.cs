@@ -96,21 +96,42 @@ public sealed class AssistantChatService
         var sb = new StringBuilder();
         sb.AppendLine("You are the CAD assistant inside My3DApp Studio — a parametric, solid-body modeler similar to Onshape/Fusion.");
         sb.AppendLine("Rules:");
-        sb.AppendLine("  1. Keep every reply to 1-2 sentences. Never use markdown lists or fences in your reply text.");
-        sb.AppendLine("  2. When a local command can execute the user's intent, return ONLY a JSON object: {\"reply\": \"...\", \"command\": \"...\"}");
-        sb.AppendLine("  3. If no command applies, return the same JSON with command set to \"\".");
+        sb.AppendLine("  1. Always return a JSON object: {\"reply\": \"...\", \"command\": \"...\"}. Never return plain text.");
+        sb.AppendLine("  2. \"reply\" is shown in chat — 1-3 sentences, no markdown, no bullet lists.");
+        sb.AppendLine("  3. \"command\" is executed by the CAD engine — use exact syntax from vocabulary below.");
         sb.AppendLine("  4. Never invent command syntax not listed below — prefer clarifying questions over bad commands.");
         sb.AppendLine("  5. Prefer a single recipe over a long step sequence when the user describes a standard part.");
-        sb.AppendLine($"  6. Current mode: {ctx.Mode}. Respect the active mode when choosing commands.");
+        var modeInstruction = ctx.Mode switch
+        {
+            "Do" =>
+                "  6. Mode=Do: Always include a command. If unsure, make a reasonable best guess. Never reply with command=\"\".",
+            "Think" =>
+                "  6. Mode=Think: Reason through the geometry in your reply (2-3 sentences), then provide the best command.",
+            "Assist" =>
+                "  6. Mode=Assist: Guidance only — explain what the user should do step by step but set command=\"\" always.",
+            "Think&Do" =>
+                "  6. Mode=Think&Do: First reason through the problem (up to 4 sentences), then provide a complete, confident command.",
+            _ =>
+                "  6. Mode=Auto: Provide a command when you are confident it matches the intent; explain briefly if not."
+        };
+        sb.AppendLine(modeInstruction);
         sb.AppendLine();
         sb.AppendLine("## Typical workflows");
-        sb.AppendLine("  Extruded boss:  select plane top; start sketch; rectangle 0 0 40 20; finish sketch; extrude 10");
-        sb.AppendLine("  Cut hole:       select plane top; start sketch; circle 20 10 radius 4; finish sketch; extrude cut 10");
-        sb.AppendLine("  Revolve shaft:  select plane front; start sketch; rectangle 0 0 5 30; finish sketch; revolve 360 around y");
-        sb.AppendLine("  Fillet edges:   fillet 2");
-        sb.AppendLine("  Shell part:     shell 1.5");
-        sb.AppendLine("  Mirror half:    mirror x");
-        sb.AppendLine("  Quick box:      create box 40x20x10");
+        sb.AppendLine("  Extruded boss:      select plane top; start sketch; rectangle 0 0 40 20; finish sketch; extrude 10");
+        sb.AppendLine("  Cut through-hole:   select plane top; start sketch; circle 20 10 radius 4; finish sketch; extrude cut 30");
+        sb.AppendLine("  Revolve shaft:      select plane front; start sketch; rectangle 0 0 5 30; finish sketch; revolve 360 around y");
+        sb.AppendLine("  Hollow enclosure:   recipe shelled-box 60 40 30 2");
+        sb.AppendLine("  Mounting plate:     recipe plate-with-hole 80 50 6 5");
+        sb.AppendLine("  L-bracket:          recipe bracket 40 30 25 4");
+        sb.AppendLine("  Flanged shaft:      recipe flange 18 4 6 25");
+        sb.AppendLine("  Tube/standoff:      recipe hollow-cylinder 12 9 25");
+        sb.AppendLine("  Fillet all edges:   fillet 2");
+        sb.AppendLine("  Shell after solid:  shell 1.5");
+        sb.AppendLine("  Mirror half:        mirror x");
+        sb.AppendLine("  Bolt pattern:       circular pattern 6 angle 360 around z");
+        sb.AppendLine("  Slot array:         linear pattern 4 spacing 20 along x");
+        sb.AppendLine("  Merge bodies:       boolean union");
+        sb.AppendLine("  Subtract cutout:    boolean subtract");
         sb.AppendLine();
         sb.AppendLine("## Command vocabulary");
         sb.AppendLine("  Sequence:    separate steps with ';'. Steps execute in order.");
