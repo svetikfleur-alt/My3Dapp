@@ -109,12 +109,78 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             "Think&Do"
         ];
 
+        PartStudios = new ObservableCollection<PartStudioTabItem>();
         ResetAssistantModelsForProvider(_selectedAssistantProvider, preserveSelection: false);
         RefreshRecentPrimitiveTools();
         _workspaceController.WorkspaceChanged += OnWorkspaceChanged;
+        _workspaceController.DocumentChanged += OnDocumentChanged;
         ApplyWorkspaceState(_workspaceController.CurrentState);
+        RefreshDocumentTabs();
         RefreshAssistantConfiguration();
         SeedAssistantHistory();
+    }
+
+    public ObservableCollection<PartStudioTabItem> PartStudios { get; }
+
+    public string DocumentName
+    {
+        get => _workspaceController.DocumentName;
+        set
+        {
+            if (_workspaceController.DocumentName == value)
+            {
+                return;
+            }
+            _workspaceController.DocumentName = value;
+            RaisePropertyChanged(nameof(DocumentName));
+        }
+    }
+
+    public void AddPartStudioTab()
+    {
+        _workspaceController.AddPartStudio();
+    }
+
+    public void ActivatePartStudio(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return;
+        }
+        _workspaceController.SwitchPartStudio(name);
+    }
+
+    public void DeletePartStudioTab(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return;
+        }
+        _workspaceController.DeletePartStudio(name);
+    }
+
+    public void RenamePartStudioTab(string oldName, string newName)
+    {
+        _workspaceController.RenamePartStudio(oldName, newName);
+    }
+
+    private void OnDocumentChanged(object? sender, EventArgs e)
+    {
+        RefreshDocumentTabs();
+        RaisePropertyChanged(nameof(DocumentName));
+        RaisePropertyChanged(nameof(WindowTitle));
+    }
+
+    private void RefreshDocumentTabs()
+    {
+        var names = _workspaceController.PartStudioNames;
+        var active = _workspaceController.ActivePartStudioName;
+
+        PartStudios.Clear();
+        foreach (var n in names)
+        {
+            PartStudios.Add(new PartStudioTabItem(n, string.Equals(n, active, StringComparison.OrdinalIgnoreCase)));
+        }
     }
 
     public event EventHandler<ViewportRenderState>? ViewportStateChanged;
@@ -137,6 +203,19 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public IReadOnlyList<string> AssistantModes { get; }
 
+    public IReadOnlyList<CadRecipe> AssistantRecipes { get; } = CadRecipeLibrary.All;
+
+    public void InsertAssistantRecipe(string recipeName)
+    {
+        var recipe = CadRecipeLibrary.Find(recipeName);
+        if (recipe is null)
+        {
+            return;
+        }
+
+        AssistantInput = recipe.Example;
+    }
+
     public ObservableCollection<AssistantMessageViewModel> AssistantMessages { get; }
 
     public ObservableCollection<string> AssistantProviders { get; }
@@ -152,7 +231,16 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     }
 
     public string ProjectTitle => HasUnsavedChanges ? _projectTitle + " *" : _projectTitle;
-    public string WindowTitle => HasUnsavedChanges ? $"* {_projectTitle} — My3DApp" : $"{_projectTitle} — My3DApp";
+    public string WindowTitle
+    {
+        get
+        {
+            var doc = _workspaceController.DocumentName;
+            var studio = _workspaceController.ActivePartStudioName;
+            var label = string.IsNullOrEmpty(studio) ? doc : $"{doc} — {studio}";
+            return HasUnsavedChanges ? $"* {label} — My3DApp" : $"{label} — My3DApp";
+        }
+    }
     private string ProjectTitleBase
     {
         get => _projectTitle;
@@ -1964,10 +2052,19 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 AddMessage("assistant", result.Reply);
                 if (!string.IsNullOrWhiteSpace(result.Command))
                 {
-                    var parsedSuggestion = _commandParser.Parse(result.Command);
-                    if (parsedSuggestion.IsSuccess && parsedSuggestion.Command is not null)
+                    var parsedSuggestionSequence = _commandParser.ParseSequence(result.Command);
+                    var allOk = parsedSuggestionSequence.Count > 0 &&
+                                parsedSuggestionSequence.All(step => step.Result.IsSuccess && step.Result.Commands.Count > 0);
+
+                    if (allOk)
                     {
-                        await HandleParsedCommandAsync(parsedSuggestion.Command, "Assistant command", cancellationToken);
+                        foreach (var step in parsedSuggestionSequence)
+                        {
+                            foreach (var command in step.Result.Commands)
+                            {
+                                await HandleParsedCommandAsync(command, $"Assistant step {step.Index}", cancellationToken);
+                            }
+                        }
                     }
                     else
                     {
@@ -3271,6 +3368,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         }
 
         _workspaceController.WorkspaceChanged -= OnWorkspaceChanged;
+        _workspaceController.DocumentChanged -= OnDocumentChanged;
         _autoDismissCts?.Cancel();
         _isDisposed = true;
     }
@@ -3296,3 +3394,5 @@ public sealed class SketchDimensionDisplayItem
     public bool IsEditable { get; init; }
     public string Unit { get; init; } = "mm";
 }
+
+public sealed record PartStudioTabItem(string Name, bool IsActive);

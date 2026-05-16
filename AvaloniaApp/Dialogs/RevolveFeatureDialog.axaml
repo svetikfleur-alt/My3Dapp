@@ -1,140 +1,96 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="My3DApp.AvaloniaApp.Dialogs.RevolveFeatureDialog"
-        Width="460"
-        Height="410"
-        MinWidth="430"
-        MinHeight="390"
+        Width="400"
+        Height="330"
+        MinWidth="370"
+        MinHeight="300"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         Classes="FeatureDialogWindow"
         Title="Revolve">
   <Border Classes="FeatureDialogPanel" Margin="0">
-    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
-      <Grid ColumnDefinitions="*,Auto">
-        <StackPanel Spacing="4">
-          <TextBlock Classes="FeatureDialogTitle"
-                     Text="Revolve" />
-          <TextBlock Classes="FeatureDialogSubtitle"
-                     TextWrapping="Wrap"
-                     Text="Create a solid by revolving a closed sketch profile around a sketch axis." />
-        </StackPanel>
-        <Border Grid.Column="1"
-                Classes="FeatureDialogTag"
-                VerticalAlignment="Top">
-          <TextBlock Text="FEATURE"
-                     Classes="FeatureDialogTagText" />
-        </Border>
+    <StackPanel Margin="16,14,16,16" Spacing="0">
+
+      <!-- Header: title + confirm/cancel -->
+      <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
+        <TextBlock Classes="FeatureDialogTitle"
+                   Text="Revolve"
+                   VerticalAlignment="Center" />
+        <Button Grid.Column="1"
+                Classes="FeatureDialogConfirmBtn"
+                IsDefault="True"
+                Click="OnConfirmClick"
+                ToolTip.Tip="Confirm (Enter)" />
+        <Button Grid.Column="2"
+                Margin="6,0,0,0"
+                Classes="FeatureDialogCancelBtn"
+                IsCancel="True"
+                Click="OnCancelClick"
+                ToolTip.Tip="Cancel (Esc)" />
       </Grid>
 
-      <StackPanel Grid.Row="2"
-                  Margin="0,16,0,16"
-                  Spacing="12">
-        <Border Classes="FeatureDialogSectionCard">
-          <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="96,*">
-            <TextBlock Text="Profile"
-                       Classes="FeatureDialogFieldLabel" />
-            <TextBlock Grid.Column="1"
-                       x:Name="ProfileValueTextBlock"
-                       Classes="FeatureDialogValueText"
-                       TextWrapping="Wrap"
-                       Text="Closed sketch profile" />
-            <TextBlock Grid.Row="1"
-                       Text="Plane"
-                       Margin="0,10,0,0"
-                       Classes="FeatureDialogFieldLabel" />
-            <TextBlock Grid.Row="1"
-                       Grid.Column="1"
-                       x:Name="PlaneValueTextBlock"
-                       Margin="0,10,0,0"
-                       Classes="FeatureDialogValueText"
-                       Text="Top" />
-            <TextBlock Grid.Row="2"
-                       Text="Operation"
-                       Margin="0,10,0,0"
-                       Classes="FeatureDialogFieldLabel" />
-            <ComboBox Grid.Row="2"
-                      Grid.Column="1"
-                      Classes="FeatureDialogInput"
-                      Margin="0,8,0,0"
-                      SelectedIndex="0"
-                      IsEnabled="False">
-              <ComboBoxItem Content="New Body" />
-            </ComboBox>
-            <TextBlock Grid.Row="3"
-                       Text="Recipe"
-                       Margin="0,10,0,0"
-                       Classes="FeatureDialogFieldLabel" />
-            <TextBlock Grid.Row="3"
-                       Grid.Column="1"
-                       x:Name="RecipeTextBlock"
-                       Margin="0,10,0,0"
-                       TextWrapping="Wrap"
-                       Classes="FeatureDialogHelpText"
-                       Text="revolve(profile, axis, angle)" />
-          </Grid>
-        </Border>
+      <!-- Profile selection field -->
+      <TextBlock Classes="FeatureDialogFieldLabel"
+                 Text="Faces and sketch regions to revolve"
+                 Margin="0,0,0,4" />
+      <Border Classes="FeatureDialogSelectionField" Margin="0,0,0,8">
+        <TextBlock x:Name="ProfileValueTextBlock"
+                   Classes="FeatureDialogSelectionText"
+                   Text="Select a closed sketch profile" />
+      </Border>
 
-        <Border Classes="FeatureDialogSectionCard">
-          <Grid ColumnDefinitions="*,88" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
-            <TextBlock Text="Angle"
-                       Classes="FeatureDialogFieldLabel" />
+      <!-- Parameters -->
+      <Border Classes="FeatureDialogSectionCard">
+        <StackPanel Spacing="0">
+
+          <!-- Revolve axis -->
+          <TextBlock Text="Revolve axis"
+                     Classes="FeatureDialogFieldLabel"
+                     Margin="0,0,0,6" />
+          <ComboBox x:Name="AxisComboBox"
+                    Classes="FeatureDialogInput"
+                    HorizontalAlignment="Stretch"
+                    Margin="0,0,0,10"
+                    SelectedIndex="1">
+            <ComboBoxItem Content="Sketch X axis" Tag="x" />
+            <ComboBoxItem Content="Sketch Y axis" Tag="y" />
+          </ComboBox>
+
+          <!-- Full revolve checkbox -->
+          <CheckBox x:Name="FullRevolveCheckBox"
+                    Classes="FeatureDialogCheckBox"
+                    Content="Full revolve"
+                    IsChecked="True"
+                    Checked="OnFullRevolveChanged"
+                    Unchecked="OnFullRevolveChanged"
+                    Margin="0,0,0,10" />
+
+          <!-- Angle (hidden when full revolve) -->
+          <Grid x:Name="AngleRow"
+                ColumnDefinitions="*,72"
+                IsVisible="False">
             <NumericUpDown x:Name="AngleInput"
                            Classes="FeatureDialogInput"
-                           Grid.Row="1"
-                           Width="160"
+                           Width="150"
                            HorizontalAlignment="Left"
-                           Margin="0,8,0,0"
                            Increment="5"
                            Minimum="1"
-                           Maximum="360"
+                           Maximum="359"
                            FormatString="0.###" />
             <Border Grid.Column="1"
-                    Grid.Row="1"
                     Classes="FeatureDialogUnitChip"
-                    Margin="8,8,0,0"
+                    Margin="8,0,0,0"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Top">
-              <TextBlock HorizontalAlignment="Center"
-                         Text="deg" />
+              <TextBlock HorizontalAlignment="Center" Text="deg" />
             </Border>
-
-            <TextBlock Grid.Row="2"
-                       Text="Axis"
-                       Margin="0,12,0,0"
-                       Classes="FeatureDialogFieldLabel" />
-            <ComboBox Grid.Row="3"
-                      Classes="FeatureDialogInput"
-                      x:Name="AxisComboBox"
-                      Width="160"
-                      HorizontalAlignment="Left"
-                      Margin="0,8,0,0"
-                      SelectedIndex="1">
-              <ComboBoxItem Content="Sketch X axis" Tag="x" />
-              <ComboBoxItem Content="Sketch Y axis" Tag="y" />
-            </ComboBox>
-            <TextBlock Grid.Row="4"
-                       Grid.ColumnSpan="2"
-                       Margin="0,10,0,0"
-                       Classes="FeatureDialogHelpText"
-                       TextWrapping="Wrap"
-                       Text="Current minimal revolve supports sketch X/Y axes only." />
           </Grid>
-        </Border>
-      </StackPanel>
 
-      <StackPanel Grid.Row="3"
-                  Orientation="Horizontal"
-                  HorizontalAlignment="Right"
-                  Spacing="8">
-        <Button Content="Cancel"
-                Classes="FeatureDialogButtonSecondary"
-                Click="OnCancelClick" />
-        <Button Content="Apply"
-                Classes="FeatureDialogButtonPrimary"
-                Click="OnConfirmClick" />
-      </StackPanel>
-    </Grid>
+        </StackPanel>
+      </Border>
+
+    </StackPanel>
   </Border>
 </Window>

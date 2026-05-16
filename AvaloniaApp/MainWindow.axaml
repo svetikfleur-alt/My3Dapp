@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:My3DApp.AvaloniaApp.ViewModels"
         xmlns:controls="clr-namespace:My3DApp.AvaloniaApp.Controls"
+        xmlns:services="clr-namespace:My3DApp.AvaloniaApp.Services"
         xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Avalonia.Svg.Skia"
         x:Class="My3DApp.AvaloniaApp.MainWindow"
         x:DataType="vm:StudioShellViewModel"
@@ -28,8 +29,20 @@
           </Border>
 
           <StackPanel Grid.Column="1" Margin="14,0,0,0" Spacing="2" VerticalAlignment="Center">
-            <TextBlock Text="{Binding ProjectTitle}"
-                       Classes="ToolbarTitleText" />
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <TextBox Text="{Binding DocumentName, Mode=TwoWay}"
+                       Classes="DocumentTitleEdit"
+                       MinWidth="220"
+                       MaxWidth="440"
+                       HorizontalAlignment="Left"
+                       ToolTip.Tip="Document name" />
+              <TextBlock Text="•"
+                         Classes="ToolbarSubtleText"
+                         FontSize="14"
+                         VerticalAlignment="Center"
+                         IsVisible="{Binding HasUnsavedChanges}"
+                         ToolTip.Tip="Unsaved changes" />
+            </StackPanel>
             <TextBlock Text="{Binding StatusBarText}"
                        Classes="ToolbarSubtleText"
                        MaxWidth="640"
@@ -757,6 +770,52 @@
     </Border>
 
     <Border DockPanel.Dock="Bottom"
+            Classes="PartStudioTabBar"
+            Background="{DynamicResource Studio.PanelInsetBrush}"
+            BorderBrush="{DynamicResource Studio.BorderBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="10,4">
+      <Grid ColumnDefinitions="*,Auto">
+        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Disabled">
+          <ItemsControl ItemsSource="{Binding PartStudios}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="2" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="vm:PartStudioTabItem">
+                <Grid ColumnDefinitions="Auto,Auto">
+                  <Button Content="{Binding Name}"
+                          Tag="{Binding Name}"
+                          Classes="PartStudioTab"
+                          Classes.active="{Binding IsActive}"
+                          Click="OnPartStudioTabClick"
+                          DoubleTapped="OnPartStudioTabRename"
+                          ToolTip.Tip="Click to switch • Double-click to rename" />
+                  <Button Grid.Column="1"
+                          Content="✕"
+                          Tag="{Binding Name}"
+                          Classes="PartStudioTabClose"
+                          IsVisible="{Binding IsActive}"
+                          Click="OnPartStudioTabClose"
+                          ToolTip.Tip="Delete this part studio" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+        <Button Grid.Column="1"
+                Content="＋"
+                Margin="6,0,0,0"
+                Classes="PartStudioTabAdd"
+                Click="OnAddPartStudioClick"
+                ToolTip.Tip="Add a new part studio" />
+      </Grid>
+    </Border>
+
+    <Border DockPanel.Dock="Bottom"
             IsVisible="{Binding HasNotification}"
             Background="{Binding NotificationBackground}"
             Height="32">
@@ -1191,21 +1250,35 @@
                 <TextBlock Text="Copilot" />
               </StackPanel>
             </TabItem.Header>
-            <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Margin="10,8,10,8">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto" Margin="10,8,10,8">
 
-              <!-- Header: title + Refresh + Clear -->
-              <Grid ColumnDefinitions="*,Auto,Auto">
+              <!-- Header: title + Recipes toggle + Config toggle + Refresh + Clear -->
+              <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
                 <TextBlock Text="AI Copilot"
                            FontSize="12"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource Studio.TextMutedBrush}"
                            VerticalAlignment="Center" />
-                <Button Grid.Column="1"
+                <ToggleButton x:Name="RecipesToggle"
+                              Grid.Column="1"
+                              Margin="0,0,6,0"
+                              Content="Recipes"
+                              Classes="AssistantLinkButton"
+                              IsChecked="False"
+                              ToolTip.Tip="Insert a standard part recipe" />
+                <ToggleButton x:Name="ConfigToggle"
+                              Grid.Column="2"
+                              Margin="0,0,6,0"
+                              Content="⚙"
+                              Classes="AssistantLinkButton"
+                              IsChecked="False"
+                              ToolTip.Tip="API settings" />
+                <Button Grid.Column="3"
                         Margin="0,0,6,0"
                         Content="Refresh"
                         Classes="AssistantLinkButton"
                         Click="OnAssistantRefreshClick" />
-                <Button Grid.Column="2"
+                <Button Grid.Column="4"
                         Content="Clear"
                         Classes="AssistantLinkButton"
                         Click="OnAssistantClearClick" />
@@ -1232,10 +1305,11 @@
                 </ListBox.ItemTemplate>
               </ListBox>
 
-              <!-- Row 2: Provider / model / key config -->
+              <!-- Row 2: Provider / model / key config (collapsed by default) -->
               <Border Grid.Row="2"
                       Classes="AssistantContextCard"
-                      Margin="0,8,0,0">
+                      Margin="0,8,0,0"
+                      IsVisible="{Binding #ConfigToggle.IsChecked}">
                 <StackPanel Spacing="6">
                   <Grid ColumnDefinitions="*,*">
                     <ComboBox ItemsSource="{Binding AssistantProviders}"
@@ -1267,8 +1341,39 @@
                 </StackPanel>
               </Border>
 
-              <!-- Row 3: Message area (fills space) -->
+              <!-- Row 3: Recipe catalog (collapsed by default) -->
               <Border Grid.Row="3"
+                      Classes="AssistantContextCard"
+                      Margin="0,8,0,0"
+                      IsVisible="{Binding #RecipesToggle.IsChecked}">
+                <StackPanel Spacing="6">
+                  <TextBlock Text="Insert a standard part — click to fill the prompt with sample parameters, then edit & send."
+                             Classes="AssistantHintText"
+                             TextWrapping="Wrap" />
+                  <ItemsControl ItemsSource="{Binding AssistantRecipes}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate DataType="services:CadRecipe">
+                        <Button Content="{Binding DisplayName}"
+                                Tag="{Binding Name}"
+                                Margin="0,0,4,4"
+                                Padding="9,4"
+                                FontSize="11"
+                                Classes="AssistantLinkButton"
+                                ToolTip.Tip="{Binding Description}"
+                                Click="OnAssistantRecipeClick" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </Border>
+
+              <!-- Row 4: Message area (fills space) -->
+              <Border Grid.Row="4"
                       Classes="AssistantMessagesHost"
                       Margin="0,8,0,0">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -1313,8 +1418,8 @@
                 </ScrollViewer>
               </Border>
 
-              <!-- Row 4: Pending command action chip -->
-              <Border Grid.Row="4"
+              <!-- Row 5: Pending command action chip -->
+              <Border Grid.Row="5"
                       Classes="AssistantPendingCard"
                       Margin="0,6,0,0"
                       IsVisible="{Binding HasPendingCommand}">
@@ -1332,8 +1437,8 @@
                 </Grid>
               </Border>
 
-              <!-- Row 5: Input bar -->
-              <Grid Grid.Row="5" ColumnDefinitions="*,Auto" Margin="0,6,0,0">
+              <!-- Row 6: Input bar -->
+              <Grid Grid.Row="6" ColumnDefinitions="*,Auto" Margin="0,6,0,0">
                 <TextBox x:Name="AssistantInputBox"
                          Grid.Column="0"
                          Margin="0,0,6,0"

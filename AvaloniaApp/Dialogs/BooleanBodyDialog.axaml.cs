@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using AWindow = Avalonia.Controls.Window;
@@ -39,27 +40,31 @@ public sealed partial class BooleanBodyDialog : AWindow
         switch (initialOperation.ToLowerInvariant())
         {
             case "subtract":
-                SubtractRadio.IsChecked = true;
+                SubtractTab.IsChecked = true;
+                UnionTab.IsChecked = false;
                 break;
             case "intersect":
-                IntersectRadio.IsChecked = true;
+                IntersectTab.IsChecked = true;
+                UnionTab.IsChecked = false;
                 break;
             default:
-                UnionRadio.IsChecked = true;
+                UnionTab.IsChecked = true;
                 break;
         }
     }
 
     public BooleanBodyDialogResult? Result { get; private set; }
 
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
+    private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 
-    private void OnCancelClick(object? sender, RoutedEventArgs e)
+    private void OnCancelClick(object? sender, RoutedEventArgs e) => Close(null);
+
+    private void OnOpTabClicked(object? sender, RoutedEventArgs e)
     {
-        Close(null);
+        if (sender is not ToggleButton clicked) return;
+        if (clicked.IsChecked != true) { clicked.IsChecked = true; return; }
+        foreach (var tab in new[] { UnionTab, SubtractTab, IntersectTab })
+            if (!ReferenceEquals(tab, clicked)) tab.IsChecked = false;
     }
 
     private void OnConfirmClick(object? sender, RoutedEventArgs e)
@@ -73,14 +78,11 @@ public sealed partial class BooleanBodyDialog : AWindow
             return;
         }
 
-        var bodyAId = _bodies[indexA].Id;
-        var bodyBId = _bodies[indexB].Id;
-
-        var operation = SubtractRadio.IsChecked == true ? "Subtract"
-            : IntersectRadio.IsChecked == true ? "Intersect"
+        var operation = SubtractTab.IsChecked == true ? "Subtract"
+            : IntersectTab.IsChecked == true ? "Intersect"
             : "Union";
 
-        Result = new BooleanBodyDialogResult(bodyAId, bodyBId, operation);
+        Result = new BooleanBodyDialogResult(_bodies[indexA].Id, _bodies[indexB].Id, operation);
         Close(Result);
     }
 }

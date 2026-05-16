@@ -21,7 +21,6 @@ public sealed partial class SweepFeatureDialog : AWindow
         ProfileValueTextBlock.Text = string.IsNullOrWhiteSpace(profileSummary)
             ? "Select a closed sketch profile"
             : profileSummary;
-        PlaneValueTextBlock.Text = string.IsNullOrWhiteSpace(planeSummary) ? "Sketch plane" : planeSummary;
         DistanceInput.Value = (decimal)initialDistance;
         TwistInput.Value = (decimal)initialTwist;
     }

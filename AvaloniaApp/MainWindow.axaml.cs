@@ -1211,6 +1211,7 @@ public sealed partial class MainWindow : Window
             if (_wiredViewModel.CanFinishSketch)
             {
                 await _wiredViewModel.FinishSketchAsync();
+                await TryAutoExtrudeAfterSketchAsync();
             }
             else
             {
@@ -1525,6 +1526,7 @@ public sealed partial class MainWindow : Window
         try
         {
             await _wiredViewModel.FinishSketchAsync();
+            await TryAutoExtrudeAfterSketchAsync();
         }
         catch (Exception ex)
         {
@@ -1532,6 +1534,23 @@ public sealed partial class MainWindow : Window
         }
 
         e.Handled = true;
+    }
+
+    private async Task TryAutoExtrudeAfterSketchAsync()
+    {
+        if (_wiredViewModel is null || !_wiredViewModel.CanProfileTools)
+        {
+            return;
+        }
+
+        var result = await ShowExtrudeFeatureDialogAsync();
+        ReturnFocusToViewport();
+        if (result is null)
+        {
+            return;
+        }
+
+        await _wiredViewModel.ExtrudeSelectedSketchAsync(result.Value.Distance, result.Value.Operation, result.Value.TargetBodyId);
     }
 
     private async void OnSketchCancelClick(object? sender, RoutedEventArgs e)
@@ -2357,6 +2376,66 @@ public sealed partial class MainWindow : Window
     private void OnAssistantClearClick(object? sender, RoutedEventArgs e)
     {
         _wiredViewModel?.ClearAssistantHistory();
+        e.Handled = true;
+    }
+
+    private void OnPartStudioTabClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not Button button || button.Tag is not string name)
+        {
+            return;
+        }
+        _wiredViewModel.ActivatePartStudio(name);
+        e.Handled = true;
+    }
+
+    private async void OnPartStudioTabRename(object? sender, Avalonia.Input.TappedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not Button button || button.Tag is not string oldName)
+        {
+            return;
+        }
+        try
+        {
+            var dialog = new RenameDialog(oldName);
+            var newName = await ShowAnchoredDialogAsync<string?>(dialog);
+            if (!string.IsNullOrWhiteSpace(newName) && newName != oldName)
+            {
+                _wiredViewModel.RenamePartStudioTab(oldName, newName);
+            }
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnPartStudioTabRename), ex);
+        }
+        e.Handled = true;
+    }
+
+    private void OnPartStudioTabClose(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not Button button || button.Tag is not string name)
+        {
+            return;
+        }
+        _wiredViewModel.DeletePartStudioTab(name);
+        e.Handled = true;
+    }
+
+    private void OnAddPartStudioClick(object? sender, RoutedEventArgs e)
+    {
+        _wiredViewModel?.AddPartStudioTab();
+        e.Handled = true;
+    }
+
+    private void OnAssistantRecipeClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not Button button || button.Tag is not string recipeName)
+        {
+            return;
+        }
+
+        _wiredViewModel.InsertAssistantRecipe(recipeName);
+        AssistantInputBox?.Focus();
         e.Handled = true;
     }
 

@@ -1,82 +1,53 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="My3DApp.AvaloniaApp.Dialogs.MirrorFeatureDialog"
-        Width="420"
-        Height="340"
-        MinWidth="400"
-        MinHeight="320"
+        Width="380"
+        Height="240"
+        MinWidth="350"
+        MinHeight="220"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         Classes="FeatureDialogWindow"
         Title="Mirror">
   <Border Classes="FeatureDialogPanel" Margin="0">
-    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
-      <Grid ColumnDefinitions="*,Auto">
-        <StackPanel Spacing="4">
-          <TextBlock Classes="FeatureDialogTitle"
-                     Text="Mirror" />
-          <TextBlock Classes="FeatureDialogSubtitle"
-                     TextWrapping="Wrap"
-                     Text="Reflect the selected body across a symmetry plane." />
-        </StackPanel>
-        <Border Grid.Column="1"
-                Classes="FeatureDialogTag"
-                VerticalAlignment="Top">
-          <TextBlock Text="FEATURE"
-                     Classes="FeatureDialogTagText" />
-        </Border>
+    <StackPanel Margin="16,14,16,16" Spacing="0">
+
+      <!-- Header: title + confirm/cancel -->
+      <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
+        <TextBlock Classes="FeatureDialogTitle"
+                   Text="Mirror"
+                   VerticalAlignment="Center" />
+        <Button Grid.Column="1"
+                Classes="FeatureDialogConfirmBtn"
+                IsDefault="True"
+                Click="OnConfirmClick"
+                ToolTip.Tip="Confirm (Enter)" />
+        <Button Grid.Column="2"
+                Margin="6,0,0,0"
+                Classes="FeatureDialogCancelBtn"
+                IsCancel="True"
+                Click="OnCancelClick"
+                ToolTip.Tip="Cancel (Esc)" />
       </Grid>
 
-      <StackPanel Grid.Row="2"
-                  Margin="0,16,0,16"
-                  Spacing="12">
-        <Border Classes="FeatureDialogSectionCard">
-          <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="110,*">
-            <TextBlock Text="Mirror plane"
-                       Classes="FeatureDialogFieldLabel"
-                       VerticalAlignment="Center" />
-            <ComboBox x:Name="AxisComboBox"
-                      Classes="FeatureDialogInput"
-                      Grid.Column="1"
-                      Width="180"
-                      HorizontalAlignment="Left"
-                      SelectedIndex="0">
-              <ComboBoxItem Content="Right (YZ) plane" Tag="x" />
-              <ComboBoxItem Content="Front (XZ) plane" Tag="y" />
-              <ComboBoxItem Content="Top (XY) plane" Tag="z" />
-            </ComboBox>
-            <TextBlock Grid.Row="1"
-                       Grid.ColumnSpan="2"
-                       Margin="0,10,0,0"
-                       Classes="FeatureDialogHelpText"
-                       TextWrapping="Wrap"
-                       Text="The selected body is reflected across the chosen plane through the world origin." />
-            <TextBlock Grid.Row="2"
-                       Text="Recipe"
-                       Margin="0,10,0,0"
-                       Classes="FeatureDialogFieldLabel" />
-            <TextBlock Grid.Row="2"
-                       Grid.Column="1"
-                       Margin="0,10,0,0"
-                       TextWrapping="Wrap"
-                       Classes="FeatureDialogHelpText"
-                       Text="mirror(body, plane)" />
-          </Grid>
-        </Border>
-      </StackPanel>
+      <!-- Parameters -->
+      <Border Classes="FeatureDialogSectionCard">
+        <StackPanel Spacing="0">
+          <TextBlock Text="Mirror plane"
+                     Classes="FeatureDialogFieldLabel"
+                     Margin="0,0,0,6" />
+          <ComboBox x:Name="AxisComboBox"
+                    Classes="FeatureDialogInput"
+                    HorizontalAlignment="Stretch"
+                    SelectedIndex="0">
+            <ComboBoxItem Content="Right (YZ) plane" Tag="x" />
+            <ComboBoxItem Content="Front (XZ) plane" Tag="y" />
+            <ComboBoxItem Content="Top (XY) plane" Tag="z" />
+          </ComboBox>
+        </StackPanel>
+      </Border>
 
-      <StackPanel Grid.Row="3"
-                  Orientation="Horizontal"
-                  HorizontalAlignment="Right"
-                  Spacing="8">
-        <Button Content="Cancel"
-                Classes="FeatureDialogButtonSecondary"
-                Click="OnCancelClick" />
-        <Button Content="Apply"
-                Classes="FeatureDialogButtonPrimary"
-                Click="OnConfirmClick" />
-      </StackPanel>
-    </Grid>
+    </StackPanel>
   </Border>
 </Window>
