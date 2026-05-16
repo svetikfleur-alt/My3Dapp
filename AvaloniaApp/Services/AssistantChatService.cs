@@ -80,7 +80,8 @@ public sealed class AssistantChatService
 
             var envelope = ParseEnvelope(content);
             return envelope is not null
-                ? AssistantChatResult.Success(envelope.Value.reply, envelope.Value.command)
+                ? AssistantChatResult.Success(envelope.Value.reply, envelope.Value.command,
+                      envelope.Value.solidSculpt, envelope.Value.formaScript)
                 : AssistantChatResult.Success(content.Trim(), null);
         }
         catch (Exception ex)
@@ -96,42 +97,54 @@ public sealed class AssistantChatService
         var sb = new StringBuilder();
         sb.AppendLine("You are the CAD assistant inside My3DApp Studio — a parametric, solid-body modeler similar to Onshape/Fusion.");
         sb.AppendLine("Rules:");
-        sb.AppendLine("  1. Always return a JSON object: {\"reply\": \"...\", \"command\": \"...\"}. Never return plain text.");
+        sb.AppendLine("  1. Always return a JSON object with a \"reply\" key. Never return plain text.");
+        sb.AppendLine("     Use ONE of the three output modes:");
+        sb.AppendLine("       CAD command:   {\"reply\": \"...\", \"command\": \"...\"}");
+        sb.AppendLine("       FormaScript:   {\"reply\": \"...\", \"formascript\": \"...\"}");
+        sb.AppendLine("       SolidSculpt:   {\"reply\": \"...\", \"solidsculpt\": \"...\"}");
+        sb.AppendLine("     command, formascript, and solidsculpt are mutually exclusive — only set the one you need.");
         sb.AppendLine("  2. \"reply\" is shown in chat — 1-3 sentences, no markdown, no bullet lists.");
         sb.AppendLine("  3. \"command\" is executed by the CAD engine — use exact syntax from vocabulary below.");
-        sb.AppendLine("  4. Never invent command syntax not listed below — prefer clarifying questions over bad commands.");
-        sb.AppendLine("  5. Prefer a single recipe over a long step sequence when the user describes a standard part.");
+        sb.AppendLine("  4. \"formascript\" contains a complete FormaScript program (multi-line string). Use when the user needs parametric generation, loops, or repeating patterns.");
+        sb.AppendLine("  5. \"solidsculpt\" contains a complete SolidSculpt program (multi-line string). Use when the user asks for organic, sculptural, or noise-based geometry.");
+        sb.AppendLine("  6. Never invent command syntax not listed below — prefer clarifying questions over bad commands.");
+        sb.AppendLine("  7. Prefer a single recipe over a long step sequence when the user describes a standard part.");
         var modeInstruction = ctx.Mode switch
         {
             "Do" =>
-                "  6. Mode=Do: Always include a command. If unsure, make a reasonable best guess. Never reply with command=\"\".",
+                "  8. Mode=Do: Always include a command, formascript, or solidsculpt. Never reply with all three empty.",
             "Think" =>
-                "  6. Mode=Think: Reason through the geometry in your reply (2-3 sentences), then provide the best command.",
+                "  8. Mode=Think: Reason through the geometry in your reply (2-3 sentences), then provide the best output.",
             "Assist" =>
-                "  6. Mode=Assist: Guidance only — explain what the user should do step by step but set command=\"\" always.",
+                "  8. Mode=Assist: Guidance only — explain what the user should do step by step but leave command/formascript/solidsculpt empty.",
             "Think&Do" =>
-                "  6. Mode=Think&Do: First reason through the problem (up to 4 sentences), then provide a complete, confident command.",
+                "  8. Mode=Think&Do: First reason through the problem (up to 4 sentences), then provide a complete, confident output.",
             _ =>
-                "  6. Mode=Auto: Provide a command when you are confident it matches the intent; explain briefly if not."
+                "  8. Mode=Auto: Provide a command, formascript, or solidsculpt when you are confident it matches the intent."
         };
         sb.AppendLine(modeInstruction);
         sb.AppendLine();
         sb.AppendLine("## Typical workflows");
-        sb.AppendLine("  Extruded boss:      select plane top; start sketch; rectangle 0 0 40 20; finish sketch; extrude 10");
-        sb.AppendLine("  Cut through-hole:   select plane top; start sketch; circle 20 10 radius 4; finish sketch; extrude cut 30");
-        sb.AppendLine("  Revolve shaft:      select plane front; start sketch; rectangle 0 0 5 30; finish sketch; revolve 360 around y");
-        sb.AppendLine("  Hollow enclosure:   recipe shelled-box 60 40 30 2");
-        sb.AppendLine("  Mounting plate:     recipe plate-with-hole 80 50 6 5");
-        sb.AppendLine("  L-bracket:          recipe bracket 40 30 25 4");
-        sb.AppendLine("  Flanged shaft:      recipe flange 18 4 6 25");
-        sb.AppendLine("  Tube/standoff:      recipe hollow-cylinder 12 9 25");
-        sb.AppendLine("  Fillet all edges:   fillet 2");
-        sb.AppendLine("  Shell after solid:  shell 1.5");
-        sb.AppendLine("  Mirror half:        mirror x");
-        sb.AppendLine("  Bolt pattern:       circular pattern 6 angle 360 around z");
-        sb.AppendLine("  Slot array:         linear pattern 4 spacing 20 along x");
-        sb.AppendLine("  Merge bodies:       boolean union");
-        sb.AppendLine("  Subtract cutout:    boolean subtract");
+        sb.AppendLine("  Extruded boss:      command  → select plane top; start sketch; rectangle 0 0 40 20; finish sketch; extrude 10");
+        sb.AppendLine("  Cut through-hole:   command  → select plane top; start sketch; circle 20 10 radius 4; finish sketch; extrude cut 30");
+        sb.AppendLine("  Revolve shaft:      command  → select plane front; start sketch; rectangle 0 0 5 30; finish sketch; revolve 360 around y");
+        sb.AppendLine("  Hollow enclosure:   command  → recipe shelled-box 60 40 30 2");
+        sb.AppendLine("  Mounting plate:     command  → recipe plate-with-hole 80 50 6 5");
+        sb.AppendLine("  L-bracket:          command  → recipe bracket 40 30 25 4");
+        sb.AppendLine("  Flanged shaft:      command  → recipe flange 18 4 6 25");
+        sb.AppendLine("  Tube/standoff:      command  → recipe hollow-cylinder 12 9 25");
+        sb.AppendLine("  Fillet all edges:   command  → fillet 2");
+        sb.AppendLine("  Shell after solid:  command  → shell 1.5");
+        sb.AppendLine("  Mirror half:        command  → mirror x");
+        sb.AppendLine("  Bolt pattern:       command  → circular pattern 6 angle 360 around z");
+        sb.AppendLine("  Slot array:         command  → linear pattern 4 spacing 20 along x");
+        sb.AppendLine("  Merge bodies:       command  → boolean union");
+        sb.AppendLine("  Subtract cutout:    command  → boolean subtract");
+        sb.AppendLine("  Grid of cylinders:  formascript → var n=5 var gap=30 / repeat n / add cylinder / linear pattern n spacing gap along x / end / linear pattern n spacing gap along y");
+        sb.AppendLine("  Gear with N teeth:  formascript → var teeth=12 / add cylinder / circular pattern teeth angle 360 around y / fillet 2");
+        sb.AppendLine("  Rocky asteroid:     solidsculpt → base sphere 40 / subdivide 2 / noise 0.08 12 31 / smooth 3 0.4");
+        sb.AppendLine("  Organic blob:       solidsculpt → base sphere 30 / subdivide 3 / smooth 2 0.6 / inflate 5 / noise 0.1 8 42");
+        sb.AppendLine("  Twisted column:     solidsculpt → base cylinder 15 80 / subdivide 2 / smooth 2 0.5 / twist 120");
         sb.AppendLine();
         sb.AppendLine("## Command vocabulary");
         sb.AppendLine("  Sequence:    separate steps with ';'. Steps execute in order.");
@@ -168,6 +181,60 @@ public sealed class AssistantChatService
         sb.AppendLine("  Examples:  \"a 50x30 mounting plate 4mm thick\" → recipe plate 50 30 4");
         sb.AppendLine("             \"hollow case 60 by 40 by 25, walls 2mm\" → recipe shelled-box 60 40 25 2");
         sb.AppendLine("             \"L bracket 40 wide 30 deep 25 tall 4 thick\" → recipe bracket 40 30 25 4");
+
+        sb.AppendLine();
+        sb.AppendLine("## FormaScript — parametric CAD scripting language");
+        sb.AppendLine("  Use when: user wants looping geometry, parametric grids, variable-driven shapes, or complex multi-step patterns.");
+        sb.AppendLine("  Return as:  {\"reply\": \"...\", \"formascript\": \"<full multiline script>\"}");
+        sb.AppendLine("  Syntax (each on its own line, comments start with //):");
+        sb.AppendLine("    var name = expr                   — variable (supports +,-,*,/,%,^ and sqrt/abs/sin/cos/tan/pi)");
+        sb.AppendLine("    name = expr                       — reassignment");
+        sb.AppendLine("    repeat N  ...  end                — loop N times");
+        sb.AppendLine("    for i in range(a, b)  ...  end    — range loop");
+        sb.AppendLine("    for i in range(a, b, step)  ...  end");
+        sb.AppendLine("    if expr op expr  ...  end         — conditional (==,!=,<,>,<=,>=)");
+        sb.AppendLine("    def name(p1, p2)  ...  end        — function definition");
+        sb.AppendLine("    name(arg1, arg2)                  — function call");
+        sb.AppendLine("    Any CAD command (add box, extrude, fillet, etc.)  — executed with variable substitution");
+        sb.AppendLine("  Examples:");
+        sb.AppendLine("    Bolt hole circle:");
+        sb.AppendLine("      var n = 6  var r = 40");
+        sb.AppendLine("      repeat n");
+        sb.AppendLine("        add cylinder");
+        sb.AppendLine("        circular pattern n angle 360 around y");
+        sb.AppendLine("      end");
+        sb.AppendLine("    Grid of boxes:");
+        sb.AppendLine("      var cols = 4  var rows = 3  var size = 20  var gap = 5");
+        sb.AppendLine("      repeat rows");
+        sb.AppendLine("        repeat cols");
+        sb.AppendLine("          add box");
+        sb.AppendLine("          linear pattern cols spacing (size + gap) along x");
+        sb.AppendLine("        end");
+        sb.AppendLine("        linear pattern rows spacing (size + gap) along y");
+        sb.AppendLine("      end");
+
+        sb.AppendLine();
+        sb.AppendLine("## SolidSculpt — organic mesh sculpting language");
+        sb.AppendLine("  Use when: user wants organic, artistic, bumpy, twisted, bent, tapered, or noise-deformed geometry.");
+        sb.AppendLine("  Return as:  {\"reply\": \"...\", \"solidsculpt\": \"<full multiline script>\"}");
+        sb.AppendLine("  Syntax (each on its own line):");
+        sb.AppendLine("    base sphere [radius]              — start from a sphere (default 30)");
+        sb.AppendLine("    base box [w] [h] [d]              — start from a box");
+        sb.AppendLine("    base cylinder [radius] [height]   — start from a cylinder");
+        sb.AppendLine("    subdivide [n]                     — loop subdivide (1–5, each ×4 triangles)");
+        sb.AppendLine("    smooth [iters] [strength 0-1]     — Laplacian smoothing");
+        sb.AppendLine("    inflate [amount]                  — push vertices along normals");
+        sb.AppendLine("    noise [scale] [strength] [seed]   — procedural noise displacement");
+        sb.AppendLine("    pinch [strength] [falloff]        — pull toward centroid");
+        sb.AppendLine("    twist [degrees]                   — twist around Z axis");
+        sb.AppendLine("    bend [degrees]                    — bend along X axis");
+        sb.AppendLine("    taper [topScale] [botScale]       — scale XY by height fraction");
+        sb.AppendLine("    spherize [strength] [radius]      — blend toward sphere");
+        sb.AppendLine("    var name = expr  |  repeat N ... end  (same as FormaScript)");
+        sb.AppendLine("  Examples:");
+        sb.AppendLine("    Rocky asteroid:  base sphere 40 → subdivide 2 → noise 0.08 12 31 → smooth 3 0.4");
+        sb.AppendLine("    Twisted pillar:  base cylinder 15 80 → subdivide 2 → smooth 2 0.5 → twist 120");
+        sb.AppendLine("    Organic blob:    base sphere 30 → subdivide 3 → smooth 2 0.6 → inflate 5 → noise 0.1 8 42 → spherize 0.4");
 
         sb.AppendLine();
         sb.AppendLine("## Session state");
@@ -223,6 +290,7 @@ public sealed class AssistantChatService
         {
             model = configuration.Model,
             temperature = 0.2,
+            max_tokens = 2048,
             messages = messages.ToArray()
         };
 
@@ -273,7 +341,7 @@ public sealed class AssistantChatService
         var payload = new
         {
             model = configuration.Model,
-            max_tokens = 1200,
+            max_tokens = 2048,
             system = BuildSystemPrompt(context),
             messages = messages.ToArray()
         };
@@ -380,7 +448,8 @@ public sealed class AssistantChatService
         return string.Join("\n", parts);
     }
 
-    private static (string reply, string? command)? ParseEnvelope(string content)
+    private static (string reply, string? command, string? solidSculpt, string? formaScript)?
+        ParseEnvelope(string content)
     {
         var trimmed = content.Trim();
         if (trimmed.StartsWith("```", StringComparison.Ordinal))
@@ -412,8 +481,19 @@ public sealed class AssistantChatService
                       commandElement.ValueKind == JsonValueKind.String
             ? commandElement.GetString()
             : null;
+        var solidSculpt = root.TryGetProperty("solidsculpt", out var ssElement) &&
+                          ssElement.ValueKind == JsonValueKind.String
+            ? ssElement.GetString()
+            : null;
+        var formaScript = root.TryGetProperty("formascript", out var fsElement) &&
+                          fsElement.ValueKind == JsonValueKind.String
+            ? fsElement.GetString()
+            : null;
 
-        return (reply, string.IsNullOrWhiteSpace(command) ? null : command.Trim());
+        return (reply,
+            string.IsNullOrWhiteSpace(command) ? null : command.Trim(),
+            string.IsNullOrWhiteSpace(solidSculpt) ? null : solidSculpt.Trim(),
+            string.IsNullOrWhiteSpace(formaScript) ? null : formaScript.Trim());
     }
 }
 
@@ -566,13 +646,22 @@ public sealed class AssistantChatResult
 
     public string? Command { get; private init; }
 
-    public static AssistantChatResult Success(string reply, string? command)
+    /// <summary>A SolidSculpt script block if the assistant returned one, otherwise null.</summary>
+    public string? SolidSculptScript { get; private init; }
+
+    /// <summary>A FormaScript block if the assistant returned one, otherwise null.</summary>
+    public string? FormaScript { get; private init; }
+
+    public static AssistantChatResult Success(string reply, string? command,
+        string? solidSculptScript = null, string? formaScript = null)
     {
         return new AssistantChatResult
         {
             IsSuccess = true,
             Reply = reply,
-            Command = command
+            Command = command,
+            SolidSculptScript = string.IsNullOrWhiteSpace(solidSculptScript) ? null : solidSculptScript.Trim(),
+            FormaScript = string.IsNullOrWhiteSpace(formaScript) ? null : formaScript.Trim()
         };
     }
 

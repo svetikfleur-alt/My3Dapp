@@ -2091,7 +2091,42 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             if (result.IsSuccess)
             {
                 AddMessage("assistant", result.Reply);
-                if (!string.IsNullOrWhiteSpace(result.Command))
+
+                // ── SolidSculpt script ────────────────────────────────────────
+                if (!string.IsNullOrWhiteSpace(result.SolidSculptScript) && ModeExecutesCommands(SelectedAssistantMode))
+                {
+                    DismissStartPage();
+                    var ssInterp = new Services.SolidSculptInterpreter();
+                    var ssResult = ssInterp.Execute(result.SolidSculptScript);
+                    if (ssResult.IsSuccess && ssResult.Mesh is not null)
+                    {
+                        await RunSolidSculptAsync(ssResult);
+                        AddMessage("system", $"SolidSculpt mesh applied ({ssResult.Mesh.Triangles.Count:N0} tris).");
+                    }
+                    else
+                    {
+                        AddMessage("system", $"SolidSculpt error: {ssResult.ErrorMessage}");
+                    }
+                }
+                // ── FormaScript program ───────────────────────────────────────
+                else if (!string.IsNullOrWhiteSpace(result.FormaScript) && ModeExecutesCommands(SelectedAssistantMode))
+                {
+                    DismissStartPage();
+                    var fsInterp = new Services.FormaScriptInterpreter();
+                    var fsResult = fsInterp.Execute(result.FormaScript);
+                    if (fsResult.IsSuccess)
+                    {
+                        var report = await RunFormaScriptAsync(fsResult, cancellationToken);
+                        if (!string.IsNullOrWhiteSpace(report))
+                            AddMessage("system", report);
+                    }
+                    else
+                    {
+                        AddMessage("system", $"FormaScript error: {fsResult.ErrorMessage}");
+                    }
+                }
+                // ── CAD command ───────────────────────────────────────────────
+                else if (!string.IsNullOrWhiteSpace(result.Command))
                 {
                     var parsedSuggestionSequence = _commandParser.ParseSequence(result.Command);
                     var allOk = parsedSuggestionSequence.Count > 0 &&
@@ -2101,6 +2136,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                     {
                         if (ModeExecutesCommands(SelectedAssistantMode))
                         {
+                            DismissStartPage();
                             foreach (var step in parsedSuggestionSequence)
                             {
                                 foreach (var command in step.Result.Commands)
