@@ -138,6 +138,11 @@
               <Border Classes="ToolSplitGroup" Padding="4">
                 <StackPanel Orientation="Horizontal" Spacing="3">
                   <Button Classes="ToolbarActionButton"
+                          ToolTip.Tip="New document (Ctrl+N)"
+                          Click="OnNewProjectClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/plus.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
                           ToolTip.Tip="Open project (Ctrl+O)"
                           Click="OnOpenProjectClick">
                     <svg:Svg Path="avares://My3DApp/Assets/Icons/open.svg" Width="16" Height="16" />

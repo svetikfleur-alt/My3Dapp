@@ -1941,6 +1941,17 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         await Task.CompletedTask;
     }
 
+    public void NewProject()
+    {
+        _workspaceController.NewProject();
+        CurrentProjectPath = string.Empty;
+        ProjectTitleBase = "Untitled";
+        IsSelectingSketchPlane = false;
+        HasExplicitSketchBaseSelection = false;
+        AppendToLog("New document created.");
+        ShowNotification("New document created.", NotificationSeverity.Info);
+    }
+
     public bool SaveProject(string path)
     {
         try
