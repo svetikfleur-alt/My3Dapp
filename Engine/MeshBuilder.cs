@@ -667,6 +667,48 @@ public static class MeshBuilder
         return mesh;
     }
 
+    public static Mesh CreatePipe(double outerRadius, double innerRadius, double height, int segments = 64)
+    {
+        var mesh = new Mesh();
+        double half = height / 2;
+
+        var outerBot = new int[segments];
+        var outerTop = new int[segments];
+        var innerBot = new int[segments];
+        var innerTop = new int[segments];
+
+        for (var i = 0; i < segments; i++)
+        {
+            double angle = 2 * Math.PI * i / segments;
+            double cos = Math.Cos(angle);
+            double sin = Math.Sin(angle);
+
+            outerBot[i] = mesh.Vertices.Count; mesh.Vertices.Add(new Vertex(outerRadius * cos, outerRadius * sin, -half));
+            outerTop[i] = mesh.Vertices.Count; mesh.Vertices.Add(new Vertex(outerRadius * cos, outerRadius * sin,  half));
+            innerBot[i] = mesh.Vertices.Count; mesh.Vertices.Add(new Vertex(innerRadius * cos, innerRadius * sin, -half));
+            innerTop[i] = mesh.Vertices.Count; mesh.Vertices.Add(new Vertex(innerRadius * cos, innerRadius * sin,  half));
+        }
+
+        for (var i = 0; i < segments; i++)
+        {
+            int next = (i + 1) % segments;
+            // outer wall (facing outward)
+            mesh.Triangles.Add(new Triangle(outerBot[i], outerTop[i],   outerBot[next]));
+            mesh.Triangles.Add(new Triangle(outerBot[next], outerTop[i], outerTop[next]));
+            // inner wall (facing inward — reversed winding)
+            mesh.Triangles.Add(new Triangle(innerBot[i], innerBot[next], innerTop[i]));
+            mesh.Triangles.Add(new Triangle(innerBot[next], innerTop[next], innerTop[i]));
+            // top annular cap (facing up)
+            mesh.Triangles.Add(new Triangle(outerTop[i], innerTop[i],   outerTop[next]));
+            mesh.Triangles.Add(new Triangle(outerTop[next], innerTop[i], innerTop[next]));
+            // bottom annular cap (facing down)
+            mesh.Triangles.Add(new Triangle(outerBot[i], outerBot[next], innerBot[i]));
+            mesh.Triangles.Add(new Triangle(outerBot[next], innerBot[next], innerBot[i]));
+        }
+
+        return mesh;
+    }
+
     public static Mesh CreateArrow(double shaftRadius, double shaftHeight, double headRadius, double headHeight, int segments = 64)
     {
         var shaft = CreateCylinder(shaftRadius, shaftHeight, segments);
@@ -999,8 +1041,11 @@ public static class MeshBuilder
         PlaneOrientation plane,
         double thickness)
     {
-        var innerBot = OffsetPolygon(outerBot, -thickness);
-        var innerTop = OffsetPolygon(outerTop, -thickness);
+        // Positive amount offsets CCW polygon inward; negate for CW polygons.
+        bool isCcwCheck = ComputeSignedArea(outerBot) >= 0d;
+        double inwardAmount = isCcwCheck ? thickness : -thickness;
+        var innerBot = OffsetPolygon(outerBot, inwardAmount);
+        var innerTop = OffsetPolygon(outerTop, inwardAmount);
         if (innerBot is null || innerTop is null)
             return BuildSolidPrismMesh(outerBot, outerTop, startD, endD, plane);
 
@@ -1016,22 +1061,21 @@ public static class MeshBuilder
             it[i] = mesh.Vertices.Count; mesh.Vertices.Add(Map3D(innerTop[i], endD,   plane));
         }
 
-        bool isCcw = ComputeSignedArea(outerBot) >= 0d;
         for (var i = 0; i < n; i++)
         {
             var next = (i + 1) % n;
             // outer sides
-            if (isCcw) { mesh.Triangles.Add(new Triangle(ob[i], ob[next], ot[i])); mesh.Triangles.Add(new Triangle(ob[next], ot[next], ot[i])); }
-            else        { mesh.Triangles.Add(new Triangle(ob[i], ot[i], ob[next])); mesh.Triangles.Add(new Triangle(ob[next], ot[i], ot[next])); }
+            if (isCcwCheck) { mesh.Triangles.Add(new Triangle(ob[i], ob[next], ot[i])); mesh.Triangles.Add(new Triangle(ob[next], ot[next], ot[i])); }
+            else              { mesh.Triangles.Add(new Triangle(ob[i], ot[i], ob[next])); mesh.Triangles.Add(new Triangle(ob[next], ot[i], ot[next])); }
             // inner sides (reversed winding = inward-facing)
-            if (isCcw) { mesh.Triangles.Add(new Triangle(ib[i], it[i], ib[next])); mesh.Triangles.Add(new Triangle(ib[next], it[i], it[next])); }
-            else        { mesh.Triangles.Add(new Triangle(ib[i], ib[next], it[i])); mesh.Triangles.Add(new Triangle(ib[next], it[next], it[i])); }
-            // bottom ring
-            mesh.Triangles.Add(new Triangle(ob[i], ib[next], ob[next]));
-            mesh.Triangles.Add(new Triangle(ob[i], ib[i],    ib[next]));
-            // top ring
-            mesh.Triangles.Add(new Triangle(ot[i], ot[next], it[next]));
-            mesh.Triangles.Add(new Triangle(ot[i], it[next], it[i]));
+            if (isCcwCheck) { mesh.Triangles.Add(new Triangle(ib[i], it[i], ib[next])); mesh.Triangles.Add(new Triangle(ib[next], it[i], it[next])); }
+            else              { mesh.Triangles.Add(new Triangle(ib[i], ib[next], it[i])); mesh.Triangles.Add(new Triangle(ib[next], it[next], it[i])); }
+            // bottom ring (annular cap, facing down)
+            if (isCcwCheck) { mesh.Triangles.Add(new Triangle(ob[i], ib[next], ob[next])); mesh.Triangles.Add(new Triangle(ob[i], ib[i], ib[next])); }
+            else              { mesh.Triangles.Add(new Triangle(ob[i], ob[next], ib[next])); mesh.Triangles.Add(new Triangle(ob[i], ib[next], ib[i])); }
+            // top ring (annular cap, facing up)
+            if (isCcwCheck) { mesh.Triangles.Add(new Triangle(ot[i], ot[next], it[next])); mesh.Triangles.Add(new Triangle(ot[i], it[next], it[i])); }
+            else              { mesh.Triangles.Add(new Triangle(ot[i], it[next], ot[next])); mesh.Triangles.Add(new Triangle(ot[i], it[i], it[next])); }
         }
 
         return mesh;

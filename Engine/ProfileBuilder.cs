@@ -238,11 +238,16 @@ public static class ProfileBuilder
             return false;
         }
 
-        if (Math.Abs(ComputeSignedArea(points)) <= Tolerance)
+        var area = ComputeSignedArea(points);
+        if (Math.Abs(area) <= Tolerance)
         {
             error = "Profile collapses to zero area.";
             return false;
         }
+
+        // Normalize to CCW so all downstream code (shell offset, prism winding) sees consistent orientation.
+        if (area < 0)
+            points.Reverse();
 
         profile = new Profile(points);
         return true;

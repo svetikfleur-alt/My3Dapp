@@ -20,9 +20,7 @@ public sealed class SolidMesher
                 CsgIntersect(Tessellate(b.A), Tessellate(b.B)),
             SphereSolid s => MeshBuilder.CreateSphere(s.Radius),
             ConeSolid c => MeshBuilder.CreateCone(c.RadiusTop, c.RadiusBottom, c.Height),
-            PipeSolid p => MeshBuilder.Merge(
-                MeshBuilder.CreateCylinder(p.OuterRadius, p.Height),
-                MeshBuilder.CreateCylinder(p.InnerRadius, p.Height)),
+            PipeSolid p => MeshBuilder.CreatePipe(p.OuterRadius, p.InnerRadius, p.Height),
             TorusSolid t => MeshBuilder.CreateTorus(t.MajorRadius, t.MinorRadius),
             PyramidSolid p => MeshBuilder.CreatePyramid(p.BaseWidth, p.BaseDepth, p.Height),
             WedgeSolid w => MeshBuilder.CreateWedge(w.Width, w.Depth, w.Height),
@@ -148,22 +146,27 @@ public sealed class SolidMesher
         }
     }
 
-    // Ray cast from point in +Y direction; odd intersection count = inside.
+    // Ray cast in +Y direction; odd intersection count = inside.
+    // Uses three slightly offset origins and takes majority vote to avoid false
+    // results when the ray grazes a vertex or shared edge.
     private static bool IsPointInsideMesh(Mesh mesh, Vertex point)
+    {
+        int votes = 0;
+        if (CountHits(mesh, new Vertex(point.X + 1.3e-4, point.Y, point.Z + 7.1e-5)) % 2 == 1) votes++;
+        if (CountHits(mesh, new Vertex(point.X - 9.7e-5, point.Y, point.Z - 1.1e-4)) % 2 == 1) votes++;
+        if (CountHits(mesh, new Vertex(point.X + 4.3e-5, point.Y, point.Z + 1.7e-4)) % 2 == 1) votes++;
+        return votes >= 2;
+    }
+
+    private static int CountHits(Mesh mesh, Vertex origin)
     {
         var hits = 0;
         foreach (var tri in mesh.Triangles)
         {
-            var v0 = mesh.Vertices[tri.A];
-            var v1 = mesh.Vertices[tri.B];
-            var v2 = mesh.Vertices[tri.C];
-            if (RayTriangleIntersect(point, v0, v1, v2))
-            {
+            if (RayTriangleIntersect(origin, mesh.Vertices[tri.A], mesh.Vertices[tri.B], mesh.Vertices[tri.C]))
                 hits++;
-            }
         }
-
-        return (hits & 1) == 1;
+        return hits;
     }
 
     // Möller–Trumbore ray-triangle intersection, ray direction = +Y.
