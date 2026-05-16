@@ -91,6 +91,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     private readonly List<string> _recentPrimitiveKinds = ["box", "cylinder", "sphere"];
     private MakerTemplateDefinition? _selectedMakerTemplate;
     private string _templateStatus = "Choose a starter template to generate a maker part.";
+    private string _lastExportSummary = "No exports yet.";
 
     public StudioShellViewModel()
     {
@@ -116,6 +117,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         WorkspaceTabs = new ObservableCollection<StudioWorkspaceTabItem>();
         TemplateCatalog = new ObservableCollection<MakerTemplateDefinition>(MakerTemplateLibrary.All);
         TemplateParameters = new ObservableCollection<ParameterItemViewModel>();
+        ExportJobs = new ObservableCollection<ExportJobViewModel>();
         ResetAssistantModelsForProvider(_selectedAssistantProvider, preserveSelection: false);
         RefreshRecentPrimitiveTools();
         _workspaceController.WorkspaceChanged += OnWorkspaceChanged;
@@ -135,6 +137,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public ObservableCollection<StudioWorkspaceTabItem> WorkspaceTabs { get; }
     public ObservableCollection<MakerTemplateDefinition> TemplateCatalog { get; }
     public ObservableCollection<ParameterItemViewModel> TemplateParameters { get; }
+    public ObservableCollection<ExportJobViewModel> ExportJobs { get; }
 
     public string DocumentName
     {
@@ -280,7 +283,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
             var selection = state.Project.Selection;
             var selectionLabel = selection.IsEmpty ? "all visible bodies" : selection.Name;
-            return $"{partCount.ToString(CultureInfo.InvariantCulture)} part(s) ready. Export the current body set as STL/OBJ or review the active selection ({selectionLabel}).";
+            return $"{partCount.ToString(CultureInfo.InvariantCulture)} part(s) ready. Export the current body set as STL/OBJ or review the active selection ({selectionLabel}). {LastExportSummary}";
         }
     }
 
@@ -302,6 +305,14 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             return "STEP and slicer handoff are not in this MVP yet. STL and OBJ are the recommended output paths.";
         }
     }
+
+    public string LastExportSummary
+    {
+        get => _lastExportSummary;
+        private set => SetProperty(ref _lastExportSummary, value);
+    }
+
+    public bool HasExportJobs => ExportJobs.Count > 0;
 
     public void InsertAssistantRecipe(string recipeName)
     {

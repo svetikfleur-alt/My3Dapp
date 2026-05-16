@@ -88,7 +88,7 @@ public sealed class FeatureNodeViewModel
 
     public bool HasIcon => IsSectionNode || !string.IsNullOrWhiteSpace(IconPath);
 
-    public bool IsSectionNode => IconKind is "reference-group" or "sketch-group" or "feature-group" or "part-group";
+    public bool IsSectionNode => IconKind is "reference-group" or "sketch-group" or "feature-group" or "part-group" or "template-group" or "export-group";
 
     public bool ShowGlyph => HasIcon && !IsSectionNode;
 
@@ -140,6 +140,8 @@ public sealed class FeatureNodeViewModel
         "sketch-entity"           => IconBase + "line.svg",
         "constraint"              => IconBase + "point.svg",
         "dimension"               => IconBase + "line.svg",
+        "template"                => IconBase + "box.svg",
+        "export"                  => IconBase + "export.svg",
         _ => string.Empty
     };
 
@@ -150,6 +152,8 @@ public sealed class FeatureNodeViewModel
         "sketch-group"     => "SK",
         "feature-group"    => "FX",
         "part-group"       => "PRT",
+        "template-group"   => "TPL",
+        "export-group"     => "EXP",
         "body" or "part"   => "BD",
         "plane" or "datum-plane" => "PL",
         "origin"           => "OR",
@@ -171,6 +175,8 @@ public sealed class FeatureNodeViewModel
         "sketch-entity"    => "GE",
         "constraint"       => "CS",
         "dimension"        => "DM",
+        "template"         => "TP",
+        "export"           => "EX",
         _ => string.Empty
     };
 
