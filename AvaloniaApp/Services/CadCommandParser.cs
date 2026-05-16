@@ -262,8 +262,10 @@ public sealed class CadCommandParser
 
     public IReadOnlyList<CadCommandSequenceStep> ParseSequence(string input)
     {
+        var expanded = CadRecipeLibrary.ExpandSequence(input);
+
         var parts = CommandSeparatorPattern
-            .Split(input)
+            .Split(expanded)
             .Select(NormalizeCommandText)
             .Where(part => !string.IsNullOrWhiteSpace(part))
             .ToArray();

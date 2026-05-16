@@ -1,49 +1,44 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="My3DApp.AvaloniaApp.Dialogs.SelectPlaneDialog"
-        Width="340"
-        Height="300"
+        Width="330"
+        Height="280"
         MinWidth="300"
-        MinHeight="240"
+        MinHeight="250"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         Classes="FeatureDialogWindow"
         Title="Select Plane">
   <Border Classes="FeatureDialogPanel" Margin="0">
-    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
-      <TextBlock Classes="FeatureDialogTitle" Text="Select Sketch Plane" />
-      <TextBlock Grid.Row="1"
-                 Classes="FeatureDialogSubtitle"
-                 Margin="0,6,0,0"
-                 Text="Choose a reference plane to begin sketching on."
-                 TextWrapping="Wrap" />
+    <StackPanel Margin="16,14,16,16" Spacing="0">
 
-      <Border Grid.Row="2"
-              Margin="0,14,0,14"
-              Background="{DynamicResource Studio.PanelInsetBrush}"
-              BorderBrush="{DynamicResource Studio.BorderBrush}"
-              BorderThickness="1"
-              Padding="4">
+      <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
+        <TextBlock Classes="FeatureDialogTitle" Text="Sketch Plane" VerticalAlignment="Center" />
+        <Button x:Name="OkButton"
+                Grid.Column="1"
+                Classes="FeatureDialogConfirmBtn"
+                IsEnabled="False"
+                Click="OnConfirmClick"
+                ToolTip.Tip="Start Sketch (Enter)" />
+        <Button Grid.Column="2"
+                Margin="6,0,0,0"
+                Classes="FeatureDialogCancelBtn"
+                IsCancel="True"
+                Click="OnCancelClick" />
+      </Grid>
+
+      <TextBlock Classes="FeatureDialogFieldLabel"
+                 Text="Choose a reference plane"
+                 Margin="0,0,0,8" />
+
+      <Border Classes="FeatureDialogSectionCard">
         <ListBox x:Name="PlaneListBox"
                  Background="Transparent"
                  BorderThickness="0"
                  DoubleTapped="OnListDoubleTapped" />
       </Border>
 
-      <StackPanel Grid.Row="3"
-                  Orientation="Horizontal"
-                  HorizontalAlignment="Right"
-                  Spacing="8">
-        <Button Content="Cancel"
-                Classes="FeatureDialogButtonSecondary"
-                Click="OnCancelClick" />
-        <Button x:Name="OkButton"
-                Content="Start Sketch"
-                Classes="FeatureDialogButtonPrimary"
-                IsEnabled="False"
-                Click="OnConfirmClick" />
-      </StackPanel>
-    </Grid>
+    </StackPanel>
   </Border>
 </Window>

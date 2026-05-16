@@ -22,40 +22,33 @@ public sealed partial class RevolveFeatureDialog : AWindow
         ProfileValueTextBlock.Text = string.IsNullOrWhiteSpace(profileSummary)
             ? "Select a closed sketch profile"
             : profileSummary;
-        PlaneValueTextBlock.Text = string.IsNullOrWhiteSpace(planeSummary) ? "Sketch plane" : planeSummary;
-        AngleInput.Value = (decimal)initialAngle;
+        AngleInput.Value = (decimal)(initialAngle >= 360 ? 360 : initialAngle);
         AxisComboBox.SelectedIndex = string.Equals(initialAxis, "x", StringComparison.OrdinalIgnoreCase) ? 0 : 1;
-        RecipeTextBlock.Text = BuildRecipeText(initialAngle, initialAxis);
+
+        var isFullRevolve = initialAngle >= 360;
+        FullRevolveCheckBox.IsChecked = isFullRevolve;
+        AngleRow.IsVisible = !isFullRevolve;
     }
 
     public double ConfirmedAngle { get; private set; }
-
     public string ConfirmedAxis { get; private set; } = "y";
 
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
+    private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 
-    private void OnCancelClick(object? sender, RoutedEventArgs e)
-    {
-        Close(null);
-    }
+    private void OnCancelClick(object? sender, RoutedEventArgs e) => Close(null);
 
     private void OnConfirmClick(object? sender, RoutedEventArgs e)
     {
-        ConfirmedAngle = (double)(AngleInput.Value ?? 0m);
+        var fullRevolve = FullRevolveCheckBox.IsChecked == true;
+        ConfirmedAngle = fullRevolve ? 360.0 : (double)(AngleInput.Value ?? 360m);
         var selectedAxis = (AxisComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString();
         ConfirmedAxis = string.Equals(selectedAxis, "x", StringComparison.OrdinalIgnoreCase) ? "x" : "y";
-
         Close(new RevolveFeatureDialogResult(ConfirmedAngle, ConfirmedAxis));
     }
 
-    private static string BuildRecipeText(double angle, string axis)
+    private void OnFullRevolveChanged(object? sender, RoutedEventArgs e)
     {
-        var axisText = string.Equals(axis, "x", StringComparison.OrdinalIgnoreCase) ? "sketchX" : "sketchY";
-        var angleText = angle.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
-        return $"revolve(profile, axis={axisText}, angle={angleText} deg)";
+        AngleRow.IsVisible = FullRevolveCheckBox.IsChecked != true;
     }
 }
 
