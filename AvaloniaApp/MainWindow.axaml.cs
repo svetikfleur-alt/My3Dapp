@@ -246,8 +246,16 @@ public sealed partial class MainWindow : Window
     {
         if (e.Action == NotifyCollectionChangedAction.Add && _assistantScrollViewer is not null)
         {
-            Dispatcher.UIThread.Post(() => _assistantScrollViewer.ScrollToEnd(), DispatcherPriority.Background);
+            Dispatcher.UIThread.Post(ScrollAssistantToEnd, DispatcherPriority.Background);
         }
+    }
+
+    private void ScrollAssistantToEnd()
+    {
+        if (_assistantScrollViewer is null) return;
+        _assistantScrollViewer.Offset = new Avalonia.Vector(
+            _assistantScrollViewer.Offset.X,
+            double.MaxValue);
     }
 
     private void RequestFeatureTreeExpansion()
