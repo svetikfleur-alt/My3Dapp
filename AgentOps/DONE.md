@@ -31,3 +31,4 @@ Queue correction:
 - Task 01 was previously marked done without matching completion evidence. It is now pending again in TASK_QUEUE.md and is intentionally not listed as done here.
 
 - 2026-05-16 — Synced local + GitHub `main`, excluded nested temp Avalonia/XAML snapshots from build, and added first publishable AI Maker CAD Studio MVP layer: bottom workspace tabs, maker template registry, prepare/export workspace, starter PartLibrary docs, and public README; build 0 warnings 0 errors.
+- 2026-05-16 — V1 studio foundation extension: added document UI state persistence, autosave status callbacks, `.umxproj` save/open UX, startup recovery status wiring, template parameter commit hooks, template command preview, and two new manifest-backed starter templates (`simple-box`, `lid`); build 0 warnings 0 errors.

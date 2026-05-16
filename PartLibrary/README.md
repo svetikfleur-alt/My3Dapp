@@ -20,6 +20,8 @@ This folder documents each template for contributors and reviewers.
 | [L-Bracket](Templates/LBracket/template.md) | `l-bracket` | Brackets | width, height, depth, thickness, holes |
 | [Fan Adapter Plate](Templates/FanAdapter/template.md) | `fan-adapter` | Plates & mounts | fan size, thickness, screw holes, center opening |
 | [Cable Clip](Templates/CableClip/template.md) | `cable-clip` | Clips & routing | cable diameter, clip width, wall thickness, gap |
+| [Simple Box](Templates/SimpleBox/template.md) | `simple-box` | Enclosures | width, depth, height, wall thickness, top mode |
+| [Lid / Cover](Templates/Lid/template.md) | `lid` | Enclosures | width, depth, thickness, lip height, tolerance |
 | [DIN Rail Clip](Templates/DinRailClip/template.md) | `din-rail-clip` | Mounts & fixtures | rail width, clip height, lip depth |
 | [T-Slot Nut](Templates/TSlotNut/template.md) | `t-slot-nut` | Fasteners & hardware | slot width, nut length, hole |
 | [Box Enclosure](Templates/BoxEnclosure/template.md) | `box-enclosure` | Enclosures | inner size, wall thickness, corner radius |

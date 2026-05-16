@@ -10,6 +10,18 @@ public sealed class AutosaveService : IDisposable
 
     public static bool HasAutosave => File.Exists(AutosaveFile);
 
+    public static DateTimeOffset? GetAutosaveTimestamp()
+    {
+        try
+        {
+            return HasAutosave ? File.GetLastWriteTimeUtc(AutosaveFile) : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public static void DeleteAutosave()
     {
         try { File.Delete(AutosaveFile); } catch { }
@@ -17,13 +29,15 @@ public sealed class AutosaveService : IDisposable
 
     private readonly Func<bool> _isDirty;
     private readonly Action<string> _saveAction;
+    private readonly Action<DateTimeOffset>? _savedCallback;
     private readonly System.Timers.Timer _timer;
     private bool _disposed;
 
-    public AutosaveService(Func<bool> isDirty, Action<string> saveAction, double intervalMs = 120_000)
+    public AutosaveService(Func<bool> isDirty, Action<string> saveAction, Action<DateTimeOffset>? savedCallback = null, double intervalMs = 120_000)
     {
         _isDirty = isDirty;
         _saveAction = saveAction;
+        _savedCallback = savedCallback;
         _timer = new System.Timers.Timer(intervalMs) { AutoReset = true };
         _timer.Elapsed += OnTimerElapsed;
         _timer.Start();
@@ -37,6 +51,7 @@ public sealed class AutosaveService : IDisposable
         {
             Directory.CreateDirectory(Path.GetDirectoryName(AutosaveFile)!);
             _saveAction(AutosaveFile);
+            _savedCallback?.Invoke(DateTimeOffset.UtcNow);
         }
         catch { }
     }

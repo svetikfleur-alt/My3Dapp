@@ -53,3 +53,40 @@ Next:
 - Updated all 6 template.md files with full parameter tables and example presets
 - All 6 templates remain in MakerTemplateLibrary.cs: mounting-plate, washer, spacer, l-bracket, fan-adapter, cable-clip
 - Committed as: mvp: publishable AI maker CAD studio proposal
+
+2026-05-16 V1 studio foundation follow-up:
+- Build repaired after export-history persistence mismatch (`ExportJobViewModel.FullPath` vs `Path`).
+- Added `AvaloniaApp/Services/StudioDocumentUiState.cs` to persist:
+  - active workspace kind
+  - selected template id
+  - template parameter values
+  - export job summaries
+  - assistant notes placeholder
+- `StudioWorkspaceController.cs` now saves/restores UI state into the project envelope.
+- `AutosaveService.cs` now exposes autosave timestamp callback support.
+- `MainWindow.axaml` / `.cs` now include:
+  - Save As command
+  - recovery status label
+  - version label
+  - template parameter commit on focus loss / Enter
+  - template command preview panel
+  - Save / Don't Save / Cancel close/open guards
+  - `.umxproj` preferred file extension in pickers
+- `StudioShellViewModel.cs` now tracks:
+  - SaveStateLabel
+  - RecoveryStatusLabel
+  - SelectedTemplateCommandPreview
+  - autosave/recovery updates
+  - document UI state push/pull
+- Added new starter templates:
+  - `PartLibrary/Templates/SimpleBox/`
+  - `PartLibrary/Templates/Lid/`
+- Build currently passes:
+  - `dotnet build .\\My3DApp.csproj -c Debug -p:StudioUiHost=Avalonia`
+  - 0 warnings, 0 errors
+
+Remaining gaps for next block:
+- public screenshot assets still need to be prepared
+- tree/document hierarchy can be deeper for templates/exports/workspaces
+- template geometry still uses MVP-level generation in some cases
+- recovery UX is restore/discard only, not keep-both

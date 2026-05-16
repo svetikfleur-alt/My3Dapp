@@ -27,6 +27,7 @@ public sealed class StudioWorkspaceController
     private const int MaxUndoDepth = 50;
     private int _mutationCount;
     private int _savedMutationCount;
+    private StudioDocumentUiState _documentUiState = new();
 
     private readonly List<PartStudioRecord> _partStudios = new();
     private int _activeStudioIndex;
@@ -36,6 +37,7 @@ public sealed class StudioWorkspaceController
     public bool CanUndo => _undoStack.Count > 0;
     public bool CanRedo => _redoStack.Count > 0;
     public bool HasUnsavedChanges => _mutationCount != _savedMutationCount;
+    public StudioDocumentUiState CurrentDocumentUiState => CloneUiState(_documentUiState);
 
     public string DocumentName
     {
@@ -96,6 +98,7 @@ public sealed class StudioWorkspaceController
         _undoStack.Clear();
         _redoStack.Clear();
         _store = new CadProjectStore();
+        _documentUiState = new StudioDocumentUiState();
         _documentName = "Untitled Document";
         _mutationCount = 0;
         _savedMutationCount = 0;
@@ -225,6 +228,19 @@ public sealed class StudioWorkspaceController
 
     private const int CurrentSchemaVersion = 2;
 
+    public void UpdateDocumentUiState(StudioDocumentUiState? uiState)
+    {
+        _documentUiState = CloneUiState(uiState ?? new StudioDocumentUiState());
+    }
+
+    public void TouchDocument()
+    {
+        _mutationCount++;
+        CurrentState = BuildState(CurrentState.StatusMessage);
+        WorkspaceChanged?.Invoke(this, CurrentState);
+        DocumentChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     public void SaveProject(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -257,7 +273,8 @@ public sealed class StudioWorkspaceController
             DocumentName = _documentName,
             ActiveStudio = ActivePartStudioName,
             Studios = studios,
-            Project = _store.Project
+            Project = _store.Project,
+            UiState = CloneUiState(_documentUiState)
         };
         var json = JsonSerializer.Serialize(envelope, ProjectJsonOptions);
         File.WriteAllText(path, json, Encoding.UTF8);
@@ -320,6 +337,7 @@ public sealed class StudioWorkspaceController
                     {
                         RestoreFromJson(active.Snapshot);
                     }
+                    _documentUiState = CloneUiState(envelope.UiState ?? new StudioDocumentUiState());
                     DocumentName = string.IsNullOrWhiteSpace(envelope.DocumentName) ? "Untitled Document" : envelope.DocumentName;
                     _savedMutationCount = _mutationCount;
                     _undoStack.Clear();
@@ -341,6 +359,7 @@ public sealed class StudioWorkspaceController
 
             NormalizeProjectForLoad(project);
             _store = new CadProjectStore(project);
+            _documentUiState = new StudioDocumentUiState();
             _partStudios.Clear();
             _studioNamingCounter = 0;
             _partStudios.Add(new PartStudioRecord { Name = NextStudioName() });
@@ -374,6 +393,7 @@ public sealed class StudioWorkspaceController
         public string ActiveStudio { get; set; } = string.Empty;
         public List<DocumentStudioEntry>? Studios { get; set; }
         public CadProject? Project { get; set; }
+        public StudioDocumentUiState? UiState { get; set; }
     }
 
     private sealed class DocumentStudioEntry
@@ -2527,6 +2547,27 @@ public sealed class StudioWorkspaceController
     {
         target = value;
         return true;
+    }
+
+    private static StudioDocumentUiState CloneUiState(StudioDocumentUiState state)
+    {
+        return new StudioDocumentUiState
+        {
+            ActiveWorkspaceKind = state.ActiveWorkspaceKind,
+            SelectedTemplateId = state.SelectedTemplateId,
+            TemplateParameterValues = new Dictionary<string, string>(state.TemplateParameterValues, StringComparer.OrdinalIgnoreCase),
+            ExportJobs = state.ExportJobs
+                .Select(job => new ExportJobState
+                {
+                    FileName = job.FileName,
+                    Format = job.Format,
+                    Scope = job.Scope,
+                    Timestamp = job.Timestamp,
+                    Path = job.Path
+                })
+                .ToList(),
+            AssistantNotes = [..state.AssistantNotes]
+        };
     }
 }
 

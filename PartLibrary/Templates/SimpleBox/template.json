@@ -1,0 +1,17 @@
+{
+  "id": "simple-box",
+  "displayName": "Simple Box",
+  "category": "Enclosures",
+  "description": "Simple printable box body with optional open top and shell thickness.",
+  "tags": ["box", "container", "bin", "simple", "maker"],
+  "previewSummary": "Simple maker box for storage, covers, and quick fixtures.",
+  "builder": "simple-box",
+  "parameters": [
+    { "key": "width", "displayName": "Width", "defaultValue": 80, "minValue": 20, "maxValue": 300, "unit": "mm", "description": "Overall width" },
+    { "key": "depth", "displayName": "Depth", "defaultValue": 60, "minValue": 20, "maxValue": 300, "unit": "mm", "description": "Overall depth" },
+    { "key": "height", "displayName": "Height", "defaultValue": 40, "minValue": 10, "maxValue": 240, "unit": "mm", "description": "Overall height" },
+    { "key": "wallThickness", "displayName": "Wall Thickness", "defaultValue": 3, "minValue": 1.5, "maxValue": 12, "unit": "mm", "description": "Wall thickness" },
+    { "key": "openTop", "displayName": "Open Top", "defaultValue": 1, "minValue": 0, "maxValue": 1, "unit": "toggle", "description": "1=open top, 0=closed" },
+    { "key": "cornerRadius", "displayName": "Corner Radius", "defaultValue": 2, "minValue": 0, "maxValue": 12, "unit": "mm", "description": "Corner softening" }
+  ]
+}

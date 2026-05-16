@@ -43,10 +43,15 @@
                          IsVisible="{Binding HasUnsavedChanges}"
                          ToolTip.Tip="Unsaved changes" />
             </StackPanel>
-            <TextBlock Text="{Binding StatusBarText}"
-                       Classes="ToolbarSubtleText"
-                       MaxWidth="640"
-                       TextTrimming="CharacterEllipsis" />
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="{Binding StatusBarText}"
+                         Classes="ToolbarSubtleText"
+                         MaxWidth="520"
+                         TextTrimming="CharacterEllipsis" />
+              <TextBlock Text="{Binding RecoveryStatusLabel}"
+                         Classes="ToolbarMetaLabel"
+                         VerticalAlignment="Center" />
+            </StackPanel>
           </StackPanel>
         </Grid>
 
@@ -71,6 +76,9 @@
         </Border>
 
         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <TextBlock Text="{Binding AppVersionLabel}"
+                     Classes="ToolbarMetaLabel"
+                     VerticalAlignment="Center" />
           <Border Classes="ToolbarModeChip">
             <TextBlock Text="{Binding WorkspaceModeBadge}" Classes="ToolbarModeChipText" />
           </Border>
@@ -158,6 +166,12 @@
                           ToolTip.Tip="Save project (Ctrl+S)"
                           Click="OnSaveProjectClick">
                     <svg:Svg Path="avares://My3DApp/Assets/Icons/save.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          ToolTip.Tip="Save project as"
+                          Click="OnSaveAsProjectClick">
+                    <TextBlock Text="As"
+                               Classes="ToolbarMetaLabel" />
                   </Button>
                 </StackPanel>
               </Border>
@@ -1279,7 +1293,9 @@
                                      Classes="ToolbarSubtleText" />
                           <TextBox Grid.Column="1"
                                    Text="{Binding Value, Mode=TwoWay}"
-                                   Classes="InlineValueEditor" />
+                                   Classes="InlineValueEditor"
+                                   LostFocus="OnTemplateParameterEditorLostFocus"
+                                   KeyDown="OnTemplateParameterEditorKeyDown" />
                           <TextBlock Grid.Column="2"
                                      Margin="8,0,0,0"
                                      VerticalAlignment="Center"
@@ -1293,6 +1309,19 @@
                     <TextBlock Text="{Binding TemplateStatus}"
                                TextWrapping="Wrap"
                                Classes="AssistantContextSecondary" />
+                  </Border>
+                  <Border Classes="AssistantContextCard">
+                    <StackPanel Spacing="6">
+                      <TextBlock Text="UMX1 command preview"
+                                 Classes="AssistantContextPrimary" />
+                      <TextBox Text="{Binding SelectedTemplateCommandPreview}"
+                               IsReadOnly="True"
+                               AcceptsReturn="True"
+                               TextWrapping="Wrap"
+                               MinHeight="84"
+                               FontFamily="Consolas, Cascadia Mono, monospace"
+                               Classes="DocumentTextView" />
+                    </StackPanel>
                   </Border>
                   <StackPanel Orientation="Horizontal" Spacing="8">
                     <Button Content="Generate Template Part"

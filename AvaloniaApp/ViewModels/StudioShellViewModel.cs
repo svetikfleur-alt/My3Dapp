@@ -51,7 +51,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     private string _selectedAssistantProvider = "OpenAI";
     private string _selectedAssistantModel = "GPT-5.4 mini";
     private string _currentProjectPath = string.Empty;
-    private string _projectTitle = "My3DApp Project / unsaved.my3dapp";
+    private string _projectTitle = "My3DApp Project / unsaved.umxproj";
     private string _assistantInput = string.Empty;
     private string _assistantKeyInput = string.Empty;
     private string _assistantStatus = "Ready";
@@ -92,6 +92,8 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     private MakerTemplateDefinition? _selectedMakerTemplate;
     private string _templateStatus = "Choose a starter template to generate a maker part.";
     private string _lastExportSummary = "No exports yet.";
+    private string _saveStateLabel = "Unsaved";
+    private string _recoveryStatusLabel = "No recovery file";
 
     public StudioShellViewModel()
     {
@@ -335,6 +337,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
         SelectedMakerTemplate = next;
         TemplateStatus = $"Ready: {next.DisplayName} template loaded.";
+        UpdateDocumentUiStateInController();
         var state = _workspaceController.CurrentState;
         RebuildFeatureTree(state.Project, state.CompileResult);
     }
@@ -366,6 +369,8 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 SelectedWorkspaceKind = "PartStudio";
                 break;
         }
+
+        UpdateDocumentUiStateInController();
     }
 
     public async Task<string> ApplySelectedTemplateAsync(CancellationToken cancellationToken = default)
@@ -402,6 +407,9 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
         TemplateStatus = $"{SelectedMakerTemplate.DisplayName} generated. Review it in the part studio, then use Prepare to export.";
         SelectedWorkspaceKind = "PartStudio";
+        _workspaceController.TouchDocument();
+        SaveStateLabel = "Unsaved";
+        UpdateDocumentUiStateInController();
         ShowPropertiesPanel();
         ShowNotification($"{SelectedMakerTemplate.DisplayName} created.", NotificationSeverity.Success);
         return result;
@@ -423,6 +431,31 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 parameter.DefaultValue.ToString("0.###", CultureInfo.InvariantCulture),
                 true));
         }
+
+        RaisePropertyChanged(nameof(SelectedTemplateCommandPreview));
+    }
+
+    public string SelectedTemplateCommandPreview
+    {
+        get
+        {
+            if (SelectedMakerTemplate is null)
+            {
+                return "Select a template to preview the generated UMX1 command sequence.";
+            }
+
+            var values = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in TemplateParameters)
+            {
+                if (double.TryParse(item.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) ||
+                    double.TryParse(item.Value, NumberStyles.Float, CultureInfo.CurrentCulture, out parsed))
+                {
+                    values[item.Key] = parsed;
+                }
+            }
+
+            return SelectedMakerTemplate.BuildCommand(values);
+        }
     }
 
     public ObservableCollection<AssistantMessageViewModel> AssistantMessages { get; }
@@ -438,6 +471,9 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         get => _currentProjectPath;
         private set => SetProperty(ref _currentProjectPath, value);
     }
+
+    public string AppVersionLabel =>
+        $"V{typeof(StudioShellViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.0.0"}";
 
     public string ProjectTitle => HasUnsavedChanges ? _projectTitle + " *" : _projectTitle;
     public string WindowTitle
@@ -721,6 +757,18 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public bool CanRedo => _workspaceController.CanRedo;
     public bool HasUnsavedChanges => _workspaceController.HasUnsavedChanges;
 
+    public string SaveStateLabel
+    {
+        get => _saveStateLabel;
+        private set => SetProperty(ref _saveStateLabel, value);
+    }
+
+    public string RecoveryStatusLabel
+    {
+        get => _recoveryStatusLabel;
+        private set => SetProperty(ref _recoveryStatusLabel, value);
+    }
+
     public string StatusBarText
     {
         get
@@ -741,7 +789,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             var sel = _multiSelectedBodyIds.Count > 1
                 ? $"{_multiSelectedBodyIds.Count} bodies selected"
                 : project.Selection.IsEmpty ? "Nothing selected" : project.Selection.Name ?? "Selection";
-            return $"{dirty}3D  ·  {bodyCount} bod{(bodyCount == 1 ? "y" : "ies")}  ·  {units}  ·  {sel}";
+            return $"{dirty}3D  ·  {bodyCount} bod{(bodyCount == 1 ? "y" : "ies")}  ·  {units}  ·  {sel}  ·  {SaveStateLabel}";
         }
     }
 
@@ -1945,9 +1993,18 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     {
         _workspaceController.NewProject();
         CurrentProjectPath = string.Empty;
-        ProjectTitleBase = "Untitled";
+        ProjectTitleBase = "My3DApp Project / unsaved.umxproj";
         IsSelectingSketchPlane = false;
         HasExplicitSketchBaseSelection = false;
+        SelectedWorkspaceKind = "PartStudio";
+        ExportJobs.Clear();
+        LastExportSummary = "No exports yet.";
+        SaveStateLabel = "Unsaved";
+        UpdateRecoveryStatus(false, null);
+        if (TemplateCatalog.Count > 0)
+        {
+            SelectMakerTemplate(TemplateCatalog[0].Id);
+        }
         AppendToLog("New document created.");
         ShowNotification("New document created.", NotificationSeverity.Info);
     }
@@ -1956,10 +2013,12 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     {
         try
         {
+            UpdateDocumentUiStateInController();
             _workspaceController.SaveProject(path);
             CurrentProjectPath = path;
             ProjectTitleBase = BuildProjectTitle(path);
             _appSettings.AddRecentFile(path);
+            SaveStateLabel = "Saved";
             RaisePropertyChanged(nameof(RecentFiles));
             AppendToLog($"Project saved: {Path.GetFileName(path)}");
             ShowNotification($"Saved: {Path.GetFileName(path)}", NotificationSeverity.Info);
@@ -1987,6 +2046,8 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             IsSelectingSketchPlane = false;
             HasExplicitSketchBaseSelection =
                 _workspaceController.CurrentState.Project.Selection.Kind == CadEntityKind.ReferencePlane;
+            RestoreDocumentUiState(_workspaceController.CurrentDocumentUiState);
+            SaveStateLabel = "Saved";
             AppendToLog($"Project opened: {Path.GetFileName(path)}");
             ShowPropertiesPanel();
             return true;
@@ -2069,6 +2130,8 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         }
 
         LastExportSummary = $"{format} exported: {fileName}";
+        SaveStateLabel = HasUnsavedChanges ? "Unsaved" : SaveStateLabel;
+        UpdateDocumentUiStateInController();
         RaisePropertyChanged(nameof(HasExportJobs));
         RaisePropertyChanged(nameof(PrepareWorkspaceSummary));
         var state = _workspaceController.CurrentState;
@@ -2079,8 +2142,96 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     {
         var fileName = Path.GetFileName(path);
         return string.IsNullOrWhiteSpace(fileName)
-            ? "My3DApp Project / unsaved.my3dapp"
+            ? "My3DApp Project / unsaved.umxproj"
             : $"My3DApp Project / {fileName}";
+    }
+
+    public void MarkAutosaved(DateTimeOffset timestamp)
+    {
+        SaveStateLabel = $"Autosaved {timestamp.ToLocalTime():HH:mm}";
+        RaisePropertyChanged(nameof(StatusBarText));
+    }
+
+    public void UpdateRecoveryStatus(bool hasRecovery, DateTimeOffset? timestamp)
+    {
+        RecoveryStatusLabel = hasRecovery
+            ? timestamp.HasValue
+                ? $"Recovery available · {timestamp.Value.ToLocalTime():yyyy-MM-dd HH:mm}"
+                : "Recovery available"
+            : "No recovery file";
+    }
+
+    public async Task CommitTemplateParameterEditAsync(ParameterItemViewModel item)
+    {
+        if (!double.TryParse(item.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) &&
+            !double.TryParse(item.Value, NumberStyles.Float, CultureInfo.CurrentCulture, out parsed))
+        {
+            TemplateStatus = $"Invalid value for {item.Name}.";
+            ShowNotification(TemplateStatus, NotificationSeverity.Warning);
+            return;
+        }
+
+        item.Value = parsed.ToString("0.###", CultureInfo.InvariantCulture);
+        TemplateStatus = $"{SelectedMakerTemplateName} updated. Generate to refresh the model.";
+        SaveStateLabel = "Unsaved";
+        _workspaceController.TouchDocument();
+        UpdateDocumentUiStateInController();
+        RaisePropertyChanged(nameof(SelectedTemplateCommandPreview));
+        RaisePropertyChanged(nameof(StatusBarText));
+        await Task.CompletedTask;
+    }
+
+    private void UpdateDocumentUiStateInController()
+    {
+        var state = new StudioDocumentUiState
+        {
+            ActiveWorkspaceKind = SelectedWorkspaceKind,
+            SelectedTemplateId = SelectedMakerTemplate?.Id ?? string.Empty,
+            TemplateParameterValues = TemplateParameters.ToDictionary(item => item.Key, item => item.Value, StringComparer.OrdinalIgnoreCase),
+            ExportJobs = ExportJobs
+                .Select(job => new ExportJobState
+                {
+                    FileName = job.FileName,
+                    Format = job.Format,
+                    Scope = job.Scope,
+                    Timestamp = job.Timestamp,
+                    Path = job.FullPath
+                })
+                .ToList(),
+            AssistantNotes = []
+        };
+
+        _workspaceController.UpdateDocumentUiState(state);
+    }
+
+    private void RestoreDocumentUiState(StudioDocumentUiState state)
+    {
+        ExportJobs.Clear();
+        foreach (var job in state.ExportJobs)
+        {
+            ExportJobs.Add(new ExportJobViewModel(job.FileName, job.Format, job.Scope, job.Timestamp, job.Path));
+        }
+
+        RaisePropertyChanged(nameof(HasExportJobs));
+
+        if (!string.IsNullOrWhiteSpace(state.SelectedTemplateId))
+        {
+            SelectMakerTemplate(state.SelectedTemplateId);
+            foreach (var parameter in TemplateParameters)
+            {
+                if (state.TemplateParameterValues.TryGetValue(parameter.Key, out var value) && !string.IsNullOrWhiteSpace(value))
+                {
+                    parameter.Value = value;
+                }
+            }
+
+            RaisePropertyChanged(nameof(SelectedTemplateCommandPreview));
+        }
+
+        if (!string.IsNullOrWhiteSpace(state.ActiveWorkspaceKind))
+        {
+            SelectedWorkspaceKind = state.ActiveWorkspaceKind;
+        }
     }
 
     public async Task SelectTreeNodeAsync(FeatureNodeViewModel? node, CancellationToken cancellationToken = default)
@@ -2406,6 +2557,11 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     {
         CodeText = state.CodeText;
         LogText = state.LogText;
+
+        if (HasUnsavedChanges && !string.Equals(SaveStateLabel, "Unsaved", StringComparison.Ordinal))
+        {
+            SaveStateLabel = "Unsaved";
+        }
 
         RebuildFeatureTree(state.Project, state.CompileResult);
         RebuildProperties(state.Project, state.CompileResult);

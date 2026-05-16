@@ -10,7 +10,14 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$repoRoot = $scriptRoot
+if ((Split-Path -Leaf $scriptRoot) -eq "temp_main_clean_export") {
+    $parentRoot = Split-Path -Parent $scriptRoot
+    if (Test-Path -LiteralPath (Join-Path $parentRoot ".git")) {
+        $repoRoot = $parentRoot
+    }
+}
 $logDir = Join-Path $repoRoot "logs"
 $logPath = Join-Path $logDir "github-sync.log"
 $mirrorRoot = Join-Path $repoRoot $MirrorFolder
@@ -90,11 +97,45 @@ function Test-MirrorRemoteBranchExists {
     }
 }
 
+function Test-IsGitMetadataPath {
+    param([string]$FullPath)
+
+    $relativePath = $FullPath.Substring($mirrorRoot.Length).TrimStart("\")
+    return $relativePath -eq ".git" -or $relativePath.StartsWith(".git\", [System.StringComparison]::OrdinalIgnoreCase)
+}
+
+function Test-MirrorHasHead {
+    Push-Location -LiteralPath $mirrorRoot
+    try {
+        & git rev-parse --verify HEAD *> $null
+        return ($LASTEXITCODE -eq 0)
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+function Reset-MirrorWorktree {
+    Write-Status "Resetting mirror worktree before branch checkout..." DarkYellow
+    if (Test-MirrorHasHead) {
+        Invoke-Git -Arguments @("reset", "--hard", "HEAD") -WorkingDirectory $mirrorRoot
+    }
+
+    Invoke-Git -Arguments @("clean", "-fdx") -WorkingDirectory $mirrorRoot
+}
+
 function Get-DesiredRelativeFiles {
     $tracked = @(& git -c core.quotepath=false ls-files)
     $untracked = @(& git -c core.quotepath=false ls-files --others --exclude-standard)
     $combined = @($tracked + $untracked) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-    return $combined | Sort-Object -Unique
+    return $combined |
+        Where-Object {
+            $normalized = $_.Replace("/", "\")
+            $normalized -notlike "cloud_sync_mirror\*" -and
+            $normalized -notlike "temp_main_clean_export\*" -and
+            $normalized -notlike "logs\*"
+        } |
+        Sort-Object -Unique
 }
 
 function Sync-FilesToMirror {
@@ -108,7 +149,7 @@ function Sync-FilesToMirror {
     }
 
     $currentMirrorFiles = Get-ChildItem -LiteralPath $mirrorRoot -Recurse -File -Force |
-        Where-Object { $_.FullName -notlike (Join-Path $mirrorRoot ".git*") }
+        Where-Object { -not (Test-IsGitMetadataPath $_.FullName) }
 
     foreach ($mirrorFile in $currentMirrorFiles) {
         $relativePath = $mirrorFile.FullName.Substring($mirrorRoot.Length).TrimStart("\")
@@ -134,7 +175,7 @@ function Sync-FilesToMirror {
 
     Get-ChildItem -LiteralPath $mirrorRoot -Recurse -Directory -Force |
         Sort-Object FullName -Descending |
-        Where-Object { $_.FullName -notlike (Join-Path $mirrorRoot ".git*") } |
+        Where-Object { -not (Test-IsGitMetadataPath $_.FullName) } |
         ForEach-Object {
             if (-not (Get-ChildItem -LiteralPath $_.FullName -Force | Select-Object -First 1)) {
                 Remove-Item -LiteralPath $_.FullName -Force
@@ -147,6 +188,9 @@ Set-Location -LiteralPath $repoRoot
 
 Write-Status "==================================================" Cyan
 Write-Status "GitHub auto-sync start" Cyan
+if ($repoRoot -ne $scriptRoot) {
+    Write-Status ("Redirected source repo from stale copy to: {0}" -f $repoRoot) DarkYellow
+}
 Write-Status ("Repo   : {0}" -f $repoRoot) Cyan
 Write-Status ("Target : {0}/{1}" -f $Remote, $Branch) Cyan
 Write-Status ("Mirror : {0}" -f $mirrorRoot) Cyan
@@ -189,6 +233,7 @@ if (-not $NoFetch) {
     Write-Status "Fetching mirror branch from GitHub..." Yellow
     Invoke-Git -Arguments @("fetch", $Remote, $Branch) -WorkingDirectory $mirrorRoot -AllowFailure
 
+    Reset-MirrorWorktree
     $remoteBranchExists = Test-MirrorRemoteBranchExists
     if ($remoteBranchExists) {
         Invoke-Git -Arguments @("checkout", "-B", $Branch, ("{0}/{1}" -f $Remote, $Branch)) -WorkingDirectory $mirrorRoot
@@ -199,6 +244,7 @@ if (-not $NoFetch) {
 }
 else {
     Write-Status "Skipping remote fetch by request." DarkYellow
+    Reset-MirrorWorktree
     Invoke-Git -Arguments @("checkout", "-B", $Branch) -WorkingDirectory $mirrorRoot
 }
 
