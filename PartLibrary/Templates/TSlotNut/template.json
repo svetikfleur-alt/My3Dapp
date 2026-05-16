@@ -2,7 +2,7 @@
   "id": "t-slot-nut",
   "displayName": "T-Slot Nut",
   "category": "Fasteners & hardware",
-  "description": "Printable T-nut for standard 2020/2040/3030 aluminum extrusion T-slots.",
+  "description": "Printable T-nut for standard aluminum extrusion T-slots.",
   "tags": ["t-nut", "t-slot", "extrusion", "2020", "hardware"],
   "previewSummary": "Drop-in T-nut for aluminum extrusion frame construction.",
   "builder": "t-slot-nut",

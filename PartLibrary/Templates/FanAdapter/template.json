@@ -1,0 +1,15 @@
+{
+  "id": "fan-adapter",
+  "displayName": "Fan Adapter Plate",
+  "category": "Plates & mounts",
+  "description": "Simplified fan plate sized for common square fan footprints.",
+  "tags": ["fan", "adapter", "plate", "cooling"],
+  "previewSummary": "Good early template for cooling mounts and printer mods.",
+  "builder": "fan-adapter",
+  "parameters": [
+    { "key": "fanSize", "displayName": "Fan Size", "defaultValue": 80, "minValue": 40, "maxValue": 140, "unit": "mm", "description": "Nominal fan body size" },
+    { "key": "thickness", "displayName": "Thickness", "defaultValue": 3, "minValue": 1, "maxValue": 20, "unit": "mm", "description": "Plate thickness" },
+    { "key": "screwHoleDiameter", "displayName": "Screw Hole Diameter", "defaultValue": 4.5, "minValue": 0, "maxValue": 12, "unit": "mm", "description": "Screw hole diameter" },
+    { "key": "centerOpeningDiameter", "displayName": "Center Opening Diameter", "defaultValue": 60, "minValue": 10, "maxValue": 120, "unit": "mm", "description": "Center airflow opening" }
+  ]
+}

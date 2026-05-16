@@ -1,0 +1,15 @@
+{
+  "id": "cable-clip",
+  "displayName": "Cable Clip",
+  "category": "Clips & routing",
+  "description": "Simple printable clip block for cable management.",
+  "tags": ["clip", "cable", "routing", "maker"],
+  "previewSummary": "Practical cable organizer template for enclosures and printer frames.",
+  "builder": "cable-clip",
+  "parameters": [
+    { "key": "cableDiameter", "displayName": "Cable Diameter", "defaultValue": 6, "minValue": 2, "maxValue": 30, "unit": "mm", "description": "Target cable size" },
+    { "key": "clipWidth", "displayName": "Clip Width", "defaultValue": 14, "minValue": 4, "maxValue": 80, "unit": "mm", "description": "Body width" },
+    { "key": "wallThickness", "displayName": "Wall Thickness", "defaultValue": 2.5, "minValue": 1, "maxValue": 12, "unit": "mm", "description": "Wall thickness" },
+    { "key": "openingGap", "displayName": "Opening Gap", "defaultValue": 4, "minValue": 1, "maxValue": 20, "unit": "mm", "description": "Entry slot opening" }
+  ]
+}

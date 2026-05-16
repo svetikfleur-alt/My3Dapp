@@ -337,9 +337,9 @@ public static class MakerTemplateLibrary
                 "Parametric 35mm DIN rail mounting clip for electronics panels and enclosures.",
                 ["din", "rail", "clip", "electronics", "panel"],
                 [
-                    P("clipLength", "Clip Length", 45, 20, 120, "mm", "Length along the rail"),
-                    P("railWidth", "Rail Width", 35, 25, 45, "mm", "DIN rail width (standard: 35)"),
-                    P("wallThickness", "Wall Thickness", 3, 1.5, 8, "mm", "Clip body wall thickness"),
+                    P("clipHeight", "Clip Height", 28, 12, 80, "mm", "Overall clip height"),
+                    P("railWidth", "Rail Width", 35, 20, 60, "mm", "DIN rail width (standard: 35)"),
+                    P("wallThickness", "Wall Thickness", 3, 1.5, 10, "mm", "Clip body wall thickness"),
                     P("lipDepth", "Lip Depth", 7, 4, 14, "mm", "Rail retention lip depth"),
                     P("screwHoleDiameter", "Screw Hole Dia.", 3.5, 0, 6, "mm", "Mounting screw hole (0=none)")
                 ],
@@ -622,106 +622,6 @@ public static class MakerTemplateLibrary
             sb.Append($"; hole depth {N(Math.Max(standoffHeight, 1d))}");
         }
 
-        return sb.ToString();
-    }
-
-    private static string BuildDinRailClip(IReadOnlyDictionary<string, double> values)
-    {
-        var clipLength = V(values, "clipLength");
-        var railWidth = Math.Max(V(values, "railWidth"), 25d);
-        var wallThickness = Math.Max(V(values, "wallThickness"), 1.5d);
-        var lipDepth = Math.Max(V(values, "lipDepth"), 4d);
-        var screwHoleDiameter = V(values, "screwHoleDiameter");
-        var bodyWidth = railWidth + wallThickness * 2d;
-        var bodyHeight = Math.Max(lipDepth + wallThickness, 12d);
-        var sb = new StringBuilder();
-        sb.Append($"select plane top; start sketch; rectangle 0 0 {N(bodyWidth)} {N(clipLength)}; finish sketch; extrude {N(bodyHeight)}");
-        if (screwHoleDiameter > 0.1d)
-        {
-            sb.Append($"; hole depth {N(bodyHeight)}");
-            sb.Append($"; hole depth {N(bodyHeight)}");
-        }
-        sb.Append($"; fillet {N(Math.Min(wallThickness * 0.5d, 2d))}");
-        return sb.ToString();
-    }
-
-    private static string BuildTSlotNut(IReadOnlyDictionary<string, double> values)
-    {
-        var slotWidth = Math.Max(V(values, "slotWidth"), 4d);
-        var nutLength = Math.Max(V(values, "nutLength"), 8d);
-        var nutHeight = Math.Max(V(values, "nutHeight"), 1.5d);
-        var holeDiameter = V(values, "holeDiameter");
-        var flangeWidth = Math.Max(V(values, "flangeWidth"), slotWidth + 2d);
-        var sb = new StringBuilder();
-        sb.Append($"select plane top; start sketch; rectangle 0 0 {N(flangeWidth)} {N(nutLength)}; finish sketch; extrude {N(nutHeight)}");
-        if (holeDiameter > 0.1d)
-        {
-            sb.Append($"; hole depth {N(nutHeight)}");
-        }
-        return sb.ToString();
-    }
-
-    private static string BuildBoxEnclosure(IReadOnlyDictionary<string, double> values)
-    {
-        var innerWidth = Math.Max(V(values, "innerWidth"), 20d);
-        var innerHeight = Math.Max(V(values, "innerHeight"), 15d);
-        var innerDepth = Math.Max(V(values, "innerDepth"), 15d);
-        var wall = Math.Max(V(values, "wallThickness"), 1.5d);
-        var cornerRadius = V(values, "cornerRadius");
-        var outerWidth = innerWidth + wall * 2d;
-        var outerDepth = innerDepth + wall * 2d;
-        var outerHeight = innerHeight + wall;
-        var sb = new StringBuilder();
-        sb.Append($"select plane top; start sketch; rectangle 0 0 {N(outerWidth)} {N(outerDepth)}; finish sketch; extrude {N(outerHeight)}");
-        if (cornerRadius > 0.05d)
-        {
-            sb.Append($"; fillet {N(Math.Min(cornerRadius, Math.Min(outerWidth, outerDepth) / 4d))}");
-        }
-        sb.Append($"; shell {N(wall)}");
-        return sb.ToString();
-    }
-
-    private static string BuildHingeBracket(IReadOnlyDictionary<string, double> values)
-    {
-        var leafWidth = Math.Max(V(values, "leafWidth"), 10d);
-        var leafLength = Math.Max(V(values, "leafLength"), 15d);
-        var thickness = Math.Max(V(values, "thickness"), 1.5d);
-        var pinDiameter = Math.Max(V(values, "pinDiameter"), 2d);
-        var knuckleRadius = pinDiameter / 2d + 1.5d;
-        var sb = new StringBuilder();
-        sb.Append($"select plane top; start sketch; rectangle 0 0 {N(leafLength)} {N(leafWidth)}; finish sketch; extrude {N(thickness)}");
-        sb.Append($"; select plane top; start sketch; circle {N(knuckleRadius)} {N(leafWidth / 2d)} radius {N(knuckleRadius)}; finish sketch; extrude {N(leafWidth)}");
-        return sb.ToString();
-    }
-
-    private static string BuildPcbTray(IReadOnlyDictionary<string, double> values)
-    {
-        var boardWidth = Math.Max(V(values, "boardWidth"), 30d);
-        var boardDepth = Math.Max(V(values, "boardDepth"), 25d);
-        var wallThickness = Math.Max(V(values, "wallThickness"), 1.5d);
-        var wallHeight = Math.Max(V(values, "wallHeight"), 3d);
-        var standoffHeight = Math.Max(V(values, "standoffHeight"), 2d);
-        var standoffDiameter = Math.Max(V(values, "standoffDiameter"), 3d);
-        var standoffHoleDia = V(values, "standoffHoleDia");
-        var outerWidth = boardWidth + wallThickness * 2d;
-        var outerDepth = boardDepth + wallThickness * 2d;
-        var standoffRadius = standoffDiameter / 2d;
-        var sb = new StringBuilder();
-        sb.Append($"select plane top; start sketch; rectangle 0 0 {N(outerWidth)} {N(outerDepth)}; finish sketch; extrude {N(wallThickness)}");
-        sb.Append($"; select plane top; start sketch; rectangle 0 0 {N(outerWidth)} {N(outerDepth)}; finish sketch; extrude {N(wallHeight)}; shell {N(wallThickness)}");
-        var cxArray = new[] { standoffRadius + wallThickness, outerWidth - standoffRadius - wallThickness };
-        var cyArray = new[] { standoffRadius + wallThickness, outerDepth - standoffRadius - wallThickness };
-        foreach (var cx in cxArray)
-        {
-            foreach (var cy in cyArray)
-            {
-                sb.Append($"; select plane top; start sketch; circle {N(cx)} {N(cy)} radius {N(standoffRadius)}; finish sketch; extrude {N(standoffHeight + wallThickness)}");
-                if (standoffHoleDia > 0.1d)
-                {
-                    sb.Append($"; hole depth {N(standoffHeight + wallThickness)}");
-                }
-            }
-        }
         return sb.ToString();
     }
 

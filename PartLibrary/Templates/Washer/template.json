@@ -1,0 +1,14 @@
+{
+  "id": "washer",
+  "displayName": "Washer",
+  "category": "Disks & spacers",
+  "description": "Printable spacer/washer blank with a fast center hole operation.",
+  "tags": ["washer", "spacer", "round", "hardware"],
+  "previewSummary": "Fast hardware spacer for printer and enclosure builds.",
+  "builder": "washer",
+  "parameters": [
+    { "key": "outerDiameter", "displayName": "Outer Diameter", "defaultValue": 24, "minValue": 6, "maxValue": 120, "unit": "mm", "description": "Outside diameter" },
+    { "key": "innerDiameter", "displayName": "Inner Diameter", "defaultValue": 8, "minValue": 0, "maxValue": 60, "unit": "mm", "description": "Center clearance diameter" },
+    { "key": "thickness", "displayName": "Thickness", "defaultValue": 2.5, "minValue": 0.5, "maxValue": 25, "unit": "mm", "description": "Part thickness" }
+  ]
+}
