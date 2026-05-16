@@ -39,6 +39,7 @@ public sealed partial class MainWindow : Window
     private Avalonia.Controls.ComboBox? _sectionAxisCombo;
     private ANumericUpDown? _sectionOffsetSpin;
     private Avalonia.Controls.TreeView? _featureTree;
+    private bool _allowImmediateClose;
     private static readonly Dictionary<string, string> SketchToolHints = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Line"]             = "Line — click to place segment endpoints  ·  Esc to finish",
@@ -60,9 +61,9 @@ public sealed partial class MainWindow : Window
         ["RadiusDimension"]  = "Radius Dimension — click a circle or arc",
     };
 
-    private static FilePickerFileType ProjectFileType => new("My3DApp Project")
+    private static FilePickerFileType ProjectFileType => new("UMX1 Studio Project")
     {
-        Patterns = ["*.my3dapp", "*.json"],
+        Patterns = ["*.umxproj", "*.my3dapp", "*.json"],
         MimeTypes = ["application/json"]
     };
 
@@ -96,14 +97,32 @@ public sealed partial class MainWindow : Window
 
     protected override async void OnClosing(WindowClosingEventArgs e)
     {
+        if (_allowImmediateClose)
+        {
+            AutosaveService.DeleteAutosave();
+            base.OnClosing(e);
+            return;
+        }
+
         if (_wiredViewModel is { HasUnsavedChanges: true })
         {
             e.Cancel = true;
-            var confirmed = await ConfirmDiscardAsync("Close without saving?",
-                "You have unsaved changes. Close anyway?");
-            if (confirmed)
+            var choice = await PromptSaveChangesAsync("Close My3DApp",
+                "You have unsaved changes. Save the current document before closing?");
+            if (choice == SaveChangesChoice.Save)
+            {
+                await SaveProjectAsync(forcePicker: false);
+                if (_wiredViewModel is { HasUnsavedChanges: false })
+                {
+                    AutosaveService.DeleteAutosave();
+                    _allowImmediateClose = true;
+                    Close();
+                }
+            }
+            else if (choice == SaveChangesChoice.DontSave)
             {
                 AutosaveService.DeleteAutosave();
+                _allowImmediateClose = true;
                 Close();
             }
             return;
@@ -157,6 +176,59 @@ public sealed partial class MainWindow : Window
         yesButton = yes;
         noButton = no;
         return panel;
+    }
+
+    private enum SaveChangesChoice
+    {
+        Cancel,
+        Save,
+        DontSave
+    }
+
+    private async Task<SaveChangesChoice> PromptSaveChangesAsync(string title, string message)
+    {
+        var dialog = new Avalonia.Controls.Window
+        {
+            Title = title,
+            Width = 420,
+            Height = 190,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false
+        };
+
+        var saveButton = new Avalonia.Controls.Button { Content = "Save", MinWidth = 86 };
+        var dontSaveButton = new Avalonia.Controls.Button { Content = "Don't Save", MinWidth = 96 };
+        var cancelButton = new Avalonia.Controls.Button { Content = "Cancel", MinWidth = 86 };
+        var tcs = new TaskCompletionSource<SaveChangesChoice>();
+
+        saveButton.Click += (_, _) => { dialog.Close(); tcs.TrySetResult(SaveChangesChoice.Save); };
+        dontSaveButton.Click += (_, _) => { dialog.Close(); tcs.TrySetResult(SaveChangesChoice.DontSave); };
+        cancelButton.Click += (_, _) => { dialog.Close(); tcs.TrySetResult(SaveChangesChoice.Cancel); };
+        dialog.Closed += (_, _) => tcs.TrySetResult(SaveChangesChoice.Cancel);
+
+        dialog.Content = new Avalonia.Controls.StackPanel
+        {
+            Children =
+            {
+                new Avalonia.Controls.TextBlock
+                {
+                    Text = message,
+                    TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                    Margin = new Avalonia.Thickness(20, 20, 20, 16)
+                },
+                new Avalonia.Controls.StackPanel
+                {
+                    Orientation = Avalonia.Layout.Orientation.Horizontal,
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                    Margin = new Avalonia.Thickness(20, 0, 20, 20),
+                    Spacing = 8,
+                    Children = { saveButton, dontSaveButton, cancelButton }
+                }
+            }
+        };
+
+        await dialog.ShowDialog(this);
+        return await tcs.Task;
     }
 
     private static void LogHandlerFailure(string handlerName, Exception ex)
@@ -349,16 +421,28 @@ public sealed partial class MainWindow : Window
             {
                 _autosaveService = new AutosaveService(
                     () => _wiredViewModel.HasUnsavedChanges,
-                    path => _wiredViewModel.SaveProject(path));
+                    path => _wiredViewModel.SaveProject(path),
+                    timestamp => Dispatcher.UIThread.Post(() => _wiredViewModel?.MarkAutosaved(timestamp)));
+
+                _wiredViewModel.UpdateRecoveryStatus(AutosaveService.HasAutosave, AutosaveService.GetAutosaveTimestamp());
 
                 if (AutosaveService.HasAutosave)
                 {
+                    var recoveryTime = AutosaveService.GetAutosaveTimestamp();
                     var recover = await ConfirmDiscardAsync("Recover unsaved work?",
-                        "My3DApp found an autosave from a previous session. Restore it?");
+                        recoveryTime.HasValue
+                            ? $"My3DApp found an autosave from {recoveryTime.Value.ToLocalTime():yyyy-MM-dd HH:mm}. Restore it?"
+                            : "My3DApp found an autosave from a previous session. Restore it?");
                     if (recover)
+                    {
                         _wiredViewModel.OpenProject(AutosaveService.AutosavePath);
+                        _wiredViewModel.UpdateRecoveryStatus(false, null);
+                    }
                     else
+                    {
                         AutosaveService.DeleteAutosave();
+                        _wiredViewModel.UpdateRecoveryStatus(false, null);
+                    }
                 }
             }
         }
@@ -383,9 +467,20 @@ public sealed partial class MainWindow : Window
     private async Task NewProjectWithGuardAsync()
     {
         if (_wiredViewModel is null) return;
-        var confirmed = await ConfirmDiscardAsync("New document", "Discard unsaved changes and create a new document?");
-        if (confirmed)
+        var choice = await PromptSaveChangesAsync("New document", "Save the current document before creating a new one?");
+        if (choice == SaveChangesChoice.Save)
+        {
+            await SaveProjectAsync(forcePicker: false);
+            if (_wiredViewModel.HasUnsavedChanges)
+            {
+                return;
+            }
             _wiredViewModel.NewProject();
+        }
+        else if (choice == SaveChangesChoice.DontSave)
+        {
+            _wiredViewModel.NewProject();
+        }
     }
 
     private void OnDismissNotificationClick(object? sender, RoutedEventArgs e)
@@ -532,6 +627,24 @@ public sealed partial class MainWindow : Window
         if (_wiredViewModel is null)
             return;
 
+        if (_wiredViewModel.HasUnsavedChanges)
+        {
+            var choice = await PromptSaveChangesAsync("Open project",
+                "You have unsaved changes. Save the current document before opening another project?");
+            if (choice == SaveChangesChoice.Save)
+            {
+                await SaveProjectAsync(forcePicker: false);
+                if (_wiredViewModel.HasUnsavedChanges)
+                {
+                    return;
+                }
+            }
+            else if (choice == SaveChangesChoice.Cancel)
+            {
+                return;
+            }
+        }
+
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = "Open My3DApp project",
@@ -585,6 +698,11 @@ public sealed partial class MainWindow : Window
         await SaveProjectAsync(forcePicker: false);
     }
 
+    private async void OnSaveAsProjectClick(object? sender, RoutedEventArgs e)
+    {
+        await SaveProjectAsync(forcePicker: true);
+    }
+
     private async Task SaveProjectAsync(bool forcePicker)
     {
         if (_wiredViewModel is null)
@@ -596,8 +714,8 @@ public sealed partial class MainWindow : Window
             var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 Title = "Save My3DApp project",
-                SuggestedFileName = "part-studio.my3dapp",
-                DefaultExtension = "my3dapp",
+                SuggestedFileName = "part-studio.umxproj",
+                DefaultExtension = "umxproj",
                 FileTypeChoices =
                 [
                     ProjectFileType
@@ -2607,6 +2725,42 @@ public sealed partial class MainWindow : Window
 
         _wiredViewModel.InsertAssistantRecipe(recipeName);
         AssistantInputBox?.Focus();
+        e.Handled = true;
+    }
+
+    private async void OnTemplateParameterEditorLostFocus(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not ATextBox textBox || textBox.DataContext is not ParameterItemViewModel item)
+        {
+            return;
+        }
+
+        try
+        {
+            await _wiredViewModel.CommitTemplateParameterEditAsync(item);
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnTemplateParameterEditorLostFocus), ex);
+        }
+    }
+
+    private async void OnTemplateParameterEditorKeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter || _wiredViewModel is null || sender is not ATextBox textBox || textBox.DataContext is not ParameterItemViewModel item)
+        {
+            return;
+        }
+
+        try
+        {
+            await _wiredViewModel.CommitTemplateParameterEditAsync(item);
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnTemplateParameterEditorKeyDown), ex);
+        }
+
         e.Handled = true;
     }
 

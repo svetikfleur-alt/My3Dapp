@@ -112,7 +112,9 @@ public static class MakerTemplateLibrary
             ["t-slot-nut"] = BuildTSlotNut,
             ["box-enclosure"] = BuildBoxEnclosure,
             ["hinge-bracket"] = BuildHingeBracket,
-            ["pcb-tray"] = BuildPcbTray
+            ["pcb-tray"] = BuildPcbTray,
+            ["simple-box"] = BuildSimpleBox,
+            ["lid"] = BuildLid
         };
 
     public static IReadOnlyList<MakerTemplateDefinition> All { get; } = LoadTemplates();
@@ -410,7 +412,40 @@ public static class MakerTemplateLibrary
                     P("standoffHoleDia", "Standoff Hole Dia.", 2.7, 0, 5, "mm", "Standoff center hole (0=solid)")
                 ],
                 "PCB mounting tray with corner standoffs for electronics builds.",
-                BuildPcbTray)
+                BuildPcbTray),
+
+            Fallback(
+                "simple-box",
+                "Simple Box",
+                "Enclosures",
+                "Simple printable box body with optional open top and shell thickness.",
+                ["box", "container", "bin", "simple", "maker"],
+                [
+                    P("width", "Width", 80, 20, 300, "mm", "Overall width"),
+                    P("depth", "Depth", 60, 20, 300, "mm", "Overall depth"),
+                    P("height", "Height", 40, 10, 240, "mm", "Overall height"),
+                    P("wallThickness", "Wall Thickness", 3, 1.5, 12, "mm", "Wall thickness"),
+                    P("openTop", "Open Top", 1, 0, 1, "toggle", "1=open top, 0=closed"),
+                    P("cornerRadius", "Corner Radius", 2, 0, 12, "mm", "Corner softening")
+                ],
+                "Simple maker box for storage, covers, and quick fixtures.",
+                BuildSimpleBox),
+
+            Fallback(
+                "lid",
+                "Lid / Cover",
+                "Enclosures",
+                "Flat printable lid with shallow locating lip for boxes and trays.",
+                ["lid", "cover", "cap", "box"],
+                [
+                    P("width", "Width", 80, 20, 300, "mm", "Overall width"),
+                    P("depth", "Depth", 60, 20, 300, "mm", "Overall depth"),
+                    P("thickness", "Thickness", 3, 1, 20, "mm", "Top thickness"),
+                    P("lipHeight", "Lip Height", 4, 0, 25, "mm", "Locating lip height"),
+                    P("tolerance", "Tolerance", 0.4, 0, 3, "mm", "Fit clearance")
+                ],
+                "Simple cover plate for boxes and electronics trays.",
+                BuildLid)
         ];
     }
 
@@ -620,6 +655,48 @@ public static class MakerTemplateLibrary
         if (standoffHoleDia > 0.1d)
         {
             sb.Append($"; hole depth {N(Math.Max(standoffHeight, 1d))}");
+        }
+
+        return sb.ToString();
+    }
+
+    private static string BuildSimpleBox(IReadOnlyDictionary<string, double> values)
+    {
+        var width = V(values, "width");
+        var depth = V(values, "depth");
+        var height = V(values, "height");
+        var wallThickness = V(values, "wallThickness");
+        var openTop = V(values, "openTop") >= 0.5d;
+        var cornerRadius = Math.Max(V(values, "cornerRadius"), 0d);
+        var sb = new StringBuilder();
+        sb.Append($"recipe shelled-box {N(width)} {N(depth)} {N(height)} {N(wallThickness)}");
+        if (!openTop)
+        {
+            sb.Append($"; create box {N(width)}x{N(depth)}x{N(wallThickness)}");
+        }
+
+        if (cornerRadius > 0.05d)
+        {
+            sb.Append($"; fillet {N(Math.Min(cornerRadius, wallThickness))}");
+        }
+
+        return sb.ToString();
+    }
+
+    private static string BuildLid(IReadOnlyDictionary<string, double> values)
+    {
+        var width = V(values, "width");
+        var depth = V(values, "depth");
+        var thickness = V(values, "thickness");
+        var lipHeight = V(values, "lipHeight");
+        var tolerance = Math.Max(V(values, "tolerance"), 0d);
+        var innerWidth = Math.Max(width - tolerance * 2d, 4d);
+        var innerDepth = Math.Max(depth - tolerance * 2d, 4d);
+        var sb = new StringBuilder();
+        sb.Append($"select plane top; start sketch; rectangle 0 0 {N(width)} {N(depth)}; finish sketch; extrude {N(thickness)}");
+        if (lipHeight > 0.05d)
+        {
+            sb.Append($"; select plane top; start sketch; rectangle {N(tolerance)} {N(tolerance)} {N(innerWidth)} {N(innerDepth)}; finish sketch; extrude {N(lipHeight)}");
         }
 
         return sb.ToString();

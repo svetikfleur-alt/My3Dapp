@@ -1,67 +1,50 @@
-# Contributing to My3DApp
+# Contributing to UMX1 Studio
 
-Thank you for your interest in contributing! My3DApp is an open-source AI-assisted maker CAD studio built on .NET 10 and Avalonia UI.
+> **Early work in progress. Not production CAD yet.**
 
-## Ways to contribute
+UMX1 Studio is an open-source AI-assisted maker CAD app. Contributions are welcome, especially focused, verifiable improvements.
 
-- **Bug reports** — open a GitHub issue with steps to reproduce, expected vs. actual behavior, and your OS/build version
-- **Feature requests** — open an issue describing the use case before starting work
-- **Templates** — add new parametric maker templates to `PartLibrary/Templates/`; see [TEMPLATE_GUIDE.md](PartLibrary/TEMPLATE_GUIDE.md)
-- **Code** — fix bugs, improve geometry builders, extend the sketch engine, or improve the UI
+## Good first contributions
 
-## Development setup
+- Add a new maker template under `PartLibrary/Templates/`
+- Improve template validation or parameter UX
+- Improve STL/OBJ export reliability
+- Improve sketch interactions, constraints, or dimensions
+- Improve docs and demo flows
+- Add tests around template generation and document persistence
 
-Requirements: Windows 11, .NET 10 SDK, Visual Studio 2022 / Rider / VS Code with C# Dev Kit.
+## Contributor workflow
 
+1. Fork and clone the repo
+2. Build locally:
+
+```powershell
+dotnet build .\My3DApp.csproj -c Debug -p:StudioUiHost=Avalonia
 ```
-git clone https://github.com/your-org/My3DApp.git
-cd My3DApp
-dotnet build
-dotnet run
-```
 
-## Project layout
+3. Run the app and verify the changed flow manually
+4. Keep changes focused and avoid regressions
+5. Open a PR with:
+   - what changed
+   - how you tested it
+   - known limitations
 
-| Path | Purpose |
-|---|---|
-| `AvaloniaApp/` | All UI — XAML, ViewModels, code-behind |
-| `AvaloniaApp/Services/` | App-level services (workspace controller, autosave, settings) |
-| `AvaloniaApp/ViewModels/` | MVVM ViewModels |
-| `AvaloniaApp/Dialogs/` | Modal dialog windows |
-| `Backends/` | CAD computation backends |
-| `Engine/` | FormaCore geometry engine |
-| `PartLibrary/Templates/` | Parametric template manifests |
-| `Assets/Icons/` | SVG icon set |
+## AI-assisted contributions
 
-**Architecture rules** (see [CLAUDE.md](CLAUDE.md)):
-- Backend code belongs in `/Backends/` and `/Engine/` only
-- UI code belongs in `/AvaloniaApp/` only
-- Never create duplicate classes or `x:Class` directives
+Have GPT Plus / Codex / Claude? That’s welcome here.
 
-## Adding a template
+Useful contribution prompts:
+- add a new maker template
+- improve a template manifest and matching builder
+- tighten document save/recovery flow
+- improve sketch or export reliability
 
-1. Create `PartLibrary/Templates/<YourTemplate>/`
-2. Add `template.json` (see [TEMPLATE_GUIDE.md](PartLibrary/TEMPLATE_GUIDE.md))
-3. Add `template.md` with parameter table and geometry notes
-4. Register a builder in `AvaloniaApp/Services/MakerTemplateLibrary.cs`
-5. Run `dotnet build` and verify the template appears in the Templates tab
+Please still test the generated output before submitting a PR.
 
-## Pull request checklist
+## Rules
 
-- [ ] `dotnet build` passes with 0 errors, 0 warnings
-- [ ] No new NuGet packages added without discussion
-- [ ] No WinForms/WPF references added
-- [ ] UI changes tested in the running app
-- [ ] Template JSON validated against schema in TEMPLATE_GUIDE.md
-- [ ] PR description explains the why, not just the what
-
-## Code style
-
-- C# 13 / .NET 10 idioms; prefer `var`, collection expressions `[]`, primary constructors
-- No comments unless the reason is non-obvious
-- MVVM: ViewModel raises `PropertyChanged`; no business logic in code-behind
-- Keep methods short and focused
-
-## License
-
-MIT — see [LICENSE](LICENSE).
+- Preserve working functionality
+- Do not replace good icon-based controls with crude text-only UI
+- Do not add fake features that only look implemented
+- Prefer small, verifiable increments
+- Run a build before and after significant changes

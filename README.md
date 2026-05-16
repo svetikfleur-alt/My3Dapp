@@ -85,6 +85,14 @@ Or open `My3DApp.sln` in Visual Studio 2022 / Rider and press F5.
 - **Datum Plane** — offset reference planes
 - **Primitives**: Box, Cylinder, Sphere, Cone, Torus, Pyramid, Wedge, Prism, Capsule, Hemisphere, Ellipsoid, and more
 
+### Document system
+- New / Open / Save / Save As in the top studio shell
+- JSON-based project format with preferred `.umxproj` extension
+- Dirty-state tracking and saved/unsaved status in the shell
+- Autosave under `%APPDATA%/My3DApp/Autosave/`
+- Recent documents stored in `%APPDATA%/My3DApp/settings.json`
+- Recovery prompt on startup when autosave content is available
+
 ### Template library
 Starter parametric templates you can select, configure, and generate:
 
@@ -96,6 +104,8 @@ Starter parametric templates you can select, configure, and generate:
 | L-Bracket | Brackets | width, height, depth, thickness, holes |
 | Fan Adapter Plate | Plates & mounts | fan size, thickness, screw holes, center opening |
 | Cable Clip | Clips & routing | cable diameter, clip width, wall thickness, gap |
+| Simple Box | Enclosures | width, depth, height, wall thickness, top mode |
+| Lid / Cover | Enclosures | width, depth, thickness, lip height, tolerance |
 | DIN Rail Clip | Mounts & fixtures | rail width, clip height, lip depth, screw hole |
 | T-Slot Nut | Fasteners & hardware | slot width, nut length, hole |
 | Box Enclosure | Enclosures | inner size, wall thickness, corner radius |
@@ -145,6 +155,16 @@ Or using templates:
 3. Edit the parameters in the panel
 4. Click "Generate" → part appears in Part Studio
 5. Go to "Prepare" tab → Export STL
+```
+
+### Document flow
+
+```
+1. Click New or open an existing `.umxproj`
+2. Edit a template or part studio
+3. Watch the shell show Unsaved / Autosaved / Saved state
+4. Save manually, or recover from autosave after restart if needed
+5. Reopen the document and continue from the restored workspace/template state
 ```
 
 ---
@@ -213,6 +233,8 @@ Then:
 4. Submit a PR
 
 See [PartLibrary/TEMPLATE_GUIDE.md](PartLibrary/TEMPLATE_GUIDE.md) for the full contributor guide.
+
+For document structure details, see [Docs/DOCUMENT_SYSTEM.md](Docs/DOCUMENT_SYSTEM.md).
 
 ---
 
