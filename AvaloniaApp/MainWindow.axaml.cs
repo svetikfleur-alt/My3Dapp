@@ -1282,6 +1282,7 @@ public sealed partial class MainWindow : Window
                 await _wiredViewModel.FinishSketchAsync();
             }
 
+            _wiredViewModel.SelectWorkspace("PartStudio");
             ReturnFocusToViewport();
         }
         catch (Exception ex)
@@ -1309,6 +1310,8 @@ public sealed partial class MainWindow : Window
             {
                 await StartSketchFromCurrentSelectionOrPlanePick();
             }
+
+            _wiredViewModel.SelectWorkspace("Sketch");
         }
         catch (Exception ex)
         {
@@ -2389,6 +2392,17 @@ public sealed partial class MainWindow : Window
         e.Handled = true;
     }
 
+    private void OnWorkspaceTabClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not AButton button || button.Tag is not string kind)
+        {
+            return;
+        }
+
+        _wiredViewModel.SelectWorkspace(kind);
+        e.Handled = true;
+    }
+
     private async void OnPartStudioTabRename(object? sender, Avalonia.Input.TappedEventArgs e)
     {
         if (_wiredViewModel is null || sender is not AButton button || button.Tag is not string oldName)
@@ -2425,6 +2439,53 @@ public sealed partial class MainWindow : Window
     {
         _wiredViewModel?.AddPartStudioTab();
         e.Handled = true;
+    }
+
+    private void OnTemplateCatalogClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not AButton button || button.Tag is not string templateId)
+        {
+            return;
+        }
+
+        _wiredViewModel.SelectMakerTemplate(templateId);
+        e.Handled = true;
+    }
+
+    private async void OnApplyTemplateClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _wiredViewModel.ApplySelectedTemplateAsync();
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnApplyTemplateClick), ex);
+        }
+
+        e.Handled = true;
+    }
+
+    private void OnOpenAssistantWorkspaceClick(object? sender, RoutedEventArgs e)
+    {
+        _wiredViewModel?.SelectWorkspace("Assistant");
+        e.Handled = true;
+    }
+
+    private void OnOpenPartStudioWorkspaceClick(object? sender, RoutedEventArgs e)
+    {
+        _wiredViewModel?.SelectWorkspace("PartStudio");
+        e.Handled = true;
+    }
+
+    private void OnPrepareExportClick(object? sender, RoutedEventArgs e)
+    {
+        OnExportClick(sender, e);
     }
 
     private void OnAssistantRecipeClick(object? sender, RoutedEventArgs e)

@@ -770,6 +770,32 @@
     </Border>
 
     <Border DockPanel.Dock="Bottom"
+            Background="{DynamicResource Studio.PanelInsetBrush}"
+            BorderBrush="{DynamicResource Studio.BorderBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="10,4">
+      <Grid ColumnDefinitions="*,Auto">
+        <ItemsControl ItemsSource="{Binding WorkspaceTabs}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal" Spacing="4" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="vm:StudioWorkspaceTabItem">
+              <Button Content="{Binding Title}"
+                      Tag="{Binding Kind}"
+                      Classes="PartStudioTab"
+                      Classes.active="{Binding IsActive}"
+                      Click="OnWorkspaceTabClick"
+                      ToolTip.Tip="{Binding Title}" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Grid>
+    </Border>
+
+    <Border DockPanel.Dock="Bottom"
             Classes="PartStudioTabBar"
             Background="{DynamicResource Studio.PanelInsetBrush}"
             BorderBrush="{DynamicResource Studio.BorderBrush}"
@@ -1003,6 +1029,7 @@
                     Grid.Row="3"
                     Margin="0,8,0,0"
                     ItemsSource="{Binding FeatureNodes}"
+                    IsVisible="{Binding IsFeatureTreeVisible}"
                     Classes="FeatureTree"
                     Background="Transparent"
                     SelectionChanged="OnFeatureTreeSelectionChanged"
@@ -1093,6 +1120,34 @@
               </TreeDataTemplate>
             </TreeView.ItemTemplate>
           </TreeView>
+          <Border Grid.Row="3"
+                  Margin="0,8,0,0"
+                  Classes="SketchSidePanel"
+                  IsVisible="{Binding IsTemplatesWorkspace}">
+            <StackPanel Spacing="8">
+              <TextBlock Text="Starter templates"
+                         Classes="SketchSidePanelHeader" />
+              <TextBlock Text="Maker-friendly parametric starting points. Pick one, edit the parameters, then generate the part into the active part studio."
+                         TextWrapping="Wrap"
+                         Classes="SketchTaskDetails" />
+              <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding TemplateCatalog}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="services:MakerTemplateDefinition">
+                      <Button Content="{Binding DisplayName}"
+                              Tag="{Binding Id}"
+                              Margin="0,0,0,6"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Left"
+                              Classes="AssistantSecondaryButton"
+                              ToolTip.Tip="{Binding Description}"
+                              Click="OnTemplateCatalogClick" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </StackPanel>
+          </Border>
         </Grid>
       </Border>
 
@@ -1115,8 +1170,8 @@
                   <TextBlock FontWeight="SemiBold"
                              Foreground="{DynamicResource Studio.TextPrimaryBrush}"
                              Classes="ViewportHeaderTitle"
-                             Text="CAD Workspace" />
-                  <TextBlock Text="{Binding AssistantWorkspaceSummary}"
+                             Text="{Binding WorkspaceSurfaceTitle}" />
+                  <TextBlock Text="{Binding WorkspaceSurfaceSummary}"
                              Classes="ViewportHeaderSecondary" />
                 </StackPanel>
                 <Border Grid.Column="1" Classes="ViewportInfoTag" Margin="8,0,0,0">
@@ -1127,7 +1182,7 @@
                 </Border>
               </Grid>
             </Border>
-            <controls:WebViewportHost x:Name="ViewportHost" Grid.Row="1" />
+            <controls:WebViewportHost x:Name="ViewportHost" Grid.Row="1" IsVisible="{Binding IsCadWorkspaceVisible}" />
             <Grid Grid.Row="1"
                   Margin="14"
                   RowDefinitions="Auto,Auto,*">
@@ -1188,6 +1243,89 @@
                              Foreground="{Binding SketchDofBrush}"
                              FontSize="11"
                              Margin="0,2,0,0" />
+                </StackPanel>
+              </Border>
+
+              <Border Grid.RowSpan="3"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Top"
+                      MaxWidth="520"
+                      Classes="ViewportSketchSessionCard"
+                      IsVisible="{Binding IsTemplateOverlayVisible}">
+                <StackPanel Spacing="10" Width="480">
+                  <TextBlock Text="{Binding SelectedMakerTemplateName}"
+                             Classes="ViewportSessionTitle" />
+                  <TextBlock Text="{Binding SelectedMakerTemplateDescription}"
+                             TextWrapping="Wrap"
+                             Classes="ViewportSessionSummary" />
+                  <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding SelectedMakerTemplateCategory}"
+                               Classes="ToolbarMetaLabel" />
+                    <TextBlock Text="{Binding SelectedMakerTemplateTags}"
+                               TextWrapping="Wrap"
+                               Classes="ToolbarSubtleText" />
+                  </StackPanel>
+                  <ItemsControl ItemsSource="{Binding TemplateParameters}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate DataType="vm:ParameterItemViewModel">
+                        <Grid ColumnDefinitions="140,*,Auto" Margin="0,3,0,0">
+                          <TextBlock Text="{Binding Name}"
+                                     VerticalAlignment="Center"
+                                     Classes="ToolbarSubtleText" />
+                          <TextBox Grid.Column="1"
+                                   Text="{Binding Value, Mode=TwoWay}"
+                                   Classes="InlineValueEditor" />
+                          <TextBlock Grid.Column="2"
+                                     Margin="8,0,0,0"
+                                     VerticalAlignment="Center"
+                                     Text="mm"
+                                     Classes="ToolbarMetaLabel" />
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <Border Classes="AssistantContextCard">
+                    <TextBlock Text="{Binding TemplateStatus}"
+                               TextWrapping="Wrap"
+                               Classes="AssistantContextSecondary" />
+                  </Border>
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="Generate Template Part"
+                            Classes="AssistantApplyButton"
+                            IsEnabled="{Binding CanApplySelectedTemplate}"
+                            Click="OnApplyTemplateClick" />
+                    <Button Content="Open AI Chat"
+                            Classes="AssistantSecondaryButton"
+                            Click="OnOpenAssistantWorkspaceClick" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+
+              <Border Grid.RowSpan="3"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Top"
+                      MaxWidth="520"
+                      Classes="ViewportSketchSessionCard"
+                      IsVisible="{Binding IsPrepareOverlayVisible}">
+                <StackPanel Spacing="10" Width="480">
+                  <TextBlock Text="Prepare &amp; Export"
+                             Classes="ViewportSessionTitle" />
+                  <TextBlock Text="{Binding PrepareWorkspaceSummary}"
+                             TextWrapping="Wrap"
+                             Classes="ViewportSessionSummary" />
+                  <Border Classes="AssistantContextCard">
+                    <TextBlock Text="{Binding PrepareWorkspaceWarnings}"
+                               TextWrapping="Wrap"
+                               Classes="AssistantContextSecondary" />
+                  </Border>
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="Export STL / OBJ"
+                            Classes="AssistantApplyButton"
+                            Click="OnPrepareExportClick" />
+                    <Button Content="Back to Part Studio"
+                            Classes="AssistantSecondaryButton"
+                            Click="OnOpenPartStudioWorkspaceClick" />
+                  </StackPanel>
                 </StackPanel>
               </Border>
 

@@ -208,7 +208,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         WorkspaceTabs.Add(new StudioWorkspaceTabItem("Templates", "Templates", IsTemplatesWorkspace));
         WorkspaceTabs.Add(new StudioWorkspaceTabItem("Prepare", "Prepare", IsPrepareWorkspace));
         WorkspaceTabs.Add(new StudioWorkspaceTabItem("AI Chat", "Assistant", IsAssistantWorkspace));
-        WorkspaceTabs.Add(new StudioWorkspaceTabItem("+", "Add", false, isAddButton: true));
+        WorkspaceTabs.Add(new StudioWorkspaceTabItem("+", "Add", false, IsAddButton: true));
     }
 
     public event EventHandler<ViewportRenderState>? ViewportStateChanged;
@@ -533,6 +533,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public IBrush NotificationBackground => _currentNotification?.Severity switch
     {
+        NotificationSeverity.Success => new SolidColorBrush(Avalonia.Media.Color.Parse("#1a6e2e")),
         NotificationSeverity.Info    => new SolidColorBrush(Avalonia.Media.Color.Parse("#1f6e1f")),
         NotificationSeverity.Warning => new SolidColorBrush(Avalonia.Media.Color.Parse("#7a5500")),
         NotificationSeverity.Error   => new SolidColorBrush(Avalonia.Media.Color.Parse("#8a1500")),
@@ -606,6 +607,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 RaisePropertyChanged(nameof(IsPrepareWorkspace));
                 RaisePropertyChanged(nameof(IsAssistantWorkspace));
                 RaisePropertyChanged(nameof(IsCadWorkspaceVisible));
+                RaisePropertyChanged(nameof(IsFeatureTreeVisible));
                 RaisePropertyChanged(nameof(IsTemplateOverlayVisible));
                 RaisePropertyChanged(nameof(IsPrepareOverlayVisible));
                 RaisePropertyChanged(nameof(WorkspaceSurfaceTitle));
@@ -626,6 +628,8 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public bool IsAssistantWorkspace => string.Equals(SelectedWorkspaceKind, "Assistant", StringComparison.Ordinal);
 
     public bool IsCadWorkspaceVisible => !IsTemplatesWorkspace && !IsPrepareWorkspace;
+
+    public bool IsFeatureTreeVisible => !IsTemplatesWorkspace;
 
     public bool IsTemplateOverlayVisible => IsTemplatesWorkspace;
 
@@ -3630,7 +3634,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     }
 }
 
-public enum NotificationSeverity { Info, Warning, Error }
+public enum NotificationSeverity { Success, Info, Warning, Error }
 
 internal sealed record StudioNotification(string Text, NotificationSeverity Severity);
 
