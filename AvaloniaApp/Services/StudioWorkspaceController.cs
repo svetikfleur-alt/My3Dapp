@@ -89,6 +89,22 @@ public sealed class StudioWorkspaceController
         return candidate;
     }
 
+    public void NewProject()
+    {
+        _partStudios.Clear();
+        _studioNamingCounter = 0;
+        _undoStack.Clear();
+        _redoStack.Clear();
+        _store = new CadProjectStore();
+        _documentName = "Untitled Document";
+        _mutationCount = 0;
+        _savedMutationCount = 0;
+        _partStudios.Add(new PartStudioRecord { Name = NextStudioName() });
+        _activeStudioIndex = 0;
+        CurrentState = BuildState("New document created.");
+        DocumentChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     public StudioWorkspaceActionResult AddPartStudio()
     {
         SnapshotActiveStudio();
@@ -350,7 +366,11 @@ public sealed class StudioWorkspaceController
     private sealed class ProjectFileEnvelope
     {
         public int SchemaVersion { get; set; } = CurrentSchemaVersion;
+        public string AppVersion { get; set; } = "1.0.0";
+        public string DocumentId { get; set; } = Guid.NewGuid().ToString("D");
         public string DocumentName { get; set; } = "Untitled Document";
+        public string CreatedAt { get; set; } = DateTime.UtcNow.ToString("O");
+        public string ModifiedAt { get; set; } = DateTime.UtcNow.ToString("O");
         public string ActiveStudio { get; set; } = string.Empty;
         public List<DocumentStudioEntry>? Studios { get; set; }
         public CadProject? Project { get; set; }

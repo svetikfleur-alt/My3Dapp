@@ -26,6 +26,7 @@ public sealed partial class MainWindow : Window
 {
     private StudioShellViewModel? _wiredViewModel;
     private WebViewportHost? _viewportHost;
+    private AutosaveService? _autosaveService;
     private ToggleButton? _lightThemeButton;
     private ToggleButton? _darkThemeButton;
     private ToggleButton? _moveToolButton;
@@ -87,8 +88,75 @@ public sealed partial class MainWindow : Window
         Opened -= OnWindowOpened;
         DetachViewModelBridge();
         DetachViewportEvents();
+        _autosaveService?.Dispose();
+        _autosaveService = null;
         disposableViewModel?.Dispose();
         base.OnClosed(e);
+    }
+
+    protected override async void OnClosing(WindowClosingEventArgs e)
+    {
+        if (_wiredViewModel is { HasUnsavedChanges: true })
+        {
+            e.Cancel = true;
+            var confirmed = await ConfirmDiscardAsync("Close without saving?",
+                "You have unsaved changes. Close anyway?");
+            if (confirmed)
+            {
+                AutosaveService.DeleteAutosave();
+                Close();
+            }
+            return;
+        }
+        AutosaveService.DeleteAutosave();
+        base.OnClosing(e);
+    }
+
+    private async Task<bool> ConfirmDiscardAsync(string title, string message)
+    {
+        var dialog = new Avalonia.Controls.Window
+        {
+            Title = title,
+            Width = 380,
+            Height = 160,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false,
+            Content = BuildConfirmPanel(message, out var yesButton, out var noButton)
+        };
+        var tcs = new TaskCompletionSource<bool>();
+        yesButton.Click += (_, _) => { dialog.Close(); tcs.TrySetResult(true); };
+        noButton.Click += (_, _) => { dialog.Close(); tcs.TrySetResult(false); };
+        dialog.Closed += (_, _) => tcs.TrySetResult(false);
+        await dialog.ShowDialog(this);
+        return await tcs.Task;
+    }
+
+    private static Avalonia.Controls.Control BuildConfirmPanel(string message,
+        out Avalonia.Controls.Button yesButton, out Avalonia.Controls.Button noButton)
+    {
+        var text = new Avalonia.Controls.TextBlock
+        {
+            Text = message,
+            TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+            Margin = new Avalonia.Thickness(20, 20, 20, 16)
+        };
+        var yes = new Avalonia.Controls.Button { Content = "Discard & Continue", Margin = new Avalonia.Thickness(0, 0, 8, 0) };
+        var no = new Avalonia.Controls.Button { Content = "Cancel" };
+        var buttons = new Avalonia.Controls.StackPanel
+        {
+            Orientation = Avalonia.Layout.Orientation.Horizontal,
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+            Margin = new Avalonia.Thickness(20, 0, 20, 20),
+            Spacing = 8
+        };
+        buttons.Children.Add(yes);
+        buttons.Children.Add(no);
+        var panel = new Avalonia.Controls.StackPanel();
+        panel.Children.Add(text);
+        panel.Children.Add(buttons);
+        yesButton = yes;
+        noButton = no;
+        return panel;
     }
 
     private static void LogHandlerFailure(string handlerName, Exception ex)
@@ -270,19 +338,54 @@ public sealed partial class MainWindow : Window
     private async void OnWindowOpened(object? sender, EventArgs e)
     {
         if (_viewportHost is null)
-        {
             return;
-        }
 
         try
         {
             await Task.Delay(250);
             await _viewportHost.EnsureInitializedAsync();
+
+            if (_wiredViewModel is not null)
+            {
+                _autosaveService = new AutosaveService(
+                    () => _wiredViewModel.HasUnsavedChanges,
+                    path => _wiredViewModel.SaveProject(path));
+
+                if (AutosaveService.HasAutosave)
+                {
+                    var recover = await ConfirmDiscardAsync("Recover unsaved work?",
+                        "My3DApp found an autosave from a previous session. Restore it?");
+                    if (recover)
+                        _wiredViewModel.OpenProject(AutosaveService.AutosavePath);
+                    else
+                        AutosaveService.DeleteAutosave();
+                }
+            }
         }
         catch (Exception ex)
         {
             LogHandlerFailure(nameof(OnWindowOpened), ex);
         }
+    }
+
+    private void OnNewProjectClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+            return;
+        if (_wiredViewModel.HasUnsavedChanges)
+        {
+            _ = NewProjectWithGuardAsync();
+            return;
+        }
+        _wiredViewModel.NewProject();
+    }
+
+    private async Task NewProjectWithGuardAsync()
+    {
+        if (_wiredViewModel is null) return;
+        var confirmed = await ConfirmDiscardAsync("New document", "Discard unsaved changes and create a new document?");
+        if (confirmed)
+            _wiredViewModel.NewProject();
     }
 
     private void OnDismissNotificationClick(object? sender, RoutedEventArgs e)
@@ -958,6 +1061,13 @@ public sealed partial class MainWindow : Window
     protected override void OnKeyDown(Avalonia.Input.KeyEventArgs e)
     {
         base.OnKeyDown(e);
+
+        if (!e.Handled && e.KeyModifiers == KeyModifiers.Control && e.Key == Key.N)
+        {
+            OnNewProjectClick(this, new RoutedEventArgs());
+            e.Handled = true;
+            return;
+        }
 
         if (!e.Handled && e.KeyModifiers == KeyModifiers.Control && e.Key == Key.E)
         {
