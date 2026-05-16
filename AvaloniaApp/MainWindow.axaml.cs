@@ -424,6 +424,39 @@ public sealed partial class MainWindow : Window
         OnToggleConstructionModeClick(sender, new RoutedEventArgs());
     }
 
+    private async void OnNewDocumentClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+            return;
+
+        if (_wiredViewModel.HasUnsavedChanges)
+        {
+            var confirm = await ConfirmDiscardAsync();
+            if (!confirm)
+            {
+                e.Handled = true;
+                return;
+            }
+        }
+
+        _wiredViewModel.NewDocument();
+        e.Handled = true;
+    }
+
+    private async void OnSaveAsProjectClick(object? sender, RoutedEventArgs e)
+    {
+        await SaveProjectAsync(forcePicker: true);
+        e.Handled = true;
+    }
+
+    private async Task<bool> ConfirmDiscardAsync()
+    {
+        var dialog = new Dialogs.ConfirmDialog(
+            "Unsaved Changes",
+            "This document has unsaved changes. Discard and continue?");
+        return await dialog.ShowDialog<bool>(this);
+    }
+
     private async void OnOpenProjectClick(object? sender, RoutedEventArgs e)
     {
         if (_wiredViewModel is null)
@@ -490,10 +523,11 @@ public sealed partial class MainWindow : Window
         var path = forcePicker ? null : _wiredViewModel.CurrentProjectPath;
         if (string.IsNullOrWhiteSpace(path))
         {
+            var suggestedName = MakeSafeFileName(_wiredViewModel.DocumentName) + ".my3dapp";
             var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 Title = "Save My3DApp project",
-                SuggestedFileName = "part-studio.my3dapp",
+                SuggestedFileName = suggestedName,
                 DefaultExtension = "my3dapp",
                 FileTypeChoices =
                 [
@@ -966,6 +1000,13 @@ public sealed partial class MainWindow : Window
             return;
         }
 
+        if (!e.Handled && e.KeyModifiers == KeyModifiers.Control && e.Key == Key.N)
+        {
+            OnNewDocumentClick(this, new RoutedEventArgs());
+            e.Handled = true;
+            return;
+        }
+
         if (!e.Handled && e.KeyModifiers == KeyModifiers.Control && e.Key == Key.O)
         {
             OnOpenProjectClick(this, new RoutedEventArgs());
@@ -973,9 +1014,30 @@ public sealed partial class MainWindow : Window
             return;
         }
 
+        if (!e.Handled && e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift) && e.Key == Key.S)
+        {
+            OnSaveAsProjectClick(this, new RoutedEventArgs());
+            e.Handled = true;
+            return;
+        }
+
         if (!e.Handled && e.KeyModifiers == KeyModifiers.Control && e.Key == Key.S)
         {
             OnSaveProjectClick(this, new RoutedEventArgs());
+            e.Handled = true;
+            return;
+        }
+
+        if (!e.Handled && e.KeyModifiers == KeyModifiers.Control && (e.Key == Key.Tab || e.Key == Key.PageDown))
+        {
+            _wiredViewModel?.CyclePartStudio(forward: true);
+            e.Handled = true;
+            return;
+        }
+
+        if (!e.Handled && e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift) && (e.Key == Key.Tab || e.Key == Key.PageUp))
+        {
+            _wiredViewModel?.CyclePartStudio(forward: false);
             e.Handled = true;
             return;
         }
@@ -2254,6 +2316,13 @@ public sealed partial class MainWindow : Window
     private void ReturnFocusToViewport()
     {
         _viewportHost?.Focus();
+    }
+
+    private static string MakeSafeFileName(string name)
+    {
+        var invalid = System.IO.Path.GetInvalidFileNameChars();
+        var safe = string.Concat(name.Select(c => Array.IndexOf(invalid, c) >= 0 ? '_' : c)).Trim();
+        return string.IsNullOrEmpty(safe) ? "untitled" : safe;
     }
 
     private async void OnFeatureTreeKeyDown(object? sender, Avalonia.Input.KeyEventArgs e)

@@ -138,6 +138,11 @@
               <Border Classes="ToolSplitGroup" Padding="4">
                 <StackPanel Orientation="Horizontal" Spacing="3">
                   <Button Classes="ToolbarActionButton"
+                          ToolTip.Tip="New document (Ctrl+N)"
+                          Click="OnNewDocumentClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/new-doc.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
                           ToolTip.Tip="Open project (Ctrl+O)"
                           Click="OnOpenProjectClick">
                     <svg:Svg Path="avares://My3DApp/Assets/Icons/open.svg" Width="16" Height="16" />
@@ -150,9 +155,14 @@
                     <svg:Svg Path="avares://My3DApp/Assets/Icons/chevron-down.svg" Width="12" Height="12" />
                   </Button>
                   <Button Classes="ToolbarActionButton"
-                          ToolTip.Tip="Save project (Ctrl+S)"
+                          ToolTip.Tip="Save (Ctrl+S)"
                           Click="OnSaveProjectClick">
                     <svg:Svg Path="avares://My3DApp/Assets/Icons/save.svg" Width="16" Height="16" />
+                  </Button>
+                  <Button Classes="ToolbarActionButton"
+                          ToolTip.Tip="Save As… (Ctrl+Shift+S)"
+                          Click="OnSaveAsProjectClick">
+                    <svg:Svg Path="avares://My3DApp/Assets/Icons/save.svg" Width="14" Height="14" />
                   </Button>
                 </StackPanel>
               </Border>

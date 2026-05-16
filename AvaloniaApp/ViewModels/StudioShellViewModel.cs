@@ -164,6 +164,17 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         _workspaceController.RenamePartStudio(oldName, newName);
     }
 
+    public void CyclePartStudio(bool forward)
+    {
+        var names = _workspaceController.PartStudioNames;
+        if (names.Count <= 1) return;
+        var active = _workspaceController.ActivePartStudioName;
+        var idx = names.ToList().FindIndex(n => string.Equals(n, active, StringComparison.OrdinalIgnoreCase));
+        if (idx < 0) return;
+        var next = forward ? (idx + 1) % names.Count : (idx - 1 + names.Count) % names.Count;
+        _workspaceController.SwitchPartStudio(names[next]);
+    }
+
     private void OnDocumentChanged(object? sender, EventArgs e)
     {
         RefreshDocumentTabs();
@@ -1671,6 +1682,19 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         await Task.CompletedTask;
     }
 
+    public void NewDocument()
+    {
+        _workspaceController.NewDocument();
+        CurrentProjectPath = string.Empty;
+        ProjectTitleBase = "My3DApp Project / unsaved.my3dapp";
+        RaisePropertyChanged(nameof(DocumentName));
+        RaisePropertyChanged(nameof(WindowTitle));
+        IsSelectingSketchPlane = false;
+        HasExplicitSketchBaseSelection = false;
+        ClearAssistantHistory();
+        AppendToLog("New document created.");
+    }
+
     public bool SaveProject(string path)
     {
         try
@@ -2068,7 +2092,12 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                     }
                     else
                     {
-                        AddMessage("system", $"Assistant suggested unsupported command: {result.Command}");
+                        var shortCmd = result.Command.Length > 80
+                            ? result.Command[..77] + "…"
+                            : result.Command;
+                        AddMessage("system",
+                            $"The assistant returned a command the parser couldn't execute: \"{shortCmd}\". " +
+                            "Try rephrasing, or use the Recipe library for standard parts.");
                     }
                 }
 

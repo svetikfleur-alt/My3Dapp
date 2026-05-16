@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="My3DApp.AvaloniaApp.Dialogs.ConfirmDialog"
+        Width="340"
+        Height="140"
+        MinWidth="300"
+        MinHeight="125"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Classes="FeatureDialogWindow"
+        Title="Confirm">
+  <Border Classes="FeatureDialogPanel" Margin="0">
+    <StackPanel Margin="16,14,16,16" Spacing="10">
+
+      <Grid ColumnDefinitions="*,Auto,Auto">
+        <TextBlock x:Name="TitleText" Classes="FeatureDialogTitle" VerticalAlignment="Center" />
+        <Button Grid.Column="1"
+                Classes="FeatureDialogConfirmBtn"
+                IsDefault="True"
+                Click="OnConfirmClick" />
+        <Button Grid.Column="2"
+                Margin="6,0,0,0"
+                Classes="FeatureDialogCancelBtn"
+                IsCancel="True"
+                Click="OnCancelClick" />
+      </Grid>
+
+      <TextBlock x:Name="MessageText"
+                 TextWrapping="Wrap"
+                 FontSize="12"
+                 Foreground="{DynamicResource Studio.TextSecondaryBrush}" />
+
+    </StackPanel>
+  </Border>
+</Window>

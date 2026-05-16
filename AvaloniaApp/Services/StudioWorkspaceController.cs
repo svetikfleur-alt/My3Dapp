@@ -89,6 +89,22 @@ public sealed class StudioWorkspaceController
         return candidate;
     }
 
+    public void NewDocument()
+    {
+        _partStudios.Clear();
+        _studioNamingCounter = 0;
+        _partStudios.Add(new PartStudioRecord { Name = NextStudioName() });
+        _activeStudioIndex = 0;
+        _store = new CadProjectStore();
+        _undoStack.Clear();
+        _redoStack.Clear();
+        _documentName = "Untitled Document";
+        _mutationCount = 0;
+        _savedMutationCount = 0;
+        DocumentChanged?.Invoke(this, EventArgs.Empty);
+        PublishSuccess("New document created.", mutated: false);
+    }
+
     public StudioWorkspaceActionResult AddPartStudio()
     {
         SnapshotActiveStudio();
