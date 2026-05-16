@@ -1,0 +1,16 @@
+{
+  "id": "t-slot-nut",
+  "displayName": "T-Slot Nut",
+  "category": "Fasteners & hardware",
+  "description": "Printable T-nut for standard 2020/2040/3030 aluminum extrusion T-slots.",
+  "tags": ["t-nut", "t-slot", "extrusion", "2020", "hardware"],
+  "previewSummary": "Drop-in T-nut for aluminum extrusion frame construction.",
+  "builder": "t-slot-nut",
+  "parameters": [
+    { "key": "slotWidth", "displayName": "Slot Width", "defaultValue": 6, "minValue": 4, "maxValue": 10, "unit": "mm", "description": "Extrusion slot width (2020=6mm, 3030=8mm)" },
+    { "key": "nutLength", "displayName": "Nut Length", "defaultValue": 20, "minValue": 8, "maxValue": 60, "unit": "mm", "description": "Nut body length" },
+    { "key": "nutHeight", "displayName": "Nut Height", "defaultValue": 3, "minValue": 1.5, "maxValue": 8, "unit": "mm", "description": "Nut body thickness" },
+    { "key": "holeDiameter", "displayName": "Thread Hole Dia.", "defaultValue": 3.2, "minValue": 1.5, "maxValue": 6, "unit": "mm", "description": "Center hole diameter" },
+    { "key": "flangeWidth", "displayName": "Flange Width", "defaultValue": 10, "minValue": 6, "maxValue": 20, "unit": "mm", "description": "T-flange outer width" }
+  ]
+}

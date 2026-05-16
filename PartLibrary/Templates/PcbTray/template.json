@@ -1,0 +1,18 @@
+{
+  "id": "pcb-tray",
+  "displayName": "PCB Tray",
+  "category": "Electronics",
+  "description": "Parametric PCB mounting tray with corner standoffs for single-board computers and shields.",
+  "tags": ["pcb", "tray", "sled", "electronics", "raspberry-pi", "arduino"],
+  "previewSummary": "PCB mounting tray with corner standoffs for electronics builds.",
+  "builder": "pcb-tray",
+  "parameters": [
+    { "key": "boardWidth", "displayName": "Board Width", "defaultValue": 85, "minValue": 30, "maxValue": 200, "unit": "mm", "description": "PCB width" },
+    { "key": "boardDepth", "displayName": "Board Depth", "defaultValue": 56, "minValue": 25, "maxValue": 200, "unit": "mm", "description": "PCB depth" },
+    { "key": "wallHeight", "displayName": "Wall Height", "defaultValue": 8, "minValue": 3, "maxValue": 40, "unit": "mm", "description": "Tray wall height" },
+    { "key": "wallThickness", "displayName": "Wall Thickness", "defaultValue": 2.5, "minValue": 1.5, "maxValue": 8, "unit": "mm", "description": "Tray wall thickness" },
+    { "key": "standoffHeight", "displayName": "Standoff Height", "defaultValue": 5, "minValue": 2, "maxValue": 20, "unit": "mm", "description": "Corner standoff height above floor" },
+    { "key": "standoffDiameter", "displayName": "Standoff Diameter", "defaultValue": 6, "minValue": 3, "maxValue": 15, "unit": "mm", "description": "Corner standoff outer diameter" },
+    { "key": "standoffHoleDia", "displayName": "Standoff Hole Dia.", "defaultValue": 2.7, "minValue": 0, "maxValue": 5, "unit": "mm", "description": "Standoff center hole (0=solid)" }
+  ]
+}

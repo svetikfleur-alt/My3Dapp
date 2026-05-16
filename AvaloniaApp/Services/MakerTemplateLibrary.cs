@@ -26,6 +26,9 @@ public sealed record MakerTemplateDefinition(
     Func<IReadOnlyDictionary<string, double>, string> BuildCommand)
 {
     public string TagSummary => string.Join(" · ", Tags);
+
+    public string Signature =>
+        $"template {Id} {string.Join(' ', Parameters.Select(p => $"{p.Key}=<{p.Unit}>"))}";
 }
 
 internal sealed class MakerTemplateManifest
@@ -82,7 +85,7 @@ internal sealed class MakerTemplateParameterManifest
 public static class MakerTemplateLibrary
 {
     private static readonly Regex TemplateInvocationPattern = new(
-        @"^(?:use\s+)?template\s+(?<id>[a-z0-9\-]+)(?<args>(?:\s+[a-zA-Z][a-zA-Z0-9]*\s*=\s*[+-]?\d+(?:\.\d+)?)*)\s*$",
+        @"^(?:(?:use|make|generate)\s+)?(?:template|part)\s+(?<id>[a-z0-9\-]+)(?<args>(?:\s+[a-zA-Z][a-zA-Z0-9]*\s*=\s*[+-]?\d+(?:\.\d+)?)*)\s*$",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex AssignmentPattern = new(
@@ -104,10 +107,18 @@ public static class MakerTemplateLibrary
             ["spacer"] = BuildSpacer,
             ["l-bracket"] = BuildLBracket,
             ["fan-adapter"] = BuildFanAdapter,
-            ["cable-clip"] = BuildCableClip
+            ["cable-clip"] = BuildCableClip,
+            ["din-rail-clip"] = BuildDinRailClip,
+            ["t-slot-nut"] = BuildTSlotNut,
+            ["box-enclosure"] = BuildBoxEnclosure,
+            ["hinge-bracket"] = BuildHingeBracket,
+            ["pcb-tray"] = BuildPcbTray
         };
 
     public static IReadOnlyList<MakerTemplateDefinition> All { get; } = LoadTemplates();
+
+    public static IReadOnlyList<string> Categories =>
+        All.Select(item => item.Category).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(item => item, StringComparer.OrdinalIgnoreCase).ToArray();
 
     public static MakerTemplateDefinition? Find(string id) =>
         All.FirstOrDefault(item => string.Equals(item.Id, id.Trim(), StringComparison.OrdinalIgnoreCase));
@@ -317,7 +328,89 @@ public static class MakerTemplateLibrary
                     P("openingGap", "Opening Gap", 4, 1, 20, "mm", "Entry slot opening")
                 ],
                 "Practical cable organizer template for enclosures and printer frames.",
-                BuildCableClip)
+                BuildCableClip),
+
+            Fallback(
+                "din-rail-clip",
+                "DIN Rail Clip",
+                "Clips & routing",
+                "Parametric 35mm DIN rail mounting clip for electronics panels and enclosures.",
+                ["din", "rail", "clip", "electronics", "panel"],
+                [
+                    P("clipLength", "Clip Length", 45, 20, 120, "mm", "Length along the rail"),
+                    P("railWidth", "Rail Width", 35, 25, 45, "mm", "DIN rail width (standard: 35)"),
+                    P("wallThickness", "Wall Thickness", 3, 1.5, 8, "mm", "Clip body wall thickness"),
+                    P("lipDepth", "Lip Depth", 7, 4, 14, "mm", "Rail retention lip depth"),
+                    P("screwHoleDiameter", "Screw Hole Dia.", 3.5, 0, 6, "mm", "Mounting screw hole (0=none)")
+                ],
+                "35mm DIN rail mounting clip for panel electronics.",
+                BuildDinRailClip),
+
+            Fallback(
+                "t-slot-nut",
+                "T-Slot Nut",
+                "Fasteners & hardware",
+                "Printable T-nut for standard 2020/2040/3030 aluminum extrusion T-slots.",
+                ["t-nut", "t-slot", "extrusion", "2020", "hardware"],
+                [
+                    P("slotWidth", "Slot Width", 6, 4, 10, "mm", "Extrusion slot width (2020=6mm, 3030=8mm)"),
+                    P("nutLength", "Nut Length", 20, 8, 60, "mm", "Nut body length"),
+                    P("nutHeight", "Nut Height", 3, 1.5, 8, "mm", "Nut body thickness"),
+                    P("holeDiameter", "Thread Hole Dia.", 3.2, 1.5, 6, "mm", "Center hole diameter"),
+                    P("flangeWidth", "Flange Width", 10, 6, 20, "mm", "T-flange outer width")
+                ],
+                "Drop-in T-nut for aluminum extrusion frame construction.",
+                BuildTSlotNut),
+
+            Fallback(
+                "box-enclosure",
+                "Box Enclosure",
+                "Enclosures",
+                "Parametric rectangular enclosure shell for electronics project boxes.",
+                ["box", "enclosure", "case", "electronics", "housing"],
+                [
+                    P("innerWidth", "Inner Width", 80, 20, 300, "mm", "Interior cavity width"),
+                    P("innerHeight", "Inner Height", 50, 15, 200, "mm", "Interior cavity height"),
+                    P("innerDepth", "Inner Depth", 40, 15, 200, "mm", "Interior cavity depth"),
+                    P("wallThickness", "Wall Thickness", 3, 1.5, 10, "mm", "Shell wall thickness"),
+                    P("cornerRadius", "Corner Radius", 3, 0, 15, "mm", "Exterior corner rounding")
+                ],
+                "Parametric project enclosure shell with hollow interior.",
+                BuildBoxEnclosure),
+
+            Fallback(
+                "hinge-bracket",
+                "Hinge Bracket",
+                "Brackets",
+                "Two-leaf printable hinge bracket for panels, lids, and folding mechanisms.",
+                ["hinge", "bracket", "pivot", "door", "lid"],
+                [
+                    P("leafWidth", "Leaf Width", 30, 10, 100, "mm", "Width of each hinge leaf"),
+                    P("leafLength", "Leaf Length", 40, 15, 150, "mm", "Length of each hinge leaf"),
+                    P("thickness", "Thickness", 3, 1.5, 8, "mm", "Leaf plate thickness"),
+                    P("pinDiameter", "Pin Diameter", 5, 2, 12, "mm", "Hinge pin outer diameter"),
+                    P("knuckleCount", "Knuckle Count", 3, 2, 5, "count", "Number of knuckle cylinders")
+                ],
+                "Printable two-leaf hinge for doors and enclosure lids.",
+                BuildHingeBracket),
+
+            Fallback(
+                "pcb-tray",
+                "PCB Tray",
+                "Electronics",
+                "Parametric PCB mounting tray with corner standoffs for single-board computers and shields.",
+                ["pcb", "tray", "sled", "electronics", "raspberry-pi", "arduino"],
+                [
+                    P("boardWidth", "Board Width", 85, 30, 200, "mm", "PCB width"),
+                    P("boardDepth", "Board Depth", 56, 25, 200, "mm", "PCB depth"),
+                    P("wallHeight", "Wall Height", 8, 3, 40, "mm", "Tray wall height"),
+                    P("wallThickness", "Wall Thickness", 2.5, 1.5, 8, "mm", "Tray wall thickness"),
+                    P("standoffHeight", "Standoff Height", 5, 2, 20, "mm", "Corner standoff height above floor"),
+                    P("standoffDiameter", "Standoff Diameter", 6, 3, 15, "mm", "Corner standoff outer diameter"),
+                    P("standoffHoleDia", "Standoff Hole Dia.", 2.7, 0, 5, "mm", "Standoff center hole (0=solid)")
+                ],
+                "PCB mounting tray with corner standoffs for electronics builds.",
+                BuildPcbTray)
         ];
     }
 
@@ -436,9 +529,200 @@ public static class MakerTemplateLibrary
         var cableDiameter = V(values, "cableDiameter");
         var clipWidth = V(values, "clipWidth");
         var wallThickness = V(values, "wallThickness");
+        var openingGap = Math.Max(V(values, "openingGap"), wallThickness);
         var overall = Math.Max(cableDiameter + wallThickness * 2d, wallThickness * 2d + 2d);
-        var depth = Math.Max(clipWidth, wallThickness * 2d + 4d);
+        var depth = Math.Max(clipWidth, wallThickness * 2d + openingGap);
         return $"create box {N(overall)}x{N(depth)}x{N(clipWidth)}; fillet {N(Math.Min(wallThickness, 3d))}";
+    }
+
+    private static string BuildDinRailClip(IReadOnlyDictionary<string, double> values)
+    {
+        var railWidth = V(values, "railWidth");
+        var clipHeight = V(values, "clipHeight");
+        var wallThickness = V(values, "wallThickness");
+        var lipDepth = V(values, "lipDepth");
+        var screwHoleDiameter = Math.Max(V(values, "screwHoleDiameter"), 0d);
+        var baseDepth = Math.Max(railWidth + wallThickness * 2d, railWidth + lipDepth);
+        var sb = new StringBuilder();
+        sb.Append($"recipe bracket {N(baseDepth)} {N(wallThickness * 2d + lipDepth)} {N(clipHeight)} {N(wallThickness)}");
+        if (screwHoleDiameter > 0.1d)
+        {
+            sb.Append($"; hole depth {N(Math.Max(wallThickness, 1d))}");
+        }
+
+        return sb.ToString();
+    }
+
+    private static string BuildTSlotNut(IReadOnlyDictionary<string, double> values)
+    {
+        var slotWidth = V(values, "slotWidth");
+        var nutLength = V(values, "nutLength");
+        var nutHeight = V(values, "nutHeight");
+        var holeDiameter = Math.Max(V(values, "holeDiameter"), 0d);
+        var flangeWidth = Math.Max(V(values, "flangeWidth"), slotWidth + 1d);
+        var sb = new StringBuilder();
+        sb.Append($"create box {N(flangeWidth)}x{N(nutLength)}x{N(nutHeight)}; chamfer {N(Math.Min(nutHeight / 3d, 1.2d))}");
+        if (holeDiameter > 0.1d)
+        {
+            sb.Append($"; hole depth {N(Math.Max(nutHeight, 1d))}");
+        }
+
+        return sb.ToString();
+    }
+
+    private static string BuildBoxEnclosure(IReadOnlyDictionary<string, double> values)
+    {
+        var innerWidth = V(values, "innerWidth");
+        var innerHeight = V(values, "innerHeight");
+        var innerDepth = V(values, "innerDepth");
+        var wallThickness = V(values, "wallThickness");
+        var cornerRadius = Math.Max(V(values, "cornerRadius"), 0d);
+        var outerWidth = innerWidth + wallThickness * 2d;
+        var outerDepth = innerDepth + wallThickness * 2d;
+        var outerHeight = innerHeight + wallThickness * 2d;
+        var sb = new StringBuilder();
+        sb.Append($"recipe shelled-box {N(outerWidth)} {N(outerDepth)} {N(outerHeight)} {N(wallThickness)}");
+        if (cornerRadius > 0.05d)
+        {
+            sb.Append($"; fillet {N(Math.Min(cornerRadius, wallThickness * 1.5d))}");
+        }
+
+        return sb.ToString();
+    }
+
+    private static string BuildHingeBracket(IReadOnlyDictionary<string, double> values)
+    {
+        var leafWidth = V(values, "leafWidth");
+        var leafLength = V(values, "leafLength");
+        var thickness = V(values, "thickness");
+        var pinDiameter = V(values, "pinDiameter");
+        var knuckleCount = Math.Clamp((int)Math.Round(V(values, "knuckleCount"), MidpointRounding.AwayFromZero), 2, 5);
+        var sb = new StringBuilder();
+        sb.Append($"recipe bracket {N(leafLength)} {N(leafWidth)} {N(pinDiameter + thickness * 2d)} {N(thickness)}");
+        sb.Append($"; circular pattern {knuckleCount} angle 180 around y");
+        return sb.ToString();
+    }
+
+    private static string BuildPcbTray(IReadOnlyDictionary<string, double> values)
+    {
+        var boardWidth = V(values, "boardWidth");
+        var boardDepth = V(values, "boardDepth");
+        var wallHeight = V(values, "wallHeight");
+        var wallThickness = V(values, "wallThickness");
+        var standoffHeight = V(values, "standoffHeight");
+        var standoffDiameter = V(values, "standoffDiameter");
+        var standoffHoleDia = Math.Max(V(values, "standoffHoleDia"), 0d);
+        var outerWidth = boardWidth + wallThickness * 2d;
+        var outerDepth = boardDepth + wallThickness * 2d;
+        var sb = new StringBuilder();
+        sb.Append($"recipe shelled-box {N(outerWidth)} {N(outerDepth)} {N(wallHeight)} {N(wallThickness)}");
+        sb.Append($"; recipe boss {N(standoffDiameter)} {N(standoffHeight)}");
+        if (standoffHoleDia > 0.1d)
+        {
+            sb.Append($"; hole depth {N(Math.Max(standoffHeight, 1d))}");
+        }
+
+        return sb.ToString();
+    }
+
+    private static string BuildDinRailClip(IReadOnlyDictionary<string, double> values)
+    {
+        var clipLength = V(values, "clipLength");
+        var railWidth = Math.Max(V(values, "railWidth"), 25d);
+        var wallThickness = Math.Max(V(values, "wallThickness"), 1.5d);
+        var lipDepth = Math.Max(V(values, "lipDepth"), 4d);
+        var screwHoleDiameter = V(values, "screwHoleDiameter");
+        var bodyWidth = railWidth + wallThickness * 2d;
+        var bodyHeight = Math.Max(lipDepth + wallThickness, 12d);
+        var sb = new StringBuilder();
+        sb.Append($"select plane top; start sketch; rectangle 0 0 {N(bodyWidth)} {N(clipLength)}; finish sketch; extrude {N(bodyHeight)}");
+        if (screwHoleDiameter > 0.1d)
+        {
+            sb.Append($"; hole depth {N(bodyHeight)}");
+            sb.Append($"; hole depth {N(bodyHeight)}");
+        }
+        sb.Append($"; fillet {N(Math.Min(wallThickness * 0.5d, 2d))}");
+        return sb.ToString();
+    }
+
+    private static string BuildTSlotNut(IReadOnlyDictionary<string, double> values)
+    {
+        var slotWidth = Math.Max(V(values, "slotWidth"), 4d);
+        var nutLength = Math.Max(V(values, "nutLength"), 8d);
+        var nutHeight = Math.Max(V(values, "nutHeight"), 1.5d);
+        var holeDiameter = V(values, "holeDiameter");
+        var flangeWidth = Math.Max(V(values, "flangeWidth"), slotWidth + 2d);
+        var sb = new StringBuilder();
+        sb.Append($"select plane top; start sketch; rectangle 0 0 {N(flangeWidth)} {N(nutLength)}; finish sketch; extrude {N(nutHeight)}");
+        if (holeDiameter > 0.1d)
+        {
+            sb.Append($"; hole depth {N(nutHeight)}");
+        }
+        return sb.ToString();
+    }
+
+    private static string BuildBoxEnclosure(IReadOnlyDictionary<string, double> values)
+    {
+        var innerWidth = Math.Max(V(values, "innerWidth"), 20d);
+        var innerHeight = Math.Max(V(values, "innerHeight"), 15d);
+        var innerDepth = Math.Max(V(values, "innerDepth"), 15d);
+        var wall = Math.Max(V(values, "wallThickness"), 1.5d);
+        var cornerRadius = V(values, "cornerRadius");
+        var outerWidth = innerWidth + wall * 2d;
+        var outerDepth = innerDepth + wall * 2d;
+        var outerHeight = innerHeight + wall;
+        var sb = new StringBuilder();
+        sb.Append($"select plane top; start sketch; rectangle 0 0 {N(outerWidth)} {N(outerDepth)}; finish sketch; extrude {N(outerHeight)}");
+        if (cornerRadius > 0.05d)
+        {
+            sb.Append($"; fillet {N(Math.Min(cornerRadius, Math.Min(outerWidth, outerDepth) / 4d))}");
+        }
+        sb.Append($"; shell {N(wall)}");
+        return sb.ToString();
+    }
+
+    private static string BuildHingeBracket(IReadOnlyDictionary<string, double> values)
+    {
+        var leafWidth = Math.Max(V(values, "leafWidth"), 10d);
+        var leafLength = Math.Max(V(values, "leafLength"), 15d);
+        var thickness = Math.Max(V(values, "thickness"), 1.5d);
+        var pinDiameter = Math.Max(V(values, "pinDiameter"), 2d);
+        var knuckleRadius = pinDiameter / 2d + 1.5d;
+        var sb = new StringBuilder();
+        sb.Append($"select plane top; start sketch; rectangle 0 0 {N(leafLength)} {N(leafWidth)}; finish sketch; extrude {N(thickness)}");
+        sb.Append($"; select plane top; start sketch; circle {N(knuckleRadius)} {N(leafWidth / 2d)} radius {N(knuckleRadius)}; finish sketch; extrude {N(leafWidth)}");
+        return sb.ToString();
+    }
+
+    private static string BuildPcbTray(IReadOnlyDictionary<string, double> values)
+    {
+        var boardWidth = Math.Max(V(values, "boardWidth"), 30d);
+        var boardDepth = Math.Max(V(values, "boardDepth"), 25d);
+        var wallThickness = Math.Max(V(values, "wallThickness"), 1.5d);
+        var wallHeight = Math.Max(V(values, "wallHeight"), 3d);
+        var standoffHeight = Math.Max(V(values, "standoffHeight"), 2d);
+        var standoffDiameter = Math.Max(V(values, "standoffDiameter"), 3d);
+        var standoffHoleDia = V(values, "standoffHoleDia");
+        var outerWidth = boardWidth + wallThickness * 2d;
+        var outerDepth = boardDepth + wallThickness * 2d;
+        var standoffRadius = standoffDiameter / 2d;
+        var sb = new StringBuilder();
+        sb.Append($"select plane top; start sketch; rectangle 0 0 {N(outerWidth)} {N(outerDepth)}; finish sketch; extrude {N(wallThickness)}");
+        sb.Append($"; select plane top; start sketch; rectangle 0 0 {N(outerWidth)} {N(outerDepth)}; finish sketch; extrude {N(wallHeight)}; shell {N(wallThickness)}");
+        var cxArray = new[] { standoffRadius + wallThickness, outerWidth - standoffRadius - wallThickness };
+        var cyArray = new[] { standoffRadius + wallThickness, outerDepth - standoffRadius - wallThickness };
+        foreach (var cx in cxArray)
+        {
+            foreach (var cy in cyArray)
+            {
+                sb.Append($"; select plane top; start sketch; circle {N(cx)} {N(cy)} radius {N(standoffRadius)}; finish sketch; extrude {N(standoffHeight + wallThickness)}");
+                if (standoffHoleDia > 0.1d)
+                {
+                    sb.Append($"; hole depth {N(standoffHeight + wallThickness)}");
+                }
+            }
+        }
+        return sb.ToString();
     }
 
     private static MakerTemplateParameter P(

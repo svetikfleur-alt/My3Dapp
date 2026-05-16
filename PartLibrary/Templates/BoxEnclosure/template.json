@@ -1,0 +1,16 @@
+{
+  "id": "box-enclosure",
+  "displayName": "Box Enclosure",
+  "category": "Enclosures",
+  "description": "Parametric rectangular enclosure shell for electronics project boxes.",
+  "tags": ["box", "enclosure", "case", "electronics", "housing"],
+  "previewSummary": "Parametric project enclosure shell with hollow interior.",
+  "builder": "box-enclosure",
+  "parameters": [
+    { "key": "innerWidth", "displayName": "Inner Width", "defaultValue": 80, "minValue": 20, "maxValue": 300, "unit": "mm", "description": "Interior cavity width" },
+    { "key": "innerHeight", "displayName": "Inner Height", "defaultValue": 50, "minValue": 15, "maxValue": 200, "unit": "mm", "description": "Interior cavity height" },
+    { "key": "innerDepth", "displayName": "Inner Depth", "defaultValue": 40, "minValue": 15, "maxValue": 200, "unit": "mm", "description": "Interior cavity depth" },
+    { "key": "wallThickness", "displayName": "Wall Thickness", "defaultValue": 3, "minValue": 1.5, "maxValue": 10, "unit": "mm", "description": "Shell wall thickness" },
+    { "key": "cornerRadius", "displayName": "Corner Radius", "defaultValue": 3, "minValue": 0, "maxValue": 15, "unit": "mm", "description": "Exterior corner rounding" }
+  ]
+}
