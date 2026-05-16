@@ -1,97 +1,285 @@
-# My3DApp / UMX1 Studio
+# UMX1 — AI Maker CAD Studio
 
-Early open-source AI-assisted maker CAD studio.
+> **Early work in progress. Not production CAD yet.**
+> This is an honest early-access open-source project. It runs, it creates parts, it exports STL.
+> It is not SolidWorks or Onshape. It is a foundation people can build on.
 
-This project is building toward a compact desktop CAD workspace for makers, 3D printing users, and contributors who want to add parametric parts, sketch tools, and AI-assisted workflows without starting from a full enterprise CAD stack.
+An open-source, AI-assisted desktop CAD studio for makers, 3D printing users, and contributors
+who want a compact but real parametric workflow — without the weight of an enterprise tool.
 
-## Current MVP direction
+Built with .NET 10, Avalonia UI, and WebView2 for 3D rendering.
 
-- Unified Avalonia studio shell
-- Part studio workflow with sketch + feature foundation
-- Starter maker template library
-- STL / OBJ export path
-- Integrated AI copilot dock
-- Open contributor-oriented architecture
+---
 
-## What works today
+## What this is
 
-- Launches into one CAD studio shell
-- Reference planes, feature tree, properties, copilot, and recipe views
-- Sketch entry from plane selection
-- Basic sketch tools: point, line, rectangle, circle, arc
-- Constraint/dimension foundation
-- Core feature dialogs: extrude, revolve, sweep, loft, fillet, chamfer, shell, patterns, hole
-- Primitive creation and body management
-- Export dialog for STL / OBJ
-- Starter maker templates through the Templates workspace
+A small, serious desktop CAD studio focused on:
+
+- **Maker workflows** — brackets, spacers, mounts, adapters, clips
+- **Parametric part templates** — pick a template, edit dimensions, generate the part
+- **Sketch-based CAD** — sketch planes, 2D tools, extrude to solid
+- **AI Copilot** — integrated assistant dock, not a separate chatbot app
+- **STL/OBJ export** — so you can actually print what you design
+- **Open contributor model** — designed to be extended with new templates and features
+
+This is not a mockup or a UI demo. The sketch tools work, the templates generate real bodies,
+the export produces files you can send to a slicer.
+
+---
+
+## Requirements
+
+- Windows 10/11 (WebView2 is Windows-only for now)
+- .NET 10 SDK
+- WebView2 Runtime (usually pre-installed on Windows 11)
+
+---
 
 ## Run
 
 ```powershell
-dotnet build .\My3DApp.csproj -c Debug -p:StudioUiHost=Avalonia
-dotnet run --project .\My3DApp.csproj -c Debug -p:StudioUiHost=Avalonia
+# Build
+dotnet build .\My3DApp.csproj -c Debug
+
+# Run
+dotnet run --project .\My3DApp.csproj -c Debug
 ```
 
-## Basic flow
+Or open `My3DApp.sln` in Visual Studio 2022 / Rider and press F5.
 
-1. Open the app.
-2. Stay in `Part Studio` for direct CAD work, or switch to `Templates`.
-3. Choose a starter maker template and edit the parameters.
-4. Generate the part into the active part studio.
-5. Refine with sketch / feature tools if needed.
-6. Switch to `Prepare` and export STL.
+---
 
-## Template library
+## What works today
 
-Starter templates currently include:
+### Studio shell
+- Unified Avalonia CAD shell — no split startup, no separate landing page
+- Top bar: document name, save/open, undo/redo, mode badge, theme toggle, command palette (Ctrl+K)
+- Grouped toolbar: 3D primitives, sketch tools, feature tools, export
+- Left panel: feature/project tree with Origin, Planes, Sketches, Features, Bodies
+- Center: 3D viewport via WebView2 + Three.js (orbit, pan, zoom, focus)
+- Right panel: Properties inspector, AI Copilot dock, Recipe view
+- Bottom: workspace tab bar (Part Studio | Sketch | Templates | Prepare | AI Chat | +)
+- Bottom: part studio tab bar (multiple part studios per document)
+- Status bar with notifications
 
-- Mounting Plate
-- Washer
-- Spacer / Standoff
-- L-Bracket
-- Fan Adapter Plate
-- Cable Clip
+### Sketch workflow
+- Start Sketch → select plane (XY / YZ / ZX or planar face)
+- Sketch tools: Point, Line, Rectangle, Circle, Arc, Polygon, Slot, Spline, Mirror, Trim, Offset, Corner Fillet
+- Construction mode (Q) — dashed reference geometry excluded from solid profiles
+- Dimensions: Linear, Radius, Angle
+- Constraints: Horizontal, Vertical, Coincident, Equal, Fix, Tangent, Parallel, Perpendicular, Concentric
+- Grid overlay with snap (G to toggle)
+- Finish Sketch → back to 3D with the sketch visible in the feature tree
 
-See [PartLibrary/README.md](PartLibrary/README.md) and [PartLibrary/TEMPLATE_GUIDE.md](PartLibrary/TEMPLATE_GUIDE.md).
+### Feature tools
+- **Extrude** — blind, symmetric, join body, cut body
+- **Revolve** — axis + angle
+- **Sweep** — profile along path
+- **Loft** — between two or more profiles
+- **Hole** — depth + diameter
+- **Fillet / Chamfer** — edge rounding and beveling
+- **Shell** — hollow a solid with wall thickness
+- **Linear Pattern / Circular Pattern** — repeat a feature
+- **Mirror** — reflect across a plane
+- **Boolean**: Union, Subtract, Intersect (multi-body workflows)
+- **Datum Plane** — offset reference planes
+- **Primitives**: Box, Cylinder, Sphere, Cone, Torus, Pyramid, Wedge, Prism, Capsule, Hemisphere, Ellipsoid, and more
 
-## AI assistant
+### Template library
+Starter parametric templates you can select, configure, and generate:
 
-The copilot is integrated as a secondary dock and workspace, not as the startup screen.
+| Template | Category | Key parameters |
+|---|---|---|
+| Mounting Plate | Plates & mounts | width, height, thickness, corner radius, holes |
+| Washer | Disks & spacers | outer diameter, inner diameter, thickness |
+| Spacer / Standoff | Disks & spacers | OD, ID, height, chamfer |
+| L-Bracket | Brackets | width, height, depth, thickness, holes |
+| Fan Adapter Plate | Plates & mounts | fan size, thickness, screw holes, center opening |
+| Cable Clip | Clips & routing | cable diameter, clip width, wall thickness, gap |
 
-It can:
+### Export
+- STL export (Ctrl+E → Export dialog)
+- OBJ export
+- STEP export placeholder (not yet functional)
+- Prepare workspace — part review, dimension summary, export controls
 
-- suggest local CAD commands
-- insert starter recipes
-- explain selected features
-- help contributors think through next steps
+### AI Copilot
+- Integrated as right-panel dock and "AI Chat" workspace tab
+- Provider: OpenAI or Anthropic
+- Modes: Auto, Do, Think, Assist, Think&Do
+- Contextual commands: creates features, inserts recipes, explains selections
+- Clean inactive state when no API key is configured (no error spam)
 
-If no provider key is configured, it stays in a clean inactive state.
+---
 
-## Limitations
+## Basic workflow
 
-- Early work in progress. Not production CAD yet.
-- Some templates currently generate simplified maker-friendly solids instead of full manufacturing-detail geometry.
-- STEP export and advanced booleans are not yet a polished end-user workflow.
-- Constraint solving is improving, but it is not yet equivalent to professional commercial CAD.
+```
+1. Launch → opens in Part Studio
+2. Press S or click "Sketch" → select a reference plane
+3. Draw a rectangle or circle with sketch tools
+4. Finish Sketch (Esc or toolbar)
+5. Press E or click "Extrude" → set distance → OK
+6. See the solid body in the viewport and feature tree
+7. Press Ctrl+E → Export STL → save file → open in your slicer
+```
+
+Or using templates:
+
+```
+1. Click the "Templates" tab
+2. Select a template (e.g., Mounting Plate)
+3. Edit the parameters in the panel
+4. Click "Generate" → part appears in Part Studio
+5. Go to "Prepare" tab → Export STL
+```
+
+---
+
+## Project structure
+
+```
+My3DApp/
+├── AvaloniaApp/            # UI layer (Avalonia MVVM)
+│   ├── MainWindow.axaml    # Main shell layout
+│   ├── ViewModels/         # StudioShellViewModel (main app state)
+│   ├── Services/           # MakerTemplateLibrary, AssistantChatService, etc.
+│   ├── Controls/           # WebViewportHost (3D viewport)
+│   └── Dialogs/            # Feature dialogs (Extrude, Hole, Pattern, etc.)
+├── Engine/                 # CAD kernel (CadModel, SolidCompiler, MeshBuilder)
+├── Core/                   # Geometry math (Solids, Primitives, Mesh)
+├── Backends/               # Geometry backend interface
+├── Export/                 # STL / OBJ exporters
+├── PartLibrary/            # Contributor-facing template library docs
+│   ├── README.md
+│   ├── TEMPLATE_GUIDE.md
+│   └── Templates/          # One folder per template
+├── Assets/Icons/           # SVG icon set (40+ icons)
+└── AgentOps/               # Build automation and agent task tracking
+```
+
+---
+
+## How to add a new template
+
+Templates are defined in [`AvaloniaApp/Services/MakerTemplateLibrary.cs`](AvaloniaApp/Services/MakerTemplateLibrary.cs).
+
+Each template is a `MakerTemplateDefinition` record with:
+- `id` — unique string key
+- `DisplayName` — shown in the UI
+- `Category` — groups templates in the list
+- `Description` — one-line summary
+- `Tags` — searchable keywords
+- `Parameters` — list of `MakerTemplateParameter` (key, display name, default, min, max, unit)
+- `BuildCommand` — a function that takes the user's parameter values and returns a CAD command string
+
+### Minimal example
+
+```csharp
+new(
+    "my-bracket",
+    "My Bracket",
+    "Brackets",
+    "A simple custom bracket.",
+    ["bracket", "custom"],
+    [
+        P("width",     "Width",     60, 10, 200, "mm", "Bracket width"),
+        P("height",    "Height",    40, 10, 200, "mm", "Bracket height"),
+        P("thickness", "Thickness",  4,  1,  20, "mm", "Wall thickness"),
+    ],
+    "Starter bracket shape.",
+    values =>
+    {
+        var w = V(values, "width");
+        var h = V(values, "height");
+        var t = V(values, "thickness");
+        return $"recipe bracket {N(w)} {N(t)} {N(h)} {N(t)}";
+    })
+```
+
+Then:
+1. Add the template to the list in `BuildTemplates()`
+2. Create `PartLibrary/Templates/MyBracket/template.md` documenting it
+3. Run `dotnet build` and test it
+4. Submit a PR
+
+See [PartLibrary/TEMPLATE_GUIDE.md](PartLibrary/TEMPLATE_GUIDE.md) for the full contributor guide.
+
+---
+
+## Keyboard shortcuts
+
+| Shortcut | Action |
+|---|---|
+| S | Start Sketch |
+| E | Extrude |
+| F | Focus / Fit view |
+| M | Move tool |
+| Q | Toggle Construction mode |
+| G | Toggle Grid |
+| L | Line tool |
+| R | Rectangle tool |
+| C | Circle tool |
+| A | Arc tool |
+| P | Point tool |
+| D | Linear Dimension |
+| Ctrl+K | Command palette |
+| Ctrl+S | Save |
+| Ctrl+O | Open |
+| Ctrl+E | Export |
+| Ctrl+Z | Undo |
+| Ctrl+Y | Redo |
+| Ctrl+D | Duplicate |
+| Esc | Cancel current tool / return to 3D |
+
+---
 
 ## Contributing
 
-This repo is intended to be contributor-friendly.
+This repo is designed to be contributor-friendly. Small targeted PRs are welcome.
 
-Useful contribution areas:
+Good first contributions:
+- **Add a new maker template** — define parameters, wire into registry, document it
+- **Improve sketch behavior** — snap, constraints, entity editing
+- **Improve export** — STEP export, per-body export, filename conventions
+- **Improve Prepare workspace** — print info, dimension summary, slicer hints
+- **Add SVG icons** — the icon set in `Assets/Icons/` uses consistent style
+- **Write tests** — especially for geometry and template generation
 
-- add new maker templates
-- improve sketch behavior
-- extend feature dialogs
-- improve export and prepare workflows
-- strengthen AI-assisted local command generation
+You can also use Claude / Codex / GPT to help generate new templates from a description and open a PR.
 
-You can also use Codex / Claude / GPT tools to help add templates and open PRs.
+---
+
+## Current limitations
+
+- **Windows only** — WebView2 is Windows-specific; macOS/Linux port is on the roadmap
+- **Constraint solver** — sketch constraints are improving but not yet equivalent to commercial CAD
+- **CSG booleans** — union/subtract/intersect work for simple cases; complex boolean trees can fail
+- **Template geometry** — some templates generate simplified solids; complex details (hole booleans on all templates) are not yet universal
+- **STEP export** — not yet functional; STL and OBJ work
+- **No cloud sync** — local files only (.my3dapp JSON format)
+- **Single-user** — no collaboration features yet
+
+---
 
 ## Roadmap
 
-- stronger template geometry and validation
-- better prepare/export review
-- more robust sketch solver
-- face-based sketching and richer feature editing
-- more publish-ready template packs for printer mods, brackets, mounts, and enclosures
+- [ ] Full sketch constraint solver (DOF tracker, fully-constrained feedback)
+- [ ] Face-based sketching (sketch on any planar face, not just origin planes)
+- [ ] STEP export
+- [ ] More template packs: enclosures, printer mods, electronics mounts
+- [ ] Plugin/extension system for custom templates
+- [ ] macOS / Linux port
+- [ ] Performance improvements for complex models
+- [ ] Community part sharing gallery
+
+---
+
+## License
+
+MIT — see LICENSE file.
+
+---
+
+*Built with .NET 10 · Avalonia UI · WebView2 · Three.js*
+*Early AI-assisted open-source maker CAD studio — contributions welcome.*

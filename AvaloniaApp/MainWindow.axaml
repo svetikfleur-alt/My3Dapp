@@ -1326,6 +1326,34 @@
                             Classes="AssistantSecondaryButton"
                             Click="OnOpenPartStudioWorkspaceClick" />
                   </StackPanel>
+                  <Border Classes="AssistantContextCard"
+                          IsVisible="{Binding HasExportJobs}">
+                    <StackPanel Spacing="6">
+                      <TextBlock Text="Recent exports"
+                                 Classes="AssistantContextPrimary" />
+                      <ItemsControl ItemsSource="{Binding ExportJobs}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate DataType="vm:ExportJobViewModel">
+                            <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,2,0,2">
+                              <TextBlock Text="{Binding Format}"
+                                         Classes="ToolbarMetaLabel"
+                                         VerticalAlignment="Center" />
+                              <StackPanel Grid.Column="1" Margin="8,0,0,0" Spacing="1">
+                                <TextBlock Text="{Binding FileName}"
+                                           Foreground="{DynamicResource Studio.TextPrimaryBrush}" />
+                                <TextBlock Text="{Binding Scope}"
+                                           Classes="ToolbarSubtleText" />
+                              </StackPanel>
+                              <TextBlock Grid.Column="2"
+                                         Text="{Binding Timestamp}"
+                                         Classes="ToolbarMetaLabel"
+                                         VerticalAlignment="Center" />
+                            </Grid>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+                  </Border>
                 </StackPanel>
               </Border>
 

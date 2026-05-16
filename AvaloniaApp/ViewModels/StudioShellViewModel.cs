@@ -91,6 +91,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     private readonly List<string> _recentPrimitiveKinds = ["box", "cylinder", "sphere"];
     private MakerTemplateDefinition? _selectedMakerTemplate;
     private string _templateStatus = "Choose a starter template to generate a maker part.";
+    private string _lastExportSummary = "No exports yet.";
 
     public StudioShellViewModel()
     {
@@ -116,6 +117,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         WorkspaceTabs = new ObservableCollection<StudioWorkspaceTabItem>();
         TemplateCatalog = new ObservableCollection<MakerTemplateDefinition>(MakerTemplateLibrary.All);
         TemplateParameters = new ObservableCollection<ParameterItemViewModel>();
+        ExportJobs = new ObservableCollection<ExportJobViewModel>();
         ResetAssistantModelsForProvider(_selectedAssistantProvider, preserveSelection: false);
         RefreshRecentPrimitiveTools();
         _workspaceController.WorkspaceChanged += OnWorkspaceChanged;
@@ -135,6 +137,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public ObservableCollection<StudioWorkspaceTabItem> WorkspaceTabs { get; }
     public ObservableCollection<MakerTemplateDefinition> TemplateCatalog { get; }
     public ObservableCollection<ParameterItemViewModel> TemplateParameters { get; }
+    public ObservableCollection<ExportJobViewModel> ExportJobs { get; }
 
     public string DocumentName
     {
@@ -280,7 +283,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
             var selection = state.Project.Selection;
             var selectionLabel = selection.IsEmpty ? "all visible bodies" : selection.Name;
-            return $"{partCount.ToString(CultureInfo.InvariantCulture)} part(s) ready. Export the current body set as STL/OBJ or review the active selection ({selectionLabel}).";
+            return $"{partCount.ToString(CultureInfo.InvariantCulture)} part(s) ready. Export the current body set as STL/OBJ or review the active selection ({selectionLabel}). {LastExportSummary}";
         }
     }
 
@@ -303,6 +306,14 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         }
     }
 
+    public string LastExportSummary
+    {
+        get => _lastExportSummary;
+        private set => SetProperty(ref _lastExportSummary, value);
+    }
+
+    public bool HasExportJobs => ExportJobs.Count > 0;
+
     public void InsertAssistantRecipe(string recipeName)
     {
         var recipe = CadRecipeLibrary.Find(recipeName);
@@ -324,6 +335,8 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
         SelectedMakerTemplate = next;
         TemplateStatus = $"Ready: {next.DisplayName} template loaded.";
+        var state = _workspaceController.CurrentState;
+        RebuildFeatureTree(state.Project, state.CompileResult);
     }
 
     public void SelectWorkspace(string workspaceKind)
@@ -1983,6 +1996,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         try
         {
             _workspaceController.ExportStl(path);
+            RegisterExportJob("STL", "All visible bodies", path);
         }
         catch (Exception ex)
         {
@@ -2006,6 +2020,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         try
         {
             _workspaceController.ExportObj(path);
+            RegisterExportJob("OBJ", "All visible bodies", path);
         }
         catch (Exception ex)
         {
@@ -2017,6 +2032,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public void ExportFormat(string format, bool allBodies, Guid selectedBodyId, string path)
     {
         var isStl = string.Equals(format, "STL", StringComparison.OrdinalIgnoreCase);
+        var scope = allBodies ? "All visible bodies" : "Selected body";
         if (allBodies)
         {
             if (isStl) _workspaceController.ExportStl(path);
@@ -2027,6 +2043,25 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             if (isStl) _workspaceController.ExportStlBody(selectedBodyId, path);
             else _workspaceController.ExportObjBody(selectedBodyId, path);
         }
+
+        RegisterExportJob(isStl ? "STL" : "OBJ", scope, path);
+    }
+
+    public void RegisterExportJob(string format, string scope, string path)
+    {
+        var fileName = Path.GetFileName(path);
+        var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
+        ExportJobs.Insert(0, new ExportJobViewModel(fileName, format, scope, timestamp, path));
+        while (ExportJobs.Count > 12)
+        {
+            ExportJobs.RemoveAt(ExportJobs.Count - 1);
+        }
+
+        LastExportSummary = $"{format} exported: {fileName}";
+        RaisePropertyChanged(nameof(HasExportJobs));
+        RaisePropertyChanged(nameof(PrepareWorkspaceSummary));
+        var state = _workspaceController.CurrentState;
+        RebuildFeatureTree(state.Project, state.CompileResult);
     }
 
     private static string BuildProjectTitle(string path)
@@ -2670,6 +2705,57 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             }
 
             roots.Add(partsRoot);
+        }
+
+        if (TemplateCatalog.Count > 0)
+        {
+            var templateRoot = new FeatureNodeViewModel(
+                "Templates",
+                "template-group",
+                string.Empty,
+                string.Empty,
+                isExpanded: true);
+
+            foreach (var template in TemplateCatalog)
+            {
+                var isSelectedTemplate = string.Equals(SelectedMakerTemplate?.Id, template.Id, StringComparison.OrdinalIgnoreCase);
+                templateRoot.Children.Add(new FeatureNodeViewModel(
+                    template.DisplayName,
+                    "template",
+                    template.Category,
+                    template.Description,
+                    template.TagSummary,
+                    string.Empty,
+                    CadEntityKind.None,
+                    Guid.Empty,
+                    isSelectable: false,
+                    isExpanded: false,
+                    isBodyVisible: true));
+            }
+
+            roots.Add(templateRoot);
+        }
+
+        if (ExportJobs.Count > 0)
+        {
+            var exportRoot = new FeatureNodeViewModel(
+                "Exports",
+                "export-group",
+                string.Empty,
+                string.Empty,
+                isExpanded: true);
+
+            foreach (var job in ExportJobs)
+            {
+                exportRoot.Children.Add(new FeatureNodeViewModel(
+                    job.FileName,
+                    "export",
+                    job.Format,
+                    $"{job.Scope} | {job.Timestamp}",
+                    job.FullPath));
+            }
+
+            roots.Add(exportRoot);
         }
 
         foreach (var root in ApplyTreeFilter(roots, FeatureTreeFilterText))

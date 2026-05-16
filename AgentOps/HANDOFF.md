@@ -40,3 +40,16 @@ Next:
   - template generation is command-driven and some parts are simplified MVP solids
   - feature tree does not yet show template/export sections as first-class nodes
   - prepare workspace is useful but not yet a full manufacturing review panel
+
+2026-05-16 MVP publishable proposal pass (this session):
+- Fixed 2 build errors that were blocking compilation:
+  - StudioShellViewModel.cs:211 — isAddButton → IsAddButton (C# record constructor param case)
+  - StudioShellViewModel.cs:393 — added NotificationSeverity.Success value to enum
+- Build now: 0 errors, 0 warnings
+- Rewrote README.md to publishable open-source standard:
+  - feature table, workflow guide, keyboard shortcuts, contribution guide, limitations, roadmap
+- Rewrote PartLibrary/README.md with template table and contributor workflow
+- Rewrote PartLibrary/TEMPLATE_GUIDE.md with full step-by-step contributor instructions
+- Updated all 6 template.md files with full parameter tables and example presets
+- All 6 templates remain in MakerTemplateLibrary.cs: mounting-plate, washer, spacer, l-bracket, fan-adapter, cable-clip
+- Committed as: mvp: publishable AI maker CAD studio proposal
