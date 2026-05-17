@@ -268,7 +268,10 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 RaisePropertyChanged(nameof(SelectedMakerTemplatePresets));
                 RaisePropertyChanged(nameof(HasSelectedMakerTemplatePresets));
                 RaisePropertyChanged(nameof(SelectedTemplateValidationSummary));
+                RaisePropertyChanged(nameof(PrepareWorkspaceTemplateSnapshot));
                 RaisePropertyChanged(nameof(PrepareWorkspaceManufacturingNotes));
+                RaisePropertyChanged(nameof(PrepareWorkspaceChecks));
+                RaisePropertyChanged(nameof(HasPrepareWorkspaceChecks));
                 RaisePropertyChanged(nameof(CanApplySelectedTemplate));
                 RaisePropertyChanged(nameof(WorkspaceSurfaceSummary));
             }
@@ -404,6 +407,34 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         }
     }
 
+    public string PrepareWorkspaceTemplateSnapshot
+    {
+        get
+        {
+            if (SelectedMakerTemplate is null)
+            {
+                return "No active template. Generate a template-driven part to see a parameter snapshot here.";
+            }
+
+            var values = GetCurrentTemplateValues();
+            if (values.Count == 0)
+            {
+                return $"{SelectedMakerTemplate.DisplayName} is selected, but no parameter values are available yet.";
+            }
+
+            var summary = SelectedMakerTemplate.Parameters
+                .Take(4)
+                .Select(parameter =>
+                {
+                    values.TryGetValue(parameter.Key, out var value);
+                    var unit = string.IsNullOrWhiteSpace(parameter.Unit) ? string.Empty : $" {parameter.Unit}";
+                    return $"{parameter.DisplayName} {FormatNumber(value)}{unit}";
+                });
+
+            return $"{SelectedMakerTemplate.DisplayName} | {string.Join(" · ", summary)}";
+        }
+    }
+
     public string PrepareWorkspaceManufacturingNotes
     {
         get
@@ -425,6 +456,19 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 "spacer" => "Short spacers with a modest chamfer usually print cleanly without support.",
                 _ => "Use 0.2 mm or 0.28 mm layer heights for quick iteration, and check that no template parameter falls below your printer's practical wall limits."
             };
+        }
+    }
+
+    public IReadOnlyList<PrepareChecklistItem> PrepareWorkspaceChecks => BuildPrepareWorkspaceChecks();
+
+    public bool HasPrepareWorkspaceChecks => PrepareWorkspaceChecks.Count > 0;
+
+    public bool CanExportCurrentPart
+    {
+        get
+        {
+            var state = _workspaceController.CurrentState;
+            return state.CompileResult.Bodies.Count > 0 && !IsSketchMode;
         }
     }
 
@@ -495,6 +539,9 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         RaisePropertyChanged(nameof(SelectedTemplateCommandPreview));
         RaisePropertyChanged(nameof(CanApplySelectedTemplate));
         RaisePropertyChanged(nameof(SelectedTemplateValidationSummary));
+        RaisePropertyChanged(nameof(PrepareWorkspaceTemplateSnapshot));
+        RaisePropertyChanged(nameof(PrepareWorkspaceChecks));
+        RaisePropertyChanged(nameof(HasPrepareWorkspaceChecks));
         RaisePropertyChanged(nameof(StatusBarText));
     }
 
@@ -572,6 +619,9 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         UpdateDocumentUiStateInController();
         ShowPropertiesPanel();
         ShowNotification($"{SelectedMakerTemplate.DisplayName} created.", NotificationSeverity.Success);
+        RaisePropertyChanged(nameof(CanExportCurrentPart));
+        RaisePropertyChanged(nameof(PrepareWorkspaceChecks));
+        RaisePropertyChanged(nameof(HasPrepareWorkspaceChecks));
         return result;
     }
 
@@ -2310,6 +2360,9 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         UpdateDocumentUiStateInController();
         RaisePropertyChanged(nameof(HasExportJobs));
         RaisePropertyChanged(nameof(PrepareWorkspaceSummary));
+        RaisePropertyChanged(nameof(PrepareWorkspaceChecks));
+        RaisePropertyChanged(nameof(HasPrepareWorkspaceChecks));
+        RaisePropertyChanged(nameof(CanExportCurrentPart));
         var state = _workspaceController.CurrentState;
         RebuildFeatureTree(state.Project, state.CompileResult);
     }
@@ -2360,6 +2413,9 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         RaisePropertyChanged(nameof(StatusBarText));
         RaisePropertyChanged(nameof(CanApplySelectedTemplate));
         RaisePropertyChanged(nameof(SelectedTemplateValidationSummary));
+        RaisePropertyChanged(nameof(PrepareWorkspaceTemplateSnapshot));
+        RaisePropertyChanged(nameof(PrepareWorkspaceChecks));
+        RaisePropertyChanged(nameof(HasPrepareWorkspaceChecks));
         await Task.CompletedTask;
     }
 
@@ -2402,6 +2458,132 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
         RaisePropertyChanged(nameof(CanApplySelectedTemplate));
         RaisePropertyChanged(nameof(SelectedTemplateValidationSummary));
+    }
+
+    private Dictionary<string, double> GetCurrentTemplateValues()
+    {
+        var values = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in TemplateParameters)
+        {
+            if (double.TryParse(item.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) ||
+                double.TryParse(item.Value, NumberStyles.Float, CultureInfo.CurrentCulture, out parsed))
+            {
+                values[item.Key] = parsed;
+            }
+        }
+
+        return values;
+    }
+
+    private IReadOnlyList<PrepareChecklistItem> BuildPrepareWorkspaceChecks()
+    {
+        var state = _workspaceController.CurrentState;
+        var items = new List<PrepareChecklistItem>();
+
+        if (state.CompileResult.Bodies.Count == 0)
+        {
+            items.Add(new PrepareChecklistItem("WARN", "No generated body", "Create a part from Templates or finish a valid feature before exporting."));
+            return items;
+        }
+
+        items.Add(new PrepareChecklistItem("PASS", "Body ready", $"{state.CompileResult.Bodies.Count.ToString(CultureInfo.InvariantCulture)} visible body/bodies available for export."));
+
+        if (IsSketchMode)
+        {
+            items.Add(new PrepareChecklistItem("WARN", "Sketch still active", "Finish the current sketch before exporting so the generated body stays stable."));
+        }
+
+        var values = GetCurrentTemplateValues();
+        if (SelectedMakerTemplate is not null && values.Count > 0)
+        {
+            AppendTemplateSpecificChecks(items, SelectedMakerTemplate.Id, values);
+        }
+        else
+        {
+            items.Add(new PrepareChecklistItem("INFO", "No template metadata", "This part was not generated from a tracked maker template, so only generic export checks are available."));
+        }
+
+        if (ExportJobs.Count == 0)
+        {
+            items.Add(new PrepareChecklistItem("INFO", "First export", "Export STL first for print review, then compare the fit before committing to a production print."));
+        }
+
+        return items;
+    }
+
+    private static void AppendTemplateSpecificChecks(
+        ICollection<PrepareChecklistItem> items,
+        string templateId,
+        IReadOnlyDictionary<string, double> values)
+    {
+        static double Get(IReadOnlyDictionary<string, double> source, string key, double fallback = 0d) =>
+            source.TryGetValue(key, out var value) ? value : fallback;
+
+        switch (templateId)
+        {
+            case "mounting-plate":
+            {
+                var thickness = Get(values, "thickness");
+                items.Add(thickness < 3
+                    ? new PrepareChecklistItem("WARN", "Thin plate", "Thickness below 3 mm may flex or warp on larger mounts.")
+                    : new PrepareChecklistItem("PASS", "Plate stiffness", "Plate thickness is in a reasonable starting range for general maker mounts."));
+                break;
+            }
+            case "fan-adapter":
+            {
+                var fanSize = Get(values, "fanSize");
+                var opening = Get(values, "centerOpeningDiameter");
+                items.Add(opening > fanSize - 10
+                    ? new PrepareChecklistItem("WARN", "Opening too large", "The center opening is close to the outer fan frame size and may weaken the plate.")
+                    : new PrepareChecklistItem("PASS", "Opening margin", "Center opening leaves a usable frame band around the fan footprint."));
+                break;
+            }
+            case "cable-clip":
+            {
+                var wall = Get(values, "wallThickness");
+                items.Add(wall < 2
+                    ? new PrepareChecklistItem("WARN", "Wall thickness low", "Clip walls below 2 mm often become brittle in FDM prints.")
+                    : new PrepareChecklistItem("PASS", "Clip wall thickness", "Wall thickness is in a safer printable range for repeated flex."));
+                break;
+            }
+            case "simple-box":
+            {
+                var wall = Get(values, "wallThickness");
+                var width = Get(values, "width");
+                items.Add(wall < 2
+                    ? new PrepareChecklistItem("WARN", "Thin enclosure wall", "Walls below 2 mm are more likely to wobble or string on tall box prints.")
+                    : new PrepareChecklistItem("PASS", "Enclosure shell", "Wall thickness is in a practical range for a starter enclosure print."));
+                if (width > 180)
+                {
+                    items.Add(new PrepareChecklistItem("INFO", "Large footprint", "Consider a brim or slower first layer for wider box prints."));
+                }
+                break;
+            }
+            case "lid":
+            {
+                var tolerance = Get(values, "tolerance");
+                items.Add(tolerance < 0.2
+                    ? new PrepareChecklistItem("WARN", "Tolerance tight", "Fit clearance below 0.2 mm may bind on typical FDM printers.")
+                    : tolerance > 0.8
+                        ? new PrepareChecklistItem("WARN", "Tolerance loose", "Large clearance may make the lid feel sloppy.")
+                        : new PrepareChecklistItem("PASS", "Fit clearance", "Tolerance is in a useful first-pass range for a printed lid."));
+                break;
+            }
+            case "washer":
+            case "spacer":
+            {
+                var thickness = Get(values, "thickness", Get(values, "height"));
+                items.Add(thickness < 2
+                    ? new PrepareChecklistItem("WARN", "Thin hardware part", "Very thin washer/spacer sections can become weak or elephant-foot sensitive.")
+                    : new PrepareChecklistItem("PASS", "Hardware section", "Part thickness is in a practical printable range."));
+                break;
+            }
+            default:
+            {
+                items.Add(new PrepareChecklistItem("INFO", "General review", "Check bridging, wall thickness, and fastener clearances against your printer and hardware."));
+                break;
+            }
+        }
     }
 
     private static bool TryParseTemplateParameter(
@@ -3342,6 +3524,11 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         RaisePropertyChanged(nameof(ViewportSketchSessionSummary));
         RaisePropertyChanged(nameof(PrepareWorkspaceSummary));
         RaisePropertyChanged(nameof(PrepareWorkspaceWarnings));
+        RaisePropertyChanged(nameof(PrepareWorkspaceTemplateSnapshot));
+        RaisePropertyChanged(nameof(PrepareWorkspaceManufacturingNotes));
+        RaisePropertyChanged(nameof(PrepareWorkspaceChecks));
+        RaisePropertyChanged(nameof(HasPrepareWorkspaceChecks));
+        RaisePropertyChanged(nameof(CanExportCurrentPart));
         RaisePropertyChanged(nameof(WorkspaceSurfaceSummary));
     }
 
@@ -4203,3 +4390,5 @@ public sealed record PartStudioTabItem(string Name, bool IsActive);
 public sealed record StudioWorkspaceTabItem(string Title, string Kind, bool IsActive, bool IsAddButton = false);
 
 public sealed record RecentDocumentItemViewModel(string DisplayName, string FullPath, string Summary);
+
+public sealed record PrepareChecklistItem(string Level, string Title, string Detail);

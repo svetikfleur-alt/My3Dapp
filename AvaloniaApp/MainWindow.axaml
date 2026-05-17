@@ -1490,6 +1490,15 @@
                              TextWrapping="Wrap"
                              Classes="ViewportSessionSummary" />
                   <Border Classes="AssistantContextCard">
+                    <StackPanel Spacing="6">
+                      <TextBlock Text="Active part snapshot"
+                                 Classes="AssistantContextPrimary" />
+                      <TextBlock Text="{Binding PrepareWorkspaceTemplateSnapshot}"
+                                 TextWrapping="Wrap"
+                                 Classes="AssistantContextSecondary" />
+                    </StackPanel>
+                  </Border>
+                  <Border Classes="AssistantContextCard">
                     <TextBlock Text="{Binding PrepareWorkspaceWarnings}"
                                TextWrapping="Wrap"
                                Classes="AssistantContextSecondary" />
@@ -1506,11 +1515,37 @@
                   <StackPanel Orientation="Horizontal" Spacing="8">
                     <Button Content="Export STL / OBJ"
                             Classes="AssistantApplyButton"
+                            IsEnabled="{Binding CanExportCurrentPart}"
                             Click="OnPrepareExportClick" />
                     <Button Content="Back to Part Studio"
                             Classes="AssistantSecondaryButton"
                             Click="OnOpenPartStudioWorkspaceClick" />
                   </StackPanel>
+                  <Border Classes="AssistantContextCard"
+                          IsVisible="{Binding HasPrepareWorkspaceChecks}">
+                    <StackPanel Spacing="6">
+                      <TextBlock Text="Readiness checklist"
+                                 Classes="AssistantContextPrimary" />
+                      <ItemsControl ItemsSource="{Binding PrepareWorkspaceChecks}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate DataType="vm:PrepareChecklistItem">
+                            <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,2,0,2">
+                              <TextBlock Text="{Binding Level}"
+                                         Classes="ToolbarMetaLabel"
+                                         VerticalAlignment="Top" />
+                              <StackPanel Grid.Column="1" Margin="8,0,0,0" Spacing="1">
+                                <TextBlock Text="{Binding Title}"
+                                           Foreground="{DynamicResource Studio.TextPrimaryBrush}" />
+                                <TextBlock Text="{Binding Detail}"
+                                           TextWrapping="Wrap"
+                                           Classes="ToolbarSubtleText" />
+                              </StackPanel>
+                            </Grid>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+                  </Border>
                   <Border Classes="AssistantContextCard"
                           IsVisible="{Binding HasExportJobs}">
                     <StackPanel Spacing="6">
