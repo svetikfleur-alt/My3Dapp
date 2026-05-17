@@ -73,6 +73,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     private int _selectedInspectorTabIndex;
     private int _selectedBottomTabIndex;
     private string _selectedWorkspaceKind = "PartStudio";
+    private string _selectedLeftPaneSection = "Project";
     private bool _canPrimitiveTools = true;
     private bool _canStartSketch = true;
     private bool _canFinishSketch;
@@ -140,6 +141,20 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public ObservableCollection<MakerTemplateDefinition> TemplateCatalog { get; }
     public ObservableCollection<ParameterItemViewModel> TemplateParameters { get; }
     public ObservableCollection<ExportJobViewModel> ExportJobs { get; }
+
+    public IReadOnlyList<RecentDocumentItemViewModel> RecentDocumentItems =>
+        _appSettings.RecentFiles
+            .Select(path => new RecentDocumentItemViewModel(
+                System.IO.Path.GetFileName(path),
+                path,
+                string.Equals(path, CurrentProjectPath, StringComparison.OrdinalIgnoreCase)
+                    ? "Open in current studio"
+                    : "Recent project"))
+            .ToList();
+
+    public bool HasRecentDocumentItems => _appSettings.RecentFiles.Count > 0;
+
+    public bool HasNoRecentDocumentItems => !HasRecentDocumentItems;
 
     public string DocumentName
     {
@@ -264,6 +279,55 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public string SelectedMakerTemplateTags => SelectedMakerTemplate?.TagSummary ?? string.Empty;
 
+    public string SelectedLeftPaneSection
+    {
+        get => _selectedLeftPaneSection;
+        private set
+        {
+            if (!SetProperty(ref _selectedLeftPaneSection, value))
+            {
+                return;
+            }
+
+            RaisePropertyChanged(nameof(IsProjectPaneSelected));
+            RaisePropertyChanged(nameof(IsTemplatesPaneSelected));
+            RaisePropertyChanged(nameof(IsLibraryPaneSelected));
+            RaisePropertyChanged(nameof(IsProjectPaneVisible));
+            RaisePropertyChanged(nameof(IsTemplatesPaneVisible));
+            RaisePropertyChanged(nameof(IsLibraryPaneVisible));
+            RaisePropertyChanged(nameof(LeftPaneTitle));
+            RaisePropertyChanged(nameof(LeftPaneSummary));
+        }
+    }
+
+    public bool IsProjectPaneSelected => string.Equals(SelectedLeftPaneSection, "Project", StringComparison.Ordinal);
+
+    public bool IsTemplatesPaneSelected => string.Equals(SelectedLeftPaneSection, "Templates", StringComparison.Ordinal);
+
+    public bool IsLibraryPaneSelected => string.Equals(SelectedLeftPaneSection, "Library", StringComparison.Ordinal);
+
+    public bool IsProjectPaneVisible => IsProjectPaneSelected;
+
+    public bool IsTemplatesPaneVisible => IsTemplatesPaneSelected;
+
+    public bool IsLibraryPaneVisible => IsLibraryPaneSelected;
+
+    public string LeftPaneTitle => SelectedLeftPaneSection switch
+    {
+        "Templates" => "Template catalog",
+        "Library" => "Project library",
+        _ => "Project navigator"
+    };
+
+    public string LeftPaneSummary => SelectedLeftPaneSection switch
+    {
+        "Templates" => $"{TemplateCatalog.Count.ToString(CultureInfo.InvariantCulture)} starter templates ready for generation.",
+        "Library" => HasRecentDocumentItems
+            ? $"{RecentDocumentItems.Count.ToString(CultureInfo.InvariantCulture)} recent documents • {TemplateCatalog.Count.ToString(CultureInfo.InvariantCulture)} library templates"
+            : $"{TemplateCatalog.Count.ToString(CultureInfo.InvariantCulture)} library templates • no recent documents yet",
+        _ => FeatureTreeSummary
+    };
+
     public string TemplateStatus
     {
         get => _templateStatus;
@@ -337,9 +401,20 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
         SelectedMakerTemplate = next;
         TemplateStatus = $"Ready: {next.DisplayName} template loaded.";
+        RaisePropertyChanged(nameof(LeftPaneSummary));
         UpdateDocumentUiStateInController();
         var state = _workspaceController.CurrentState;
         RebuildFeatureTree(state.Project, state.CompileResult);
+    }
+
+    public void SelectLeftPaneSection(string section)
+    {
+        SelectedLeftPaneSection = section switch
+        {
+            "Templates" => "Templates",
+            "Library" => "Library",
+            _ => "Project"
+        };
     }
 
     public void SelectWorkspace(string workspaceKind)
@@ -359,6 +434,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 break;
             case "Templates":
                 SelectedWorkspaceKind = "Templates";
+                SelectLeftPaneSection("Templates");
                 ShowPropertiesPanel();
                 break;
             case "Prepare":
@@ -661,6 +737,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 RaisePropertyChanged(nameof(IsPrepareOverlayVisible));
                 RaisePropertyChanged(nameof(WorkspaceSurfaceTitle));
                 RaisePropertyChanged(nameof(WorkspaceSurfaceSummary));
+                RaisePropertyChanged(nameof(LeftPaneSummary));
                 RefreshWorkspaceTabs();
             }
         }
@@ -2020,6 +2097,10 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             _appSettings.AddRecentFile(path);
             SaveStateLabel = "Saved";
             RaisePropertyChanged(nameof(RecentFiles));
+            RaisePropertyChanged(nameof(RecentDocumentItems));
+            RaisePropertyChanged(nameof(HasRecentDocumentItems));
+            RaisePropertyChanged(nameof(HasNoRecentDocumentItems));
+            RaisePropertyChanged(nameof(LeftPaneSummary));
             AppendToLog($"Project saved: {Path.GetFileName(path)}");
             ShowNotification($"Saved: {Path.GetFileName(path)}", NotificationSeverity.Info);
             return true;
@@ -2043,6 +2124,10 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             ProjectTitleBase = BuildProjectTitle(path);
             _appSettings.AddRecentFile(path);
             RaisePropertyChanged(nameof(RecentFiles));
+            RaisePropertyChanged(nameof(RecentDocumentItems));
+            RaisePropertyChanged(nameof(HasRecentDocumentItems));
+            RaisePropertyChanged(nameof(HasNoRecentDocumentItems));
+            RaisePropertyChanged(nameof(LeftPaneSummary));
             IsSelectingSketchPlane = false;
             HasExplicitSketchBaseSelection =
                 _workspaceController.CurrentState.Project.Selection.Kind == CadEntityKind.ReferencePlane;
@@ -2787,6 +2872,35 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     {
         FeatureNodes.Clear();
 
+        var documentRoot = new FeatureNodeViewModel(
+            "Document",
+            "document-group",
+            string.Empty,
+            string.Empty,
+            isExpanded: true);
+        documentRoot.Children.Add(new FeatureNodeViewModel(
+            string.IsNullOrWhiteSpace(CurrentProjectPath) ? "unsaved.umxproj" : Path.GetFileName(CurrentProjectPath),
+            "document",
+            "Project",
+            $"{SaveStateLabel} | {SelectedWorkspaceKind} | {PartStudios.Count.ToString(CultureInfo.InvariantCulture)} studio tab(s)",
+            string.IsNullOrWhiteSpace(CurrentProjectPath) ? "Unsaved local document" : CurrentProjectPath));
+
+        var workspaceRoot = new FeatureNodeViewModel(
+            "Workspaces",
+            "workspace-group",
+            string.Empty,
+            string.Empty,
+            isExpanded: true);
+        foreach (var tab in WorkspaceTabs.Where(tab => !tab.IsAddButton))
+        {
+            workspaceRoot.Children.Add(new FeatureNodeViewModel(
+                tab.Title,
+                "workspace",
+                tab.IsActive ? "Active" : "Workspace",
+                BuildWorkspaceNodeSummary(tab),
+                $"{tab.Title} workspace"));
+        }
+
         var geometryRoot = new FeatureNodeViewModel(
             "Default geometry",
             "reference-group",
@@ -2823,7 +2937,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             string.Empty,
             string.Empty,
             isExpanded: true);
-        var roots = new List<FeatureNodeViewModel> { geometryRoot };
+        var roots = new List<FeatureNodeViewModel> { documentRoot, workspaceRoot, geometryRoot };
 
         foreach (var body in project.Scene.Bodies)
         {
@@ -3045,6 +3159,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         FeatureTreeSummary =
             $"{featureCount.ToString(CultureInfo.InvariantCulture)} history items | {partCount.ToString(CultureInfo.InvariantCulture)} parts";
         FeatureListHeader = $"Features ({featureCount.ToString(CultureInfo.InvariantCulture)})";
+        RaisePropertyChanged(nameof(LeftPaneSummary));
 
         AssistantWorkspaceSummary = compileResult.Mode == CadMode.Sketch
             ? "Sketch workspace"
@@ -3270,6 +3385,20 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             compiledBody.BodyId,
             isSelectable: true,
             isBodyVisible: isBodyVisible);
+    }
+
+    private string BuildWorkspaceNodeSummary(StudioWorkspaceTabItem tab)
+    {
+        var stateLabel = tab.IsActive ? "current" : "available";
+        return tab.Kind switch
+        {
+            "PartStudio" => $"{stateLabel} | active 3D part workspace",
+            "Sketch" => $"{stateLabel} | sketch tools and plane workflow",
+            "Templates" => $"{stateLabel} | {TemplateCatalog.Count.ToString(CultureInfo.InvariantCulture)} parametric templates",
+            "Prepare" => $"{stateLabel} | export review and handoff",
+            "Assistant" => $"{stateLabel} | copilot guidance and UMX1 help",
+            _ => stateLabel
+        };
     }
 
     private static string BuildFeatureSummary(CadFeature feature)
@@ -3911,3 +4040,5 @@ public sealed class SketchDimensionDisplayItem
 public sealed record PartStudioTabItem(string Name, bool IsActive);
 
 public sealed record StudioWorkspaceTabItem(string Title, string Kind, bool IsActive, bool IsAddButton = false);
+
+public sealed record RecentDocumentItemViewModel(string DisplayName, string FullPath, string Summary);

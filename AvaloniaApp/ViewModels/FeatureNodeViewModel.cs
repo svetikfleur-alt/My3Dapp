@@ -88,7 +88,7 @@ public sealed class FeatureNodeViewModel
 
     public bool HasIcon => IsSectionNode || !string.IsNullOrWhiteSpace(IconPath);
 
-    public bool IsSectionNode => IconKind is "reference-group" or "sketch-group" or "feature-group" or "part-group" or "template-group" or "export-group";
+    public bool IsSectionNode => IconKind is "document-group" or "workspace-group" or "reference-group" or "sketch-group" or "feature-group" or "part-group" or "template-group" or "export-group";
 
     public bool ShowGlyph => HasIcon && !IsSectionNode;
 
@@ -148,6 +148,8 @@ public sealed class FeatureNodeViewModel
     public string IconToken => IconKind switch
     {
         "group"            => "GR",
+        "document-group"   => "DOC",
+        "workspace-group"  => "WS",
         "reference-group"  => "REF",
         "sketch-group"     => "SK",
         "feature-group"    => "FX",
@@ -177,6 +179,8 @@ public sealed class FeatureNodeViewModel
         "dimension"        => "DM",
         "template"         => "TP",
         "export"           => "EX",
+        "workspace"        => "WS",
+        "document"         => "DOC",
         _ => string.Empty
     };
 

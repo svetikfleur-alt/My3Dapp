@@ -889,8 +889,26 @@
               Background="{DynamicResource Studio.PanelBackgroundBrush}"
               BorderBrush="{DynamicResource Studio.BorderBrush}"
               BorderThickness="1">
-        <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="12">
-          <Grid ColumnDefinitions="34,*" VerticalAlignment="Center">
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Margin="12">
+          <StackPanel Orientation="Horizontal"
+                      Spacing="6">
+            <ToggleButton Content="Tree"
+                          Classes="FeatureDialogOperationTab"
+                          IsChecked="{Binding IsProjectPaneSelected}"
+                          Click="OnProjectPaneClick" />
+            <ToggleButton Content="Templates"
+                          Classes="FeatureDialogOperationTab"
+                          IsChecked="{Binding IsTemplatesPaneSelected}"
+                          Click="OnTemplatesPaneClick" />
+            <ToggleButton Content="Library"
+                          Classes="FeatureDialogOperationTab"
+                          IsChecked="{Binding IsLibraryPaneSelected}"
+                          Click="OnLibraryPaneClick" />
+          </StackPanel>
+          <Grid Grid.Row="1"
+                ColumnDefinitions="34,*"
+                VerticalAlignment="Center"
+                IsVisible="{Binding IsProjectPaneVisible}">
             <Border Classes="TreeFilterIconShell">
               <svg:Svg Path="avares://My3DApp/Assets/Icons/filter.svg"
                        Width="16"
@@ -904,16 +922,18 @@
                      Text="{Binding FeatureTreeFilterText, Mode=TwoWay}"
                      Classes="TreeFilterTextBox" />
           </Grid>
-            <Grid Grid.Row="1"
-                  ColumnDefinitions="*,Auto"
+            <Grid Grid.Row="2"
+                  RowDefinitions="Auto,Auto"
                   Margin="0,12,0,0">
-              <TextBlock Text="{Binding FeatureListHeader}"
-                         Classes="FeatureListHeaderText" />
-              <TextBlock Grid.Column="1"
-                         Text="{Binding FeatureTreeSummary}"
+              <TextBlock Text="{Binding LeftPaneTitle}"
+                          Classes="FeatureListHeaderText" />
+              <TextBlock Grid.Row="1"
+                         Margin="0,3,0,0"
+                         Text="{Binding LeftPaneSummary}"
+                         TextWrapping="Wrap"
                          Classes="FeatureListMetaText" />
             </Grid>
-          <StackPanel Grid.Row="2"
+          <StackPanel Grid.Row="3"
                       Margin="0,10,0,0"
                       Spacing="0"
                       IsVisible="{Binding IsSketchMode}">
@@ -1045,10 +1065,10 @@
             </Border>
           </StackPanel>
           <TreeView x:Name="FeatureTreeView"
-                    Grid.Row="3"
+                    Grid.Row="4"
                     Margin="0,8,0,0"
                     ItemsSource="{Binding FeatureNodes}"
-                    IsVisible="{Binding IsFeatureTreeVisible}"
+                    IsVisible="{Binding IsProjectPaneVisible}"
                     Classes="FeatureTree"
                     Background="Transparent"
                     SelectionChanged="OnFeatureTreeSelectionChanged"
@@ -1139,10 +1159,10 @@
               </TreeDataTemplate>
             </TreeView.ItemTemplate>
           </TreeView>
-          <Border Grid.Row="3"
+          <Border Grid.Row="4"
                   Margin="0,8,0,0"
                   Classes="SketchSidePanel"
-                  IsVisible="{Binding IsTemplatesWorkspace}">
+                  IsVisible="{Binding IsTemplatesPaneVisible}">
             <StackPanel Spacing="8">
               <TextBlock Text="Starter templates"
                          Classes="SketchSidePanelHeader" />
@@ -1166,6 +1186,76 @@
                 </ItemsControl>
               </ScrollViewer>
             </StackPanel>
+          </Border>
+          <Border Grid.Row="4"
+                  Margin="0,8,0,0"
+                  Classes="SketchSidePanel"
+                  IsVisible="{Binding IsLibraryPaneVisible}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+              <StackPanel Spacing="10">
+                <Border Classes="AssistantContextCard">
+                  <StackPanel Spacing="6">
+                    <TextBlock Text="Recent documents"
+                               Classes="AssistantContextPrimary" />
+                    <TextBlock Text="Jump back into a saved project without leaving the studio."
+                               TextWrapping="Wrap"
+                               Classes="AssistantContextSecondary" />
+                    <ItemsControl ItemsSource="{Binding RecentDocumentItems}"
+                                  IsVisible="{Binding HasRecentDocumentItems}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:RecentDocumentItemViewModel">
+                          <Button Tag="{Binding FullPath}"
+                                  Margin="0,0,0,6"
+                                  HorizontalAlignment="Stretch"
+                                  HorizontalContentAlignment="Left"
+                                  Classes="AssistantSecondaryButton"
+                                  ToolTip.Tip="{Binding FullPath}"
+                                  Click="OnRecentDocumentLibraryClick">
+                            <StackPanel Spacing="1">
+                              <TextBlock Text="{Binding DisplayName}" />
+                              <TextBlock Text="{Binding Summary}"
+                                         Classes="ToolbarMetaLabel" />
+                            </StackPanel>
+                          </Button>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="No recent documents yet. Save a project to pin it here."
+                               TextWrapping="Wrap"
+                               Classes="AssistantContextSecondary"
+                               IsVisible="{Binding HasNoRecentDocumentItems}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="AssistantContextCard">
+                  <StackPanel Spacing="6">
+                    <TextBlock Text="Template library"
+                               Classes="AssistantContextPrimary" />
+                    <TextBlock Text="Open a starter template directly into the Templates workspace and keep building from there."
+                               TextWrapping="Wrap"
+                               Classes="AssistantContextSecondary" />
+                    <ItemsControl ItemsSource="{Binding TemplateCatalog}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="services:MakerTemplateDefinition">
+                          <Button Tag="{Binding Id}"
+                                  Margin="0,0,0,6"
+                                  HorizontalAlignment="Stretch"
+                                  HorizontalContentAlignment="Left"
+                                  Classes="AssistantSecondaryButton"
+                                  ToolTip.Tip="{Binding Description}"
+                                  Click="OnLibraryTemplateOpenClick">
+                            <StackPanel Spacing="1">
+                              <TextBlock Text="{Binding DisplayName}" />
+                              <TextBlock Text="{Binding Category}"
+                                         Classes="ToolbarMetaLabel" />
+                            </StackPanel>
+                          </Button>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </Border>
+              </StackPanel>
+            </ScrollViewer>
           </Border>
         </Grid>
       </Border>

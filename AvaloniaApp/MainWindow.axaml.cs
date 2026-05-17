@@ -627,22 +627,10 @@ public sealed partial class MainWindow : Window
         if (_wiredViewModel is null)
             return;
 
-        if (_wiredViewModel.HasUnsavedChanges)
+        if (!await EnsureSafeToReplaceCurrentProjectAsync("Open project",
+                "You have unsaved changes. Save the current document before opening another project?"))
         {
-            var choice = await PromptSaveChangesAsync("Open project",
-                "You have unsaved changes. Save the current document before opening another project?");
-            if (choice == SaveChangesChoice.Save)
-            {
-                await SaveProjectAsync(forcePicker: false);
-                if (_wiredViewModel.HasUnsavedChanges)
-                {
-                    return;
-                }
-            }
-            else if (choice == SaveChangesChoice.Cancel)
-            {
-                return;
-            }
+            return;
         }
 
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
@@ -662,7 +650,45 @@ public sealed partial class MainWindow : Window
             return;
         }
 
+        await OpenProjectWithGuardAsync(path);
+    }
+
+    private async Task<bool> EnsureSafeToReplaceCurrentProjectAsync(string actionName, string prompt)
+    {
+        if (_wiredViewModel is null)
+        {
+            return false;
+        }
+
+        if (_wiredViewModel.HasUnsavedChanges)
+        {
+            var choice = await PromptSaveChangesAsync(actionName, prompt);
+            if (choice == SaveChangesChoice.Save)
+            {
+                await SaveProjectAsync(forcePicker: false);
+                if (_wiredViewModel.HasUnsavedChanges)
+                {
+                    return false;
+                }
+            }
+            else if (choice == SaveChangesChoice.Cancel)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private Task OpenProjectWithGuardAsync(string path)
+    {
+        if (_wiredViewModel is null || string.IsNullOrWhiteSpace(path))
+        {
+            return Task.CompletedTask;
+        }
+
         _wiredViewModel.OpenProject(path);
+        return Task.CompletedTask;
     }
 
     private void OnRecentFilesClick(object? sender, RoutedEventArgs e)
@@ -2677,6 +2703,61 @@ public sealed partial class MainWindow : Window
         }
 
         _wiredViewModel.SelectMakerTemplate(templateId);
+        e.Handled = true;
+    }
+
+    private void OnProjectPaneClick(object? sender, RoutedEventArgs e)
+    {
+        _wiredViewModel?.SelectLeftPaneSection("Project");
+        e.Handled = true;
+    }
+
+    private void OnTemplatesPaneClick(object? sender, RoutedEventArgs e)
+    {
+        _wiredViewModel?.SelectLeftPaneSection("Templates");
+        e.Handled = true;
+    }
+
+    private void OnLibraryPaneClick(object? sender, RoutedEventArgs e)
+    {
+        _wiredViewModel?.SelectLeftPaneSection("Library");
+        e.Handled = true;
+    }
+
+    private async void OnRecentDocumentLibraryClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not AButton button || button.Tag is not string projectPath)
+        {
+            return;
+        }
+
+        try
+        {
+            if (!await EnsureSafeToReplaceCurrentProjectAsync("Open recent project",
+                    "You have unsaved changes. Save the current document before opening a recent project?"))
+            {
+                return;
+            }
+
+            await OpenProjectWithGuardAsync(projectPath);
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnRecentDocumentLibraryClick), ex);
+        }
+
+        e.Handled = true;
+    }
+
+    private void OnLibraryTemplateOpenClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not AButton button || button.Tag is not string templateId)
+        {
+            return;
+        }
+
+        _wiredViewModel.SelectMakerTemplate(templateId);
+        _wiredViewModel.SelectWorkspace("Templates");
         e.Handled = true;
     }
 
