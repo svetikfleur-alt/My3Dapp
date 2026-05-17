@@ -1374,24 +1374,76 @@
                                TextWrapping="Wrap"
                                Classes="ToolbarSubtleText" />
                   </StackPanel>
+                  <Border Classes="AssistantContextCard"
+                          IsVisible="{Binding HasSelectedMakerTemplatePresets}">
+                    <StackPanel Spacing="8">
+                      <TextBlock Text="Quick presets"
+                                 Classes="AssistantContextPrimary" />
+                      <ItemsControl ItemsSource="{Binding SelectedMakerTemplatePresets}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate DataType="services:MakerTemplatePreset">
+                            <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,2">
+                              <StackPanel Spacing="2">
+                                <TextBlock Text="{Binding Name}"
+                                           Foreground="{DynamicResource Studio.TextPrimaryBrush}" />
+                                <TextBlock Text="{Binding Description}"
+                                           TextWrapping="Wrap"
+                                           Classes="ToolbarSubtleText" />
+                              </StackPanel>
+                              <Button Grid.Column="1"
+                                      Margin="12,0,0,0"
+                                      Content="Apply"
+                                      Tag="{Binding Name}"
+                                      Classes="AssistantSecondaryButton"
+                                      Click="OnApplyTemplatePresetClick" />
+                            </Grid>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+                  </Border>
+                  <Border Classes="AssistantContextCard">
+                    <TextBlock Text="{Binding SelectedTemplateValidationSummary}"
+                               TextWrapping="Wrap"
+                               Classes="AssistantContextSecondary" />
+                  </Border>
                   <ItemsControl ItemsSource="{Binding TemplateParameters}">
                     <ItemsControl.ItemTemplate>
                       <DataTemplate DataType="vm:ParameterItemViewModel">
-                        <Grid ColumnDefinitions="140,*,Auto" Margin="0,3,0,0">
-                          <TextBlock Text="{Binding Name}"
-                                     VerticalAlignment="Center"
-                                     Classes="ToolbarSubtleText" />
-                          <TextBox Grid.Column="1"
-                                   Text="{Binding Value, Mode=TwoWay}"
-                                   Classes="InlineValueEditor"
-                                   LostFocus="OnTemplateParameterEditorLostFocus"
-                                   KeyDown="OnTemplateParameterEditorKeyDown" />
-                          <TextBlock Grid.Column="2"
-                                     Margin="8,0,0,0"
-                                     VerticalAlignment="Center"
-                                     Text="mm"
-                                     Classes="ToolbarMetaLabel" />
-                        </Grid>
+                        <Border Classes="AssistantContextCard" Padding="10" Margin="0,3,0,0">
+                          <StackPanel Spacing="5">
+                            <Grid ColumnDefinitions="140,*,Auto">
+                              <TextBlock Text="{Binding Name}"
+                                         VerticalAlignment="Center"
+                                         Foreground="{DynamicResource Studio.TextPrimaryBrush}" />
+                              <TextBox Grid.Column="1"
+                                       Text="{Binding Value, Mode=TwoWay}"
+                                       Classes="InlineValueEditor"
+                                       LostFocus="OnTemplateParameterEditorLostFocus"
+                                       KeyDown="OnTemplateParameterEditorKeyDown" />
+                              <TextBlock Grid.Column="2"
+                                         Margin="8,0,0,0"
+                                         VerticalAlignment="Center"
+                                         Text="{Binding Unit}"
+                                         Classes="ToolbarMetaLabel" />
+                            </Grid>
+                            <TextBlock Text="{Binding Description}"
+                                       TextWrapping="Wrap"
+                                       Classes="ToolbarSubtleText" />
+                            <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HasValidationMessage}">
+                              <TextBlock Text="{Binding ValidationMessage}"
+                                         TextWrapping="Wrap"
+                                         Foreground="#C96B22" />
+                              <TextBlock Grid.Column="1"
+                                         Text="{Binding RangeLabel}"
+                                         Classes="ToolbarMetaLabel"
+                                         VerticalAlignment="Center" />
+                            </Grid>
+                            <TextBlock Text="{Binding RangeLabel}"
+                                       Classes="ToolbarMetaLabel"
+                                       IsVisible="{Binding HasNoValidationMessage}" />
+                          </StackPanel>
+                        </Border>
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
@@ -1441,6 +1493,15 @@
                     <TextBlock Text="{Binding PrepareWorkspaceWarnings}"
                                TextWrapping="Wrap"
                                Classes="AssistantContextSecondary" />
+                  </Border>
+                  <Border Classes="AssistantContextCard">
+                    <StackPanel Spacing="6">
+                      <TextBlock Text="Manufacturing note"
+                                 Classes="AssistantContextPrimary" />
+                      <TextBlock Text="{Binding PrepareWorkspaceManufacturingNotes}"
+                                 TextWrapping="Wrap"
+                                 Classes="AssistantContextSecondary" />
+                    </StackPanel>
                   </Border>
                   <StackPanel Orientation="Horizontal" Spacing="8">
                     <Button Content="Export STL / OBJ"

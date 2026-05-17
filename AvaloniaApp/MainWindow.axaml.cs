@@ -2780,6 +2780,17 @@ public sealed partial class MainWindow : Window
         e.Handled = true;
     }
 
+    private void OnApplyTemplatePresetClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not AButton button || button.Tag is not string presetName)
+        {
+            return;
+        }
+
+        _wiredViewModel.ApplyTemplatePreset(presetName);
+        e.Handled = true;
+    }
+
     private void OnOpenAssistantWorkspaceClick(object? sender, RoutedEventArgs e)
     {
         _wiredViewModel?.SelectWorkspace("Assistant");

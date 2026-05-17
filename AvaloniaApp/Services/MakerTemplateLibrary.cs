@@ -15,6 +15,11 @@ public sealed record MakerTemplateParameter(
     string Unit,
     string Description);
 
+public sealed record MakerTemplatePreset(
+    string Name,
+    string Description,
+    IReadOnlyDictionary<string, double> Values);
+
 public sealed record MakerTemplateDefinition(
     string Id,
     string DisplayName,
@@ -23,7 +28,8 @@ public sealed record MakerTemplateDefinition(
     IReadOnlyList<string> Tags,
     IReadOnlyList<MakerTemplateParameter> Parameters,
     string PreviewSummary,
-    Func<IReadOnlyDictionary<string, double>, string> BuildCommand)
+    Func<IReadOnlyDictionary<string, double>, string> BuildCommand,
+    IReadOnlyList<MakerTemplatePreset> Presets)
 {
     public string TagSummary => string.Join(" · ", Tags);
 
@@ -206,7 +212,8 @@ public static class MakerTemplateLibrary
                             item.Description))
                         .ToArray(),
                     manifest.PreviewSummary,
-                    builder));
+                    builder,
+                    BuildPresetsForTemplate(manifest.Id)));
             }
             catch
             {
@@ -458,7 +465,71 @@ public static class MakerTemplateLibrary
         IReadOnlyList<MakerTemplateParameter> parameters,
         string previewSummary,
         Func<IReadOnlyDictionary<string, double>, string> builder) =>
-        new(id, displayName, category, description, tags, parameters, previewSummary, builder);
+        new(id, displayName, category, description, tags, parameters, previewSummary, builder, BuildPresetsForTemplate(id));
+
+    private static IReadOnlyList<MakerTemplatePreset> BuildPresetsForTemplate(string id)
+    {
+        return id.ToLowerInvariant() switch
+        {
+            "mounting-plate" =>
+            [
+                Preset("Printer mount", "Compact 3D-printer accessory plate.",
+                    KV("width", 80), KV("height", 50), KV("thickness", 4), KV("cornerRadius", 4), KV("holeDiameter", 5), KV("holeMargin", 10), KV("holeCount", 4)),
+                Preset("Panel plate", "Larger utility plate for enclosures and mounts.",
+                    KV("width", 140), KV("height", 90), KV("thickness", 5), KV("cornerRadius", 6), KV("holeDiameter", 6), KV("holeMargin", 14), KV("holeCount", 4))
+            ],
+            "washer" =>
+            [
+                Preset("M4 washer", "Small hardware washer.",
+                    KV("outerDiameter", 12), KV("innerDiameter", 4.3), KV("thickness", 1.6)),
+                Preset("M8 spacer", "Larger printable washer.",
+                    KV("outerDiameter", 24), KV("innerDiameter", 8.4), KV("thickness", 3))
+            ],
+            "spacer" =>
+            [
+                Preset("PCB standoff", "Short spacer for electronics.",
+                    KV("outerDiameter", 8), KV("innerDiameter", 3.2), KV("height", 8), KV("chamfer", 0.5)),
+                Preset("Frame spacer", "Longer spacer for brackets and panels.",
+                    KV("outerDiameter", 14), KV("innerDiameter", 5.2), KV("height", 20), KV("chamfer", 0.8))
+            ],
+            "l-bracket" =>
+            [
+                Preset("Shelf bracket", "Simple right-angle support.",
+                    KV("width", 60), KV("height", 60), KV("depth", 40), KV("thickness", 4), KV("holeDiameter", 5), KV("holeCount", 2)),
+                Preset("Heavy mount", "Larger support bracket for machines and enclosures.",
+                    KV("width", 100), KV("height", 80), KV("depth", 60), KV("thickness", 6), KV("holeDiameter", 6), KV("holeCount", 4))
+            ],
+            "fan-adapter" =>
+            [
+                Preset("40 mm fan", "Compact blower or electronics fan plate.",
+                    KV("fanSize", 40), KV("thickness", 3), KV("screwHoleDiameter", 3.2), KV("centerOpeningDiameter", 28)),
+                Preset("120 mm fan", "Large cooling plate for case or enclosure airflow.",
+                    KV("fanSize", 120), KV("thickness", 4), KV("screwHoleDiameter", 4.5), KV("centerOpeningDiameter", 102))
+            ],
+            "cable-clip" =>
+            [
+                Preset("Sensor wire", "Small clip for signal cable routing.",
+                    KV("cableDiameter", 4), KV("clipWidth", 12), KV("wallThickness", 2), KV("openingGap", 3)),
+                Preset("Power lead", "Wider clip for thicker harness runs.",
+                    KV("cableDiameter", 8), KV("clipWidth", 18), KV("wallThickness", 3), KV("openingGap", 5))
+            ],
+            "simple-box" =>
+            [
+                Preset("Project box", "Compact utility box with open top.",
+                    KV("width", 100), KV("depth", 70), KV("height", 45), KV("wallThickness", 3), KV("openTop", 1), KV("cornerRadius", 2)),
+                Preset("Storage bin", "Closed-top printable container shell.",
+                    KV("width", 140), KV("depth", 100), KV("height", 70), KV("wallThickness", 3), KV("openTop", 0), KV("cornerRadius", 3))
+            ],
+            "lid" =>
+            [
+                Preset("Snap lid", "Shallow lid for a medium electronics box.",
+                    KV("width", 100), KV("depth", 70), KV("thickness", 3), KV("lipHeight", 4), KV("tolerance", 0.35)),
+                Preset("Large cover", "Broader cover with a taller locating lip.",
+                    KV("width", 140), KV("depth", 100), KV("thickness", 3.5), KV("lipHeight", 5), KV("tolerance", 0.45))
+            ],
+            _ => [Preset("Default", "Template default dimensions.")]
+        };
+    }
 
     private static string BuildMountingPlate(IReadOnlyDictionary<string, double> values)
     {
@@ -711,6 +782,17 @@ public static class MakerTemplateLibrary
         string unit,
         string description) =>
         new(key, displayName, defaultValue, minValue, maxValue, unit, description);
+
+    private static MakerTemplatePreset Preset(
+        string name,
+        string description,
+        params KeyValuePair<string, double>[] values) =>
+        new(
+            name,
+            description,
+            values.ToDictionary(item => item.Key, item => item.Value, StringComparer.OrdinalIgnoreCase));
+
+    private static KeyValuePair<string, double> KV(string key, double value) => new(key, value);
 
     private static double V(IReadOnlyDictionary<string, double> values, string key) =>
         values.TryGetValue(key, out var value) ? value : 0d;

@@ -265,6 +265,10 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 RaisePropertyChanged(nameof(SelectedMakerTemplateDescription));
                 RaisePropertyChanged(nameof(SelectedMakerTemplateCategory));
                 RaisePropertyChanged(nameof(SelectedMakerTemplateTags));
+                RaisePropertyChanged(nameof(SelectedMakerTemplatePresets));
+                RaisePropertyChanged(nameof(HasSelectedMakerTemplatePresets));
+                RaisePropertyChanged(nameof(SelectedTemplateValidationSummary));
+                RaisePropertyChanged(nameof(PrepareWorkspaceManufacturingNotes));
                 RaisePropertyChanged(nameof(CanApplySelectedTemplate));
                 RaisePropertyChanged(nameof(WorkspaceSurfaceSummary));
             }
@@ -278,6 +282,30 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public string SelectedMakerTemplateCategory => SelectedMakerTemplate?.Category ?? "Templates";
 
     public string SelectedMakerTemplateTags => SelectedMakerTemplate?.TagSummary ?? string.Empty;
+
+    public IReadOnlyList<MakerTemplatePreset> SelectedMakerTemplatePresets =>
+        SelectedMakerTemplate?.Presets ?? Array.Empty<MakerTemplatePreset>();
+
+    public bool HasSelectedMakerTemplatePresets => SelectedMakerTemplatePresets.Count > 0;
+
+    public string SelectedTemplateValidationSummary
+    {
+        get
+        {
+            if (SelectedMakerTemplate is null)
+            {
+                return "Choose a template to inspect parameter ranges and generate a part.";
+            }
+
+            var invalid = TemplateParameters.Where(item => !item.IsValueValid).ToArray();
+            if (invalid.Length == 0)
+            {
+                return $"{TemplateParameters.Count.ToString(CultureInfo.InvariantCulture)} parameter(s) ready. Generate the part into the active part studio when the values look right.";
+            }
+
+            return $"{invalid.Length.ToString(CultureInfo.InvariantCulture)} parameter(s) need attention before generation.";
+        }
+    }
 
     public string SelectedLeftPaneSection
     {
@@ -334,7 +362,10 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         private set => SetProperty(ref _templateStatus, value);
     }
 
-    public bool CanApplySelectedTemplate => SelectedMakerTemplate is not null && TemplateParameters.Count > 0;
+    public bool CanApplySelectedTemplate =>
+        SelectedMakerTemplate is not null &&
+        TemplateParameters.Count > 0 &&
+        TemplateParameters.All(item => item.IsValueValid);
 
     public string PrepareWorkspaceSummary
     {
@@ -349,7 +380,8 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
             var selection = state.Project.Selection;
             var selectionLabel = selection.IsEmpty ? "all visible bodies" : selection.Name;
-            return $"{partCount.ToString(CultureInfo.InvariantCulture)} part(s) ready. Export the current body set as STL/OBJ or review the active selection ({selectionLabel}). {LastExportSummary}";
+            var templateLabel = SelectedMakerTemplate?.DisplayName ?? "custom part";
+            return $"{partCount.ToString(CultureInfo.InvariantCulture)} part(s) ready from {templateLabel}. Review the active selection ({selectionLabel}), then export STL/OBJ for print prep. {LastExportSummary}";
         }
     }
 
@@ -368,7 +400,31 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 return "Finish the active sketch before exporting so the solid stays consistent.";
             }
 
-            return "STEP and slicer handoff are not in this MVP yet. STL and OBJ are the recommended output paths.";
+            return "Review wall thickness, bridge spans, and screw-hole diameters before export. STEP and slicer handoff are not in this MVP yet.";
+        }
+    }
+
+    public string PrepareWorkspaceManufacturingNotes
+    {
+        get
+        {
+            if (SelectedMakerTemplate is null)
+            {
+                return "No template selected yet. Use Templates to generate a maker part, then come back here to review export readiness.";
+            }
+
+            return SelectedMakerTemplate.Id switch
+            {
+                "cable-clip" => "For FDM prints, keep the clip opening upward and avoid wall thickness below 2 mm for flexible retention arms.",
+                "fan-adapter" => "Check screw-hole clearance against your fastener set and keep the plate flat on the build plate for the cleanest opening edges.",
+                "l-bracket" => "Print with the largest face on the bed if possible, and increase thickness for brackets that will carry repeated load.",
+                "mounting-plate" => "Thin plates may warp on larger footprints; 4-5 mm thickness is a safer starting point for printer and enclosure mounts.",
+                "simple-box" => "Longer box walls benefit from 3+ perimeter shells. Open-top boxes usually print more reliably than fully closed shells.",
+                "lid" => "Tolerance is printer-dependent. Start around 0.35-0.45 mm for FDM and test-fit before printing a large batch.",
+                "washer" => "For load-bearing use, increase thickness instead of only widening the outer diameter.",
+                "spacer" => "Short spacers with a modest chamfer usually print cleanly without support.",
+                _ => "Use 0.2 mm or 0.28 mm layer heights for quick iteration, and check that no template parameter falls below your printer's practical wall limits."
+            };
         }
     }
 
@@ -405,6 +461,41 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         UpdateDocumentUiStateInController();
         var state = _workspaceController.CurrentState;
         RebuildFeatureTree(state.Project, state.CompileResult);
+    }
+
+    public void ApplyTemplatePreset(string presetName)
+    {
+        if (SelectedMakerTemplate is null)
+        {
+            return;
+        }
+
+        var preset = SelectedMakerTemplate.Presets
+            .FirstOrDefault(item => string.Equals(item.Name, presetName, StringComparison.OrdinalIgnoreCase));
+        if (preset is null)
+        {
+            return;
+        }
+
+        foreach (var parameter in TemplateParameters)
+        {
+            if (preset.Values.TryGetValue(parameter.Key, out var value))
+            {
+                parameter.Value = value.ToString("0.###", CultureInfo.InvariantCulture);
+                parameter.ValidationMessage = string.Empty;
+                parameter.IsValueValid = true;
+            }
+        }
+
+        ValidateTemplateParameters();
+        TemplateStatus = $"{SelectedMakerTemplate.DisplayName}: preset '{preset.Name}' applied.";
+        SaveStateLabel = "Unsaved";
+        _workspaceController.TouchDocument();
+        UpdateDocumentUiStateInController();
+        RaisePropertyChanged(nameof(SelectedTemplateCommandPreview));
+        RaisePropertyChanged(nameof(CanApplySelectedTemplate));
+        RaisePropertyChanged(nameof(SelectedTemplateValidationSummary));
+        RaisePropertyChanged(nameof(StatusBarText));
     }
 
     public void SelectLeftPaneSection(string section)
@@ -457,18 +548,11 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             return TemplateStatus;
         }
 
-        var values = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
-        foreach (var item in TemplateParameters)
+        if (!TryCollectTemplateValues(out var values, out var validationMessage))
         {
-            if (!double.TryParse(item.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) &&
-                !double.TryParse(item.Value, NumberStyles.Float, CultureInfo.CurrentCulture, out parsed))
-            {
-                TemplateStatus = $"Invalid value for {item.Name}.";
-                ShowNotification(TemplateStatus, NotificationSeverity.Warning);
-                return TemplateStatus;
-            }
-
-            values[item.Key] = parsed;
+            TemplateStatus = validationMessage;
+            ShowNotification(validationMessage, NotificationSeverity.Warning);
+            return TemplateStatus;
         }
 
         var commandText = SelectedMakerTemplate.BuildCommand(values);
@@ -505,9 +589,16 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 parameter.DisplayName,
                 parameter.Key,
                 parameter.DefaultValue.ToString("0.###", CultureInfo.InvariantCulture),
-                true));
+                true,
+                parameter.Unit,
+                parameter.MinValue,
+                parameter.MaxValue,
+                parameter.Description));
         }
 
+        ValidateTemplateParameters();
+        RaisePropertyChanged(nameof(SelectedTemplateValidationSummary));
+        RaisePropertyChanged(nameof(CanApplySelectedTemplate));
         RaisePropertyChanged(nameof(SelectedTemplateCommandPreview));
     }
 
@@ -2248,22 +2339,91 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public async Task CommitTemplateParameterEditAsync(ParameterItemViewModel item)
     {
-        if (!double.TryParse(item.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) &&
-            !double.TryParse(item.Value, NumberStyles.Float, CultureInfo.CurrentCulture, out parsed))
+        if (!TryParseTemplateParameter(item, out var parsed, out var validationMessage))
         {
-            TemplateStatus = $"Invalid value for {item.Name}.";
+            TemplateStatus = validationMessage;
             ShowNotification(TemplateStatus, NotificationSeverity.Warning);
+            RaisePropertyChanged(nameof(CanApplySelectedTemplate));
+            RaisePropertyChanged(nameof(SelectedTemplateValidationSummary));
             return;
         }
 
         item.Value = parsed.ToString("0.###", CultureInfo.InvariantCulture);
+        item.ValidationMessage = string.Empty;
+        item.IsValueValid = true;
         TemplateStatus = $"{SelectedMakerTemplateName} updated. Generate to refresh the model.";
         SaveStateLabel = "Unsaved";
         _workspaceController.TouchDocument();
+        ValidateTemplateParameters();
         UpdateDocumentUiStateInController();
         RaisePropertyChanged(nameof(SelectedTemplateCommandPreview));
         RaisePropertyChanged(nameof(StatusBarText));
+        RaisePropertyChanged(nameof(CanApplySelectedTemplate));
+        RaisePropertyChanged(nameof(SelectedTemplateValidationSummary));
         await Task.CompletedTask;
+    }
+
+    private bool TryCollectTemplateValues(
+        out Dictionary<string, double> values,
+        out string validationMessage)
+    {
+        values = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        validationMessage = string.Empty;
+
+        foreach (var item in TemplateParameters)
+        {
+            if (!TryParseTemplateParameter(item, out var parsed, out var itemMessage))
+            {
+                validationMessage = itemMessage;
+                return false;
+            }
+
+            values[item.Key] = parsed;
+        }
+
+        return true;
+    }
+
+    private void ValidateTemplateParameters()
+    {
+        foreach (var item in TemplateParameters)
+        {
+            if (TryParseTemplateParameter(item, out _, out var message))
+            {
+                item.ValidationMessage = string.Empty;
+                item.IsValueValid = true;
+            }
+            else
+            {
+                item.ValidationMessage = message;
+                item.IsValueValid = false;
+            }
+        }
+
+        RaisePropertyChanged(nameof(CanApplySelectedTemplate));
+        RaisePropertyChanged(nameof(SelectedTemplateValidationSummary));
+    }
+
+    private static bool TryParseTemplateParameter(
+        ParameterItemViewModel item,
+        out double parsed,
+        out string validationMessage)
+    {
+        if (!double.TryParse(item.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out parsed) &&
+            !double.TryParse(item.Value, NumberStyles.Float, CultureInfo.CurrentCulture, out parsed))
+        {
+            validationMessage = $"{item.Name} needs a numeric value.";
+            return false;
+        }
+
+        if (parsed < item.MinValue || parsed > item.MaxValue)
+        {
+            validationMessage = $"{item.Name} must stay between {item.MinValue.ToString("0.###", CultureInfo.InvariantCulture)} and {item.MaxValue.ToString("0.###", CultureInfo.InvariantCulture)} {item.Unit}".Trim();
+            return false;
+        }
+
+        validationMessage = string.Empty;
+        return true;
     }
 
     private void UpdateDocumentUiStateInController()
@@ -2310,6 +2470,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 }
             }
 
+            ValidateTemplateParameters();
             RaisePropertyChanged(nameof(SelectedTemplateCommandPreview));
         }
 
@@ -3143,7 +3304,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     private void AddParameter(string name, string key, string value, bool editable)
     {
-        Parameters.Add(new ParameterItemViewModel(name, key, value, editable));
+        Parameters.Add(new ParameterItemViewModel(name, key, value, editable, string.Empty, double.MinValue, double.MaxValue, string.Empty));
     }
 
     private static bool IsNumericParameterValue(string value)
