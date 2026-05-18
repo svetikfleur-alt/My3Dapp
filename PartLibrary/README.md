@@ -27,6 +27,7 @@ This folder documents each template for contributors and reviewers.
 | [Box Enclosure](Templates/BoxEnclosure/template.md) | `box-enclosure` | Enclosures | inner size, wall thickness, corner radius |
 | [Hinge Bracket](Templates/HingeBracket/template.md) | `hinge-bracket` | Brackets | leaf size, thickness, pin diameter |
 | [PCB Tray](Templates/PcbTray/template.md) | `pcb-tray` | Electronics | board size, wall height, standoffs |
+| [Controller Box Kit](Templates/ControllerBoxKit/template.md) | `controller-box-kit` | Electronics | enclosure, lid, standoffs, cable clips, fan plate |
 
 ---
 
@@ -39,7 +40,12 @@ Each template is an external manifest plus a runtime builder mapping:
 3. **Builder id** — maps the manifest to a generation function that returns a CAD command string
 
 The app reads the template list on startup, shows it in the Templates workspace,
-lets the user edit parameters, and executes the mapped command builder to generate the part.
+lets the user edit parameters, and executes either:
+
+- a mapped runtime builder in C#, or
+- an external ACL script file referenced by the template manifest
+
+to generate the part.
 
 ---
 

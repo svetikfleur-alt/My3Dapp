@@ -1,0 +1,19 @@
+{
+  "id": "controller-box-kit",
+  "displayName": "Controller Box Kit",
+  "category": "Electronics",
+  "description": "Printable control-box starter kit with enclosure body, lid, standoffs, cable clips, and a fan plate laid out for fabrication.",
+  "tags": ["electronics", "enclosure", "kit", "controller", "fan", "standoff", "cable"],
+  "previewSummary": "ACL-driven printable electronics enclosure kit with matching accessory parts.",
+  "scriptFile": "template.acl",
+  "parameters": [
+    { "key": "boxWidth", "displayName": "Box Width", "defaultValue": 120, "minValue": 60, "maxValue": 300, "unit": "mm", "description": "Overall enclosure width" },
+    { "key": "boxDepth", "displayName": "Box Depth", "defaultValue": 80, "minValue": 40, "maxValue": 240, "unit": "mm", "description": "Overall enclosure depth" },
+    { "key": "boxHeight", "displayName": "Box Height", "defaultValue": 45, "minValue": 20, "maxValue": 180, "unit": "mm", "description": "Overall enclosure body height" },
+    { "key": "wallThickness", "displayName": "Wall Thickness", "defaultValue": 3, "minValue": 1.5, "maxValue": 10, "unit": "mm", "description": "Shared printable wall thickness" },
+    { "key": "lidThickness", "displayName": "Lid Thickness", "defaultValue": 3, "minValue": 1, "maxValue": 10, "unit": "mm", "description": "Top cover thickness" },
+    { "key": "standoffHeight", "displayName": "Standoff Height", "defaultValue": 8, "minValue": 3, "maxValue": 30, "unit": "mm", "description": "Accessory standoff height" },
+    { "key": "cableDiameter", "displayName": "Cable Diameter", "defaultValue": 6, "minValue": 2, "maxValue": 20, "unit": "mm", "description": "Cable clip sizing diameter" },
+    { "key": "fanSize", "displayName": "Fan Size", "defaultValue": 60, "minValue": 40, "maxValue": 140, "unit": "mm", "description": "Square fan adapter size" }
+  ]
+}

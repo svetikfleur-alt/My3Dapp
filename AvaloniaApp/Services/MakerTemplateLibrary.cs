@@ -60,6 +60,12 @@ internal sealed class MakerTemplateManifest
     [JsonPropertyName("builder")]
     public string Builder { get; set; } = string.Empty;
 
+    [JsonPropertyName("scriptFile")]
+    public string ScriptFile { get; set; } = string.Empty;
+
+    [JsonPropertyName("aclScript")]
+    public string AclScript { get; set; } = string.Empty;
+
     [JsonPropertyName("parameters")]
     public List<MakerTemplateParameterManifest> Parameters { get; set; } = [];
 }
@@ -189,7 +195,19 @@ public static class MakerTemplateLibrary
                     continue;
                 }
 
-                if (!Builders.TryGetValue(manifest.Builder, out var builder) &&
+                var templateDirectory = Path.GetDirectoryName(file) ?? string.Empty;
+                Func<IReadOnlyDictionary<string, double>, string>? builder = null;
+                if (!string.IsNullOrWhiteSpace(manifest.ScriptFile) || !string.IsNullOrWhiteSpace(manifest.AclScript))
+                {
+                    var scriptText = LoadTemplateScript(manifest, templateDirectory);
+                    if (!string.IsNullOrWhiteSpace(scriptText))
+                    {
+                        builder = CreateAclTemplateBuilder(manifest, scriptText);
+                    }
+                }
+
+                if (builder is null &&
+                    !Builders.TryGetValue(manifest.Builder, out builder) &&
                     !Builders.TryGetValue(manifest.Id, out builder))
                 {
                     continue;
@@ -239,6 +257,59 @@ public static class MakerTemplateLibrary
         }
 
         return Array.Empty<string>();
+    }
+
+    private static string LoadTemplateScript(MakerTemplateManifest manifest, string templateDirectory)
+    {
+        if (!string.IsNullOrWhiteSpace(manifest.AclScript))
+        {
+            return manifest.AclScript.Trim();
+        }
+
+        if (string.IsNullOrWhiteSpace(manifest.ScriptFile) || string.IsNullOrWhiteSpace(templateDirectory))
+        {
+            return string.Empty;
+        }
+
+        var scriptPath = Path.Combine(templateDirectory, manifest.ScriptFile);
+        return File.Exists(scriptPath) ? File.ReadAllText(scriptPath) : string.Empty;
+    }
+
+    private static Func<IReadOnlyDictionary<string, double>, string> CreateAclTemplateBuilder(
+        MakerTemplateManifest manifest,
+        string scriptText)
+    {
+        var parameters = manifest.Parameters
+            .Select(item => item.Key)
+            .Where(key => !string.IsNullOrWhiteSpace(key))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        return values =>
+        {
+            var preamble = new StringBuilder();
+            foreach (var key in parameters)
+            {
+                var value = values.TryGetValue(key, out var current)
+                    ? current
+                    : manifest.Parameters.FirstOrDefault(item => string.Equals(item.Key, key, StringComparison.OrdinalIgnoreCase))?.DefaultValue ?? 0d;
+                preamble.Append("let ");
+                preamble.Append(key);
+                preamble.Append(" = ");
+                preamble.Append(N(value));
+                preamble.AppendLine();
+            }
+
+            preamble.AppendLine();
+            preamble.Append(scriptText.Trim());
+            if (!CadScriptLibrary.TryExpandSequence(preamble.ToString(), out var expanded, out var error))
+            {
+                throw new InvalidOperationException(
+                    $"ACL template '{manifest.Id}' failed to expand: {error ?? "unknown script error"}");
+            }
+
+            return expanded;
+        };
     }
 
     private static IReadOnlyList<MakerTemplateDefinition> BuildFallbackTemplates()
@@ -609,7 +680,7 @@ public static class MakerTemplateLibrary
             }
         }
 
-        return sb.ToString();
+        return ExpandBuilderSequence(sb.ToString());
     }
 
     private static string BuildFanAdapter(IReadOnlyDictionary<string, double> values)
@@ -656,7 +727,7 @@ public static class MakerTemplateLibrary
             sb.Append($"; hole depth {N(Math.Max(wallThickness, 1d))}");
         }
 
-        return sb.ToString();
+        return ExpandBuilderSequence(sb.ToString());
     }
 
     private static string BuildTSlotNut(IReadOnlyDictionary<string, double> values)
@@ -693,7 +764,7 @@ public static class MakerTemplateLibrary
             sb.Append($"; fillet {N(Math.Min(cornerRadius, wallThickness * 1.5d))}");
         }
 
-        return sb.ToString();
+        return ExpandBuilderSequence(sb.ToString());
     }
 
     private static string BuildHingeBracket(IReadOnlyDictionary<string, double> values)
@@ -706,7 +777,7 @@ public static class MakerTemplateLibrary
         var sb = new StringBuilder();
         sb.Append($"recipe bracket {N(leafLength)} {N(leafWidth)} {N(pinDiameter + thickness * 2d)} {N(thickness)}");
         sb.Append($"; circular pattern {knuckleCount} angle 180 around y");
-        return sb.ToString();
+        return ExpandBuilderSequence(sb.ToString());
     }
 
     private static string BuildPcbTray(IReadOnlyDictionary<string, double> values)
@@ -728,7 +799,7 @@ public static class MakerTemplateLibrary
             sb.Append($"; hole depth {N(Math.Max(standoffHeight, 1d))}");
         }
 
-        return sb.ToString();
+        return ExpandBuilderSequence(sb.ToString());
     }
 
     private static string BuildSimpleBox(IReadOnlyDictionary<string, double> values)
@@ -751,7 +822,7 @@ public static class MakerTemplateLibrary
             sb.Append($"; fillet {N(Math.Min(cornerRadius, wallThickness))}");
         }
 
-        return sb.ToString();
+        return ExpandBuilderSequence(sb.ToString());
     }
 
     private static string BuildLid(IReadOnlyDictionary<string, double> values)
@@ -772,6 +843,9 @@ public static class MakerTemplateLibrary
 
         return sb.ToString();
     }
+
+    private static string ExpandBuilderSequence(string text) =>
+        CadRecipeLibrary.ExpandSequence(text);
 
     private static MakerTemplateParameter P(
         string key,

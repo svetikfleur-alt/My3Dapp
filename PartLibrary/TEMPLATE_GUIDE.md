@@ -54,6 +54,34 @@ Create `PartLibrary/Templates/MyTemplate/template.json`:
 Open [`AvaloniaApp/Services/MakerTemplateLibrary.cs`](../AvaloniaApp/Services/MakerTemplateLibrary.cs)
 and map the new `builder` id to a generation function.
 
+### 2b. Or back the template with ACL
+
+Instead of a C# builder, a manifest can reference an ACL file:
+
+```json
+{
+  "id": "controller-box-kit",
+  "displayName": "Controller Box Kit",
+  "scriptFile": "template.acl",
+  "parameters": [
+    { "key": "boxWidth", "displayName": "Box Width", "defaultValue": 120, "minValue": 60, "maxValue": 300, "unit": "mm", "description": "Overall enclosure width" }
+  ]
+}
+```
+
+The loader will:
+
+1. read `template.acl`
+2. inject template parameter values as ACL variables
+3. expand the script into plain CAD commands
+
+Use this when a template benefits from:
+
+- loops
+- helper macros
+- multi-part kit layout
+- nested template calls
+
 ### 3. Parameter helpers
 
 The library provides helper functions you can use inside the builder methods:

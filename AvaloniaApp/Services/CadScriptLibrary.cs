@@ -50,22 +50,44 @@ public static class CadScriptLibrary
             return input;
         }
 
+        if (TryExpandSequence(input, out var expanded, out _))
+        {
+            return expanded;
+        }
+
+        return ExpandSequenceLegacy(input);
+    }
+
+    public static bool TryExpandSequence(string input, out string expanded, out string? error)
+    {
+        expanded = string.Empty;
+        error = null;
+
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            expanded = input;
+            return true;
+        }
+
         try
         {
             var tokens = TokenizeScript(input);
             if (tokens.Count == 0)
             {
-                return string.Empty;
+                expanded = string.Empty;
+                return true;
             }
 
             var macros = new Dictionary<string, CadScriptMacro>(StringComparer.OrdinalIgnoreCase);
             var context = new CadScriptScope(null);
             var lines = ExecuteBlock(tokens, macros, context);
-            return string.Join("; ", lines.Where(line => !string.IsNullOrWhiteSpace(line)));
+            expanded = string.Join("; ", lines.Where(line => !string.IsNullOrWhiteSpace(line)));
+            return true;
         }
-        catch
+        catch (Exception ex)
         {
-            return ExpandSequenceLegacy(input);
+            error = ex.Message;
+            return false;
         }
     }
 
@@ -121,8 +143,7 @@ public static class CadScriptLibrary
     private static List<string> TokenizeScript(string input)
     {
         var normalized = NormalizeScriptEnvelope(input);
-        normalized = normalized.Replace("{", Environment.NewLine + "{" + Environment.NewLine, StringComparison.Ordinal)
-            .Replace("}", Environment.NewLine + "}" + Environment.NewLine, StringComparison.Ordinal);
+        normalized = InsertBlockDelimiters(normalized);
 
         var tokens = new List<string>();
         foreach (var rawLine in normalized.Split(["\r\n", "\n"], StringSplitOptions.None))
@@ -150,6 +171,49 @@ public static class CadScriptLibrary
         }
 
         return tokens;
+    }
+
+    private static string InsertBlockDelimiters(string text)
+    {
+        var builder = new StringBuilder(text.Length * 2);
+        var inInterpolation = false;
+
+        for (var i = 0; i < text.Length; i++)
+        {
+            var ch = text[i];
+            if (!inInterpolation && ch == '$' && i + 1 < text.Length && text[i + 1] == '{')
+            {
+                inInterpolation = true;
+                builder.Append(ch);
+                builder.Append('{');
+                i++;
+                continue;
+            }
+
+            if (inInterpolation)
+            {
+                builder.Append(ch);
+                if (ch == '}')
+                {
+                    inInterpolation = false;
+                }
+
+                continue;
+            }
+
+            if (ch == '{' || ch == '}')
+            {
+                builder.AppendLine();
+                builder.Append(ch);
+                builder.AppendLine();
+            }
+            else
+            {
+                builder.Append(ch);
+            }
+        }
+
+        return builder.ToString();
     }
 
     private static IReadOnlyList<string> ExecuteBlock(
@@ -271,6 +335,11 @@ public static class CadScriptLibrary
 
             var expandedLine = ExpandInterpolatedLine(token, scope);
             var expandedCommand = ExpandLine(expandedLine);
+            if (!string.Equals(expandedCommand, expandedLine, StringComparison.Ordinal))
+            {
+                expandedCommand = ExpandSequence(expandedCommand);
+            }
+
             if (!string.IsNullOrWhiteSpace(expandedCommand))
             {
                 output.Add(expandedCommand);
@@ -666,9 +735,27 @@ public static class CadScriptLibrary
         {
             SkipWhitespace();
             var start = _index;
-            while (_index < _text.Length && (char.IsDigit(_text[_index]) || _text[_index] is '.' or ','))
+            var seenSeparator = false;
+            while (_index < _text.Length)
             {
-                _index++;
+                var ch = _text[_index];
+                if (char.IsDigit(ch))
+                {
+                    _index++;
+                    continue;
+                }
+
+                if ((ch == '.' || ch == ',') &&
+                    !seenSeparator &&
+                    _index + 1 < _text.Length &&
+                    char.IsDigit(_text[_index + 1]))
+                {
+                    seenSeparator = true;
+                    _index++;
+                    continue;
+                }
+
+                break;
             }
 
             var slice = _text[start.._index].Replace(',', '.');

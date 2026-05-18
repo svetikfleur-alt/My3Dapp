@@ -1,0 +1,41 @@
+# Controller box print kit generated with ACL.
+# Produces an enclosure body, lid, four standoffs, two cable clips, and a fan adapter.
+
+let trayOffset = max(boxWidth, boxDepth) + 28
+let accessoryRowY = -(boxDepth + 34)
+let standoffPitch = max(18, boxWidth / 5)
+let clipPitch = max(26, cableDiameter * 3.5)
+
+def placeStandoff(slot)
+{
+  template spacer outerDiameter=${max(10, wallThickness * 3.5)} innerDiameter=3.2 height=$standoffHeight chamfer=${max(0.4, wallThickness / 5)}
+  move ${-1.5 * standoffPitch + slot * standoffPitch} x
+  move $accessoryRowY y
+}
+
+def placeCableClip(slot)
+{
+  template cable-clip cableDiameter=$cableDiameter clipWidth=${max(14, cableDiameter * 2.2)} wallThickness=${max(2, wallThickness * 0.9)} openingGap=${max(3, cableDiameter * 0.45)}
+  move ${-trayOffset + slot * clipPitch} x
+  move ${accessoryRowY - 28} y
+}
+
+template simple-box width=$boxWidth depth=$boxDepth height=$boxHeight wallThickness=$wallThickness openTop=1 cornerRadius=${max(2, wallThickness)}
+move ${-trayOffset} x
+
+template lid width=$boxWidth depth=$boxDepth thickness=$lidThickness lipHeight=${wallThickness + 1} tolerance=0.4
+move $trayOffset x
+
+for i in 0..3
+{
+  placeStandoff(i)
+}
+
+for clip in 0..1
+{
+  placeCableClip(clip)
+}
+
+template fan-adapter fanSize=$fanSize thickness=${max(2, wallThickness)} screwHoleDiameter=4.5 centerOpeningDiameter=${max(18, fanSize - 18)}
+move ${trayOffset + fanSize + 18} x
+move ${accessoryRowY} y

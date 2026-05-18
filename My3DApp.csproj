@@ -27,15 +27,19 @@
     <Compile Remove="temp_*\**\*.cs" />
     <Compile Remove="cloud_sync_mirror\**\*.cs" />
     <Compile Remove="ThirdParty\**\*.cs" />
+    <Compile Remove="Tools\AclSmokeRunner\**\*.cs" />
     <EmbeddedResource Remove="temp_*\**\*" />
     <EmbeddedResource Remove="cloud_sync_mirror\**\*" />
     <EmbeddedResource Remove="ThirdParty\**\*" />
+    <EmbeddedResource Remove="Tools\AclSmokeRunner\**\*" />
     <None Remove="temp_*\**\*" />
     <None Remove="cloud_sync_mirror\**\*" />
     <None Remove="ThirdParty\**\*" />
+    <None Remove="Tools\AclSmokeRunner\**\*" />
     <AvaloniaXaml Remove="temp_*\**\*.axaml" />
     <AvaloniaXaml Remove="cloud_sync_mirror\**\*.axaml" />
     <AvaloniaXaml Remove="ThirdParty\**\*.axaml" />
+    <AvaloniaXaml Remove="Tools\AclSmokeRunner\**\*.axaml" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(StudioUiHost)' == 'WinForms'">

@@ -45,6 +45,7 @@ template mounting-plate width=80 height=50 thickness=4 holeCount=4
 template pcb-tray boardWidth=85 boardDepth=56 wallHeight=8
 part din-rail-clip railWidth=35 clipHeight=28 wallThickness=3
 make template box-enclosure innerWidth=100 innerDepth=70 wallThickness=3
+template controller-box-kit boxWidth=140 boxDepth=95 boxHeight=48 wallThickness=3 lidThickness=3 standoffHeight=10 cableDiameter=7 fanSize=80
 ```
 
 The scripting layer expands template calls into executable CAD command sequences.
@@ -129,6 +130,38 @@ You can inject variable or expression values directly into normal command text:
 let d = 24
 circle 0 0 ${d / 2}
 extrude ${d / 6}
+```
+
+## Practical sample
+
+`controller-box-kit` is the first practical ACL-backed generation sample in the app.
+
+It is defined in:
+
+- `PartLibrary/Templates/ControllerBoxKit/template.json`
+- `PartLibrary/Templates/ControllerBoxKit/template.acl`
+
+That ACL script generates a fabrication-ready kit layout containing:
+
+- enclosure body
+- lid
+- four standoffs
+- two cable clips
+- one fan adapter
+
+The script uses:
+
+- variables
+- math
+- `def`
+- `for`
+- nested template invocations
+- move commands to lay parts out in the studio
+
+Quick smoke test:
+
+```powershell
+.\Tools\Test-AclSample.ps1
 ```
 
 ## Script envelopes
