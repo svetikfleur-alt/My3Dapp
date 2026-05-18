@@ -1,6 +1,6 @@
 # Template Contributor Guide
 
-This guide explains how to add a new maker template to UMX1.
+This guide explains how to add a new maker template to My3DApp.
 
 Templates are parametric part definitions that users can select, configure, and generate
 directly from the Templates workspace. They are the easiest way to contribute useful maker
@@ -196,7 +196,7 @@ If your template uses simplified geometry, add a note to `template.md`:
 
 You can prompt Claude or GPT to write templates for you:
 
-> "Write a template.json and builder mapping for UMX1 for a DIN rail clip.
+> "Write a template.json and builder mapping for My3DApp for a DIN rail clip.
 > Parameters: rail width (35mm default, min 10, max 60), clip depth (20mm, min 10, max 60), wall thickness (3mm, min 1, max 10).
 > Follow the same structure as the existing MountingPlate manifest and builder."
 

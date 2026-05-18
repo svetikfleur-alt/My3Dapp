@@ -1454,7 +1454,7 @@
                   </Border>
                   <Border Classes="AssistantContextCard">
                     <StackPanel Spacing="6">
-                      <TextBlock Text="UMX1 command preview"
+                      <TextBlock Text="Script command preview"
                                  Classes="AssistantContextPrimary" />
                       <TextBox Text="{Binding SelectedTemplateCommandPreview}"
                                IsReadOnly="True"

@@ -1,6 +1,6 @@
 # Document System
 
-UMX1 Studio stores projects as JSON-based document files.
+My3DApp stores projects as JSON-based document files.
 
 ## Extension
 

@@ -61,7 +61,7 @@ public sealed partial class MainWindow : Window
         ["RadiusDimension"]  = "Radius Dimension — click a circle or arc",
     };
 
-    private static FilePickerFileType ProjectFileType => new("UMX1 Studio Project")
+    private static FilePickerFileType ProjectFileType => new("My3DApp Project")
     {
         Patterns = ["*.umxproj", "*.my3dapp", "*.json"],
         MimeTypes = ["application/json"]

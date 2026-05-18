@@ -1,4 +1,4 @@
-# UMX1 — AI Maker CAD Studio
+# My3DApp — AI Maker CAD Studio
 
 > **Early work in progress. Not production CAD yet.**
 > This is an honest early-access open-source project. It runs, it creates parts, it exports STL.
@@ -112,13 +112,13 @@ Starter parametric templates you can select, configure, and generate:
 | Hinge Bracket | Brackets | leaf size, thickness, pin diameter |
 | PCB Tray | Electronics | board size, wall height, standoffs |
 
-### UMX1 language
+### ACL scripting language
 - Direct CAD commands for sketching and feature work
 - `recipe ...` macros for reusable modeling sequences
 - `template ...` / `part ...` invocations for parameterized maker parts
 - script envelopes with comments for AI-generated command blocks
 
-See [Docs/UMX1_LANGUAGE.md](Docs/UMX1_LANGUAGE.md).
+See [Docs/ACL_LANGUAGE.md](Docs/ACL_LANGUAGE.md).
 
 ### Export
 - STL export (Ctrl+E → Export dialog)
@@ -198,7 +198,7 @@ My3DApp/
 Templates are defined by:
 - a manifest in `PartLibrary/Templates/<TemplateName>/template.json`
 - a runtime loader and builder mapping in [`AvaloniaApp/Services/MakerTemplateLibrary.cs`](AvaloniaApp/Services/MakerTemplateLibrary.cs)
-- the UMX1 command language described in [Docs/UMX1_LANGUAGE.md](Docs/UMX1_LANGUAGE.md)
+- the ACL scripting language described in [Docs/ACL_LANGUAGE.md](Docs/ACL_LANGUAGE.md)
 
 Each template includes:
 - `id` — unique string key

@@ -1,16 +1,22 @@
-# UMX1 CAD Language
+# ACL Feature Language
 
-UMX1 includes an app-owned scripting language for fast part generation, template use, reusable modeling scripts, and AI-assisted CAD workflows.
+ACL is the embedded scripting language inside My3DApp.
 
-It is intentionally small, readable, and contributor-friendly.
+Its role is not to rename the studio. The studio remains `My3DApp` while ACL is the language used for:
+- custom features
+- parametric part generation
+- reusable maker macros
+- AI-assisted scripted modeling flows
+
+It is intentionally compact, readable, and contributor-friendly.
 
 ## Core idea
 
-The language expands into the existing CAD command pipeline:
+ACL expands into the existing CAD command pipeline:
 
-`UMX1 script -> recipes/templates -> CAD commands -> studio actions`
+`ACL script -> recipes/templates -> CAD commands -> studio actions`
 
-That means contributors can add new reusable part logic without redesigning the shell.
+That means contributors can add reusable feature logic and generated part flows without redesigning the shell.
 
 ## Supported layers
 
@@ -41,15 +47,15 @@ part din-rail-clip railWidth=35 clipHeight=28 wallThickness=3
 make template box-enclosure innerWidth=100 innerDepth=70 wallThickness=3
 ```
 
-The script layer expands template calls into a sequence of executable CAD commands.
+The scripting layer expands template calls into executable CAD command sequences.
 
 ## Real scripting features
 
-UMX1 now supports a compact scripting layer on top of direct commands, recipes, and templates.
+ACL supports a compact scripting layer on top of direct commands, recipes, and templates.
 
 ### Variables and expressions
 
-```umx1
+```acl
 let width = 80
 let height = width / 2 + 10
 template mounting-plate width=$width height=$height thickness=${max(4, width / 20)}
@@ -63,7 +69,7 @@ Supported math:
 
 ### Repeat blocks
 
-```umx1
+```acl
 repeat 4
 {
   template washer outerDiameter=18 innerDiameter=5 thickness=2
@@ -76,7 +82,7 @@ Loop variables available inside a repeat block:
 
 ### For loops
 
-```umx1
+```acl
 for i in 0..3
 {
   template spacer outerDiameter=${8 + i * 2} innerDiameter=3.2 height=${6 + i * 3}
@@ -85,7 +91,7 @@ for i in 0..3
 
 Optional step value:
 
-```umx1
+```acl
 for hole in 10..40 step 10
 {
   template mounting-plate width=100 height=60 thickness=4 holeMargin=$hole
@@ -94,7 +100,7 @@ for hole in 10..40 step 10
 
 ### Reusable functions / macros
 
-```umx1
+```acl
 def bracketPlate(width, height, thickness = 4)
 {
   select plane top
@@ -119,7 +125,7 @@ Macros can call:
 
 You can inject variable or expression values directly into normal command text:
 
-```umx1
+```acl
 let d = 24
 circle 0 0 ${d / 2}
 extrude ${d / 6}
@@ -129,7 +135,7 @@ extrude ${d / 6}
 
 The parser also accepts simple wrapped scripts:
 
-```umx1
+```acl
 program
 {
   template mounting-plate width=100 height=60 thickness=5
@@ -159,8 +165,8 @@ This keeps the public template surface external and readable while preserving a 
 
 ## Next upgrades
 
-- named presets
 - conditionals and comparisons
 - reusable part packs and importable script modules
 - external recipe files
+- richer feature authoring constructs
 - stronger AI-assisted script generation and repair

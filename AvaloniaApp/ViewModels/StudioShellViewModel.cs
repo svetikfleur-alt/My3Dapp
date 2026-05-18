@@ -658,7 +658,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         {
             if (SelectedMakerTemplate is null)
             {
-                return "Select a template to preview the generated UMX1 command sequence.";
+                return "Select a template to preview the generated script command sequence.";
             }
 
             var values = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
@@ -3744,7 +3744,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             "Sketch" => $"{stateLabel} | sketch tools and plane workflow",
             "Templates" => $"{stateLabel} | {TemplateCatalog.Count.ToString(CultureInfo.InvariantCulture)} parametric templates",
             "Prepare" => $"{stateLabel} | export review and handoff",
-            "Assistant" => $"{stateLabel} | copilot guidance and UMX1 help",
+            "Assistant" => $"{stateLabel} | copilot guidance and scripting help",
             _ => stateLabel
         };
     }

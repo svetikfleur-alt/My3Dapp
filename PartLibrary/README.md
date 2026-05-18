@@ -1,6 +1,6 @@
 # PartLibrary
 
-`PartLibrary/` is the contributor-facing documentation and structure for the UMX1 maker template library.
+`PartLibrary/` is the contributor-facing documentation and structure for the My3DApp maker template library.
 
 The **runtime registry** is manifest-driven:
 - public manifests live in `Templates/*/template.json`
@@ -82,6 +82,6 @@ You can describe a part in natural language to Claude / Codex / GPT and ask it t
 This is a valid and encouraged contribution workflow.
 Example prompt:
 
-> "Write a template.json and builder mapping for UMX1 for a DIN rail clip.
+> "Write a template.json and builder mapping for My3DApp for a DIN rail clip.
 > Parameters: rail width (35mm default), clip depth (20mm), wall thickness (3mm), screw hole diameter (4mm).
 > Use the same pattern as the existing MountingPlate manifest and builder."

@@ -1,4 +1,4 @@
-# UMX1 Studio Demo Flow
+# My3DApp Demo Flow
 
 ## Demo: maker part from template
 
@@ -7,7 +7,7 @@
 3. Open the `Templates` workspace
 4. Select `Fan Adapter Plate` or `Mounting Plate`
 5. Edit a few parameter values
-6. Review the generated UMX1 command preview
+6. Review the generated script command preview
 7. Click `Generate Template Part`
 8. Switch to `Prepare`
 9. Export STL

@@ -306,7 +306,7 @@ public static class CadScriptLibrary
 
         if (depth != 0)
         {
-            throw new InvalidOperationException("Missing closing brace in UMX1 script.");
+            throw new InvalidOperationException("Missing closing brace in ACL script.");
         }
 
         return tokens.Skip(start).Take(index - start - 1).ToArray();
@@ -508,7 +508,7 @@ public static class CadScriptLibrary
                 return _parent.Get(name);
             }
 
-            throw new InvalidOperationException($"Unknown UMX1 variable '{name}'.");
+            throw new InvalidOperationException($"Unknown ACL variable '{name}'.");
         }
     }
 
@@ -658,7 +658,7 @@ public static class CadScriptLibrary
                 "clamp" => Math.Clamp(args[0], args[1], args[2]),
                 "pow" => Math.Pow(args[0], args[1]),
                 "sqrt" => Math.Sqrt(args[0]),
-                _ => throw new InvalidOperationException($"Unknown UMX1 function '{name}'.")
+                _ => throw new InvalidOperationException($"Unknown ACL function '{name}'.")
             };
         }
 
