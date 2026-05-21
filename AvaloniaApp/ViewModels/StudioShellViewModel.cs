@@ -1134,7 +1134,13 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public string SaveStateLabel
     {
         get => _saveStateLabel;
-        private set => SetProperty(ref _saveStateLabel, value);
+        private set
+        {
+            if (SetProperty(ref _saveStateLabel, value))
+            {
+                RaisePropertyChanged(nameof(StatusBarText));
+            }
+        }
     }
 
     public string RecoveryStatusLabel
@@ -2477,6 +2483,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             return false;
         }
 
+        DismissStartupPage();
         var commandText = CadRecipeLibrary.ExpandSequence(recipe.Example);
         ActiveRecipe = BuildRecipeRun(
             recipe.Name,
@@ -2639,6 +2646,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             SaveStateLabel = "Saved";
             RaiseProjectMetadataProperties();
             RaisePropertyChanged(nameof(RecentFiles));
+            RaisePropertyChanged(nameof(HasRecentFiles));
             RaisePropertyChanged(nameof(RecentDocumentItems));
             RaisePropertyChanged(nameof(HasRecentDocumentItems));
             RaisePropertyChanged(nameof(HasNoRecentDocumentItems));
@@ -2667,6 +2675,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             ProjectTitleBase = BuildProjectTitle(path);
             _appSettings.AddRecentFile(path);
             RaisePropertyChanged(nameof(RecentFiles));
+            RaisePropertyChanged(nameof(HasRecentFiles));
             RaisePropertyChanged(nameof(RecentDocumentItems));
             RaisePropertyChanged(nameof(HasRecentDocumentItems));
             RaisePropertyChanged(nameof(HasNoRecentDocumentItems));
