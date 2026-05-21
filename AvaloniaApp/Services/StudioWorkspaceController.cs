@@ -62,11 +62,49 @@ public sealed class StudioWorkspaceController
             ? _partStudios[_activeStudioIndex].Name
             : string.Empty;
 
+    public IReadOnlyList<StudioPartStudioSummary> GetPartStudioSummaries()
+    {
+        var summaries = new List<StudioPartStudioSummary>();
+        for (var index = 0; index < _partStudios.Count; index++)
+        {
+            var studio = _partStudios[index];
+            var isActive = index == _activeStudioIndex;
+            var project = isActive ? _store.Project : TryDeserializeStudioProject(studio.Snapshot);
+            var bodyNames = project?.Scene.Bodies
+                .Select(body => string.IsNullOrWhiteSpace(body.Name) ? "Body" : body.Name.Trim())
+                .ToList() ?? [];
+            var historyItems = project?.Scene.Bodies
+                .SelectMany(body => body.Features)
+                .Select(feature => string.IsNullOrWhiteSpace(feature.Name) ? feature.Kind.ToString() : feature.Name.Trim())
+                .ToList() ?? [];
+            var activePlane = isActive
+                ? CurrentState.CompileResult.ActivePlaneName
+                : ResolveActivePlaneName(project);
+
+            summaries.Add(new StudioPartStudioSummary(
+                studio.Id,
+                studio.Name,
+                isActive,
+                studio.CreatedAt,
+                studio.UpdatedAt,
+                bodyNames,
+                historyItems,
+                string.IsNullOrWhiteSpace(activePlane) ? "Top" : activePlane));
+        }
+
+        return summaries;
+    }
+
     public event EventHandler? DocumentChanged;
+
+    private static string CurrentTimestamp() => DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
 
     private sealed class PartStudioRecord
     {
+        public string Id { get; set; } = Guid.NewGuid().ToString("D");
         public string Name { get; set; } = "Part Studio 1";
+        public string CreatedAt { get; set; } = CurrentTimestamp();
+        public string UpdatedAt { get; set; } = CurrentTimestamp();
         public string Snapshot { get; set; } = string.Empty;
     }
 
@@ -169,6 +207,7 @@ public sealed class StudioWorkspaceController
             return PublishFailure($"A part studio named '{trimmed}' already exists.");
         }
         _partStudios[index].Name = trimmed;
+        _partStudios[index].UpdatedAt = CurrentTimestamp();
         _mutationCount++;
         DocumentChanged?.Invoke(this, EventArgs.Empty);
         return PublishSuccess($"Renamed studio to {trimmed}.", mutated: false);
@@ -220,6 +259,66 @@ public sealed class StudioWorkspaceController
             return;
         }
         _partStudios[_activeStudioIndex].Snapshot = JsonSerializer.Serialize(_store.Project, ProjectJsonOptions);
+        _partStudios[_activeStudioIndex].UpdatedAt = CurrentTimestamp();
+    }
+
+    private void MarkActiveStudioUpdated()
+    {
+        if (_activeStudioIndex < 0 || _activeStudioIndex >= _partStudios.Count)
+        {
+            return;
+        }
+
+        _partStudios[_activeStudioIndex].UpdatedAt = CurrentTimestamp();
+    }
+
+    private static CadProject? TryDeserializeStudioProject(string snapshot)
+    {
+        if (string.IsNullOrWhiteSpace(snapshot))
+        {
+            return null;
+        }
+
+        try
+        {
+            var project = JsonSerializer.Deserialize<CadProject>(snapshot, ProjectJsonOptions);
+            if (project is not null)
+            {
+                NormalizeProjectForLoad(project);
+            }
+
+            return project;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string ResolveActivePlaneName(CadProject? project)
+    {
+        if (project is null)
+        {
+            return "Top";
+        }
+
+        if (project.Selection.Kind == CadEntityKind.ReferencePlane)
+        {
+            var selectedPlane = project.Scene.ReferencePlanes.FirstOrDefault(plane => plane.Id == project.Selection.EntityId);
+            if (selectedPlane is not null && !string.IsNullOrWhiteSpace(selectedPlane.Name))
+            {
+                return selectedPlane.Name;
+            }
+
+            if (!string.IsNullOrWhiteSpace(project.Selection.Name))
+            {
+                return project.Selection.Name;
+            }
+        }
+
+        return project.Scene.ReferencePlanes.FirstOrDefault(plane => plane.Kind == CadReferencePlaneKind.Top)?.Name
+            ?? project.Scene.ReferencePlanes.FirstOrDefault()?.Name
+            ?? "Top";
     }
 
     public StudioWorkspaceState CurrentState { get; private set; }
@@ -264,7 +363,14 @@ public sealed class StudioWorkspaceController
             {
                 project = JsonSerializer.Deserialize<CadProject>(s.Snapshot, ProjectJsonOptions);
             }
-            studios.Add(new DocumentStudioEntry { Name = s.Name, Project = project });
+            studios.Add(new DocumentStudioEntry
+            {
+                Id = s.Id,
+                Name = s.Name,
+                CreatedAt = s.CreatedAt,
+                UpdatedAt = s.UpdatedAt,
+                Project = project
+            });
         }
 
         var envelope = new ProjectFileEnvelope
@@ -317,6 +423,18 @@ public sealed class StudioWorkspaceController
                     {
                         var studioName = string.IsNullOrWhiteSpace(entry.Name) ? NextStudioName() : entry.Name.Trim();
                         var rec = new PartStudioRecord { Name = studioName };
+                        if (!string.IsNullOrWhiteSpace(entry.Id))
+                        {
+                            rec.Id = entry.Id.Trim();
+                        }
+                        if (!string.IsNullOrWhiteSpace(entry.CreatedAt))
+                        {
+                            rec.CreatedAt = entry.CreatedAt.Trim();
+                        }
+                        if (!string.IsNullOrWhiteSpace(entry.UpdatedAt))
+                        {
+                            rec.UpdatedAt = entry.UpdatedAt.Trim();
+                        }
                         if (entry.Project is not null)
                         {
                             NormalizeProjectForLoad(entry.Project);
@@ -398,7 +516,10 @@ public sealed class StudioWorkspaceController
 
     private sealed class DocumentStudioEntry
     {
+        public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
+        public string CreatedAt { get; set; } = string.Empty;
+        public string UpdatedAt { get; set; } = string.Empty;
         public CadProject? Project { get; set; }
     }
 
@@ -772,6 +893,11 @@ public sealed class StudioWorkspaceController
         bool requestFocusSelection = false,
         CadCompileResult? snapshot = null)
     {
+        if (mutated)
+        {
+            MarkActiveStudioUpdated();
+        }
+
         AppendActionLog(message);
         var state = BuildState(message, snapshot);
         PublishState(state);
@@ -2543,6 +2669,46 @@ public sealed class StudioWorkspaceController
         return combined;
     }
 
+    private static ProductProjectState? CloneProductProjectState(ProductProjectState? state)
+    {
+        if (state is null)
+        {
+            return null;
+        }
+
+        return new ProductProjectState
+        {
+            Id = state.Id,
+            Name = state.Name,
+            Type = state.Type,
+            CreatedAt = state.CreatedAt,
+            UpdatedAt = state.UpdatedAt,
+            Documents = state.Documents
+                .Select(document => new ProductDocumentState
+                {
+                    Id = document.Id,
+                    Name = document.Name,
+                    Type = document.Type,
+                    CreatedAt = document.CreatedAt,
+                    UpdatedAt = document.UpdatedAt,
+                    PartStudios = document.PartStudios
+                        .Select(studio => new ProductPartStudioState
+                        {
+                            Id = studio.Id,
+                            Name = studio.Name,
+                            CreatedAt = studio.CreatedAt,
+                            UpdatedAt = studio.UpdatedAt,
+                            Bodies = [..studio.Bodies],
+                            History = [..studio.History],
+                            ActivePlane = studio.ActivePlane,
+                            IsActive = studio.IsActive
+                        })
+                        .ToList()
+                })
+                .ToList()
+        };
+    }
+
     private static bool Set<T>(out T target, T value)
     {
         target = value;
@@ -2553,6 +2719,7 @@ public sealed class StudioWorkspaceController
     {
         return new StudioDocumentUiState
         {
+            ProductProject = CloneProductProjectState(state.ProductProject),
             ProjectId = state.ProjectId,
             ProjectName = state.ProjectName,
             ProjectType = state.ProjectType,
@@ -2594,3 +2761,13 @@ public sealed record StudioWorkspaceActionResult(
     bool Mutated,
     string Message,
     bool RequestFocusSelection);
+
+public sealed record StudioPartStudioSummary(
+    string Id,
+    string Name,
+    bool IsActive,
+    string CreatedAt,
+    string UpdatedAt,
+    IReadOnlyList<string> Bodies,
+    IReadOnlyList<string> History,
+    string ActivePlane);

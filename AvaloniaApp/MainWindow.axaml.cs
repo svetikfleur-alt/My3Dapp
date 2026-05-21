@@ -185,6 +185,11 @@ public sealed partial class MainWindow : Window
         DontSave
     }
 
+    private sealed record NewProjectTypeChoice(string Type, string Label, string Description)
+    {
+        public override string ToString() => Label;
+    }
+
     private async Task<SaveChangesChoice> PromptSaveChangesAsync(string title, string message)
     {
         var dialog = new Avalonia.Controls.Window
@@ -523,6 +528,12 @@ public sealed partial class MainWindow : Window
 
     private async Task<(string Type, string Name)?> ShowNewProjectDialogAsync()
     {
+        var projectTypes = new[]
+        {
+            new NewProjectTypeChoice("large", "Large Project", "Creates multiple part studios for assemblies, variants, or longer design sessions."),
+            new NewProjectTypeChoice("standard", "Standard Project", "Creates one saved project with one active part studio."),
+            new NewProjectTypeChoice("quick", "Quick Design", "Creates a saved local scratch project for fast repair or household parts.")
+        };
         var nameBox = new ATextBox
         {
             Text = "Standard Project",
@@ -531,9 +542,15 @@ public sealed partial class MainWindow : Window
         };
         var typeBox = new Avalonia.Controls.ComboBox
         {
-            ItemsSource = new[] { "large", "standard", "quick" },
-            SelectedIndex = 1,
+            ItemsSource = projectTypes,
+            SelectedItem = projectTypes[1],
             MinWidth = 160
+        };
+        var typeDescription = new Avalonia.Controls.TextBlock
+        {
+            Text = projectTypes[1].Description,
+            TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+            Classes = { "ToolbarSubtleText" }
         };
 
         (string Type, string Name)? result = null;
@@ -554,7 +571,7 @@ public sealed partial class MainWindow : Window
         {
             Title = "New Project",
             Width = 440,
-            Height = 250,
+            Height = 300,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             CanResize = false,
             Content = new Avalonia.Controls.StackPanel
@@ -576,6 +593,7 @@ public sealed partial class MainWindow : Window
                     },
                     nameBox,
                     typeBox,
+                    typeDescription,
                     new Avalonia.Controls.StackPanel
                     {
                         Orientation = Avalonia.Layout.Orientation.Horizontal,
@@ -587,10 +605,25 @@ public sealed partial class MainWindow : Window
             }
         };
 
+        typeBox.SelectionChanged += (_, _) =>
+        {
+            if (typeBox.SelectedItem is not NewProjectTypeChoice choice)
+            {
+                return;
+            }
+
+            typeDescription.Text = choice.Description;
+            if (projectTypes.Any(projectType => string.Equals(nameBox.Text, projectType.Label, StringComparison.Ordinal)))
+            {
+                nameBox.Text = choice.Label;
+            }
+        };
+
         createButton.Click += (_, _) =>
         {
-            var type = typeBox.SelectedItem?.ToString() ?? "standard";
-            var name = string.IsNullOrWhiteSpace(nameBox.Text) ? "Standard Project" : nameBox.Text.Trim();
+            var choice = typeBox.SelectedItem as NewProjectTypeChoice ?? projectTypes[1];
+            var type = choice.Type;
+            var name = string.IsNullOrWhiteSpace(nameBox.Text) ? choice.Label : nameBox.Text.Trim();
             result = (type, name);
             dialog.Close();
         };
@@ -3013,6 +3046,28 @@ public sealed partial class MainWindow : Window
         e.Handled = true;
     }
 
+    private async void OnRunSampleRecipeClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (_wiredViewModel.PrepareRecipeFromLibrary("plate-with-hole", "Empty Part Studio"))
+            {
+                await _wiredViewModel.RunActiveRecipeAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnRunSampleRecipeClick), ex);
+        }
+
+        e.Handled = true;
+    }
+
     private async void OnRunActiveRecipeClick(object? sender, RoutedEventArgs e)
     {
         if (_wiredViewModel is null)
@@ -3056,11 +3111,17 @@ public sealed partial class MainWindow : Window
             SelectedItem = _wiredViewModel.SelectedAssistantProvider,
             MinWidth = 180
         };
-        var modelBox = new Avalonia.Controls.ComboBox
+        var modelBox = new ATextBox
         {
-            ItemsSource = _wiredViewModel.AssistantModels,
-            SelectedItem = _wiredViewModel.SelectedAssistantModel,
-            MinWidth = 180
+            Text = _wiredViewModel.SelectedAssistantModel,
+            Watermark = "Model name, for example deepseek-chat",
+            MinWidth = 240
+        };
+        var baseUrlBox = new ATextBox
+        {
+            Text = _wiredViewModel.SelectedAssistantBaseUrl,
+            Watermark = "Optional base URL (blank uses provider default)",
+            MinWidth = 380
         };
         var keyBox = new ATextBox
         {
@@ -3069,16 +3130,37 @@ public sealed partial class MainWindow : Window
             Watermark = "Session API key (not saved)",
             MinWidth = 380
         };
+        var statusText = new Avalonia.Controls.TextBlock
+        {
+            TextWrapping = Avalonia.Media.TextWrapping.Wrap
+        };
+
+        void RefreshPreview()
+        {
+            var provider = providerBox.SelectedItem as string ?? _wiredViewModel.SelectedAssistantProvider;
+            statusText.Text = _wiredViewModel.PreviewAssistantConfiguration(
+                provider,
+                modelBox.Text ?? string.Empty,
+                baseUrlBox.Text ?? string.Empty,
+                keyBox.Text ?? string.Empty);
+        }
 
         providerBox.SelectionChanged += (_, _) =>
         {
             if (providerBox.SelectedItem is string provider)
             {
-                _wiredViewModel.SelectedAssistantProvider = provider;
-                modelBox.ItemsSource = _wiredViewModel.AssistantModels;
-                modelBox.SelectedItem = _wiredViewModel.SelectedAssistantModel;
+                modelBox.Text = _wiredViewModel.GetDefaultAssistantModelName(provider);
+                if (string.Equals(provider, "Local CAD Only", StringComparison.Ordinal))
+                {
+                    baseUrlBox.Text = string.Empty;
+                }
             }
+
+            RefreshPreview();
         };
+        modelBox.TextChanged += (_, _) => RefreshPreview();
+        baseUrlBox.TextChanged += (_, _) => RefreshPreview();
+        keyBox.TextChanged += (_, _) => RefreshPreview();
 
         var saveButton = new Avalonia.Controls.Button
         {
@@ -3096,8 +3178,8 @@ public sealed partial class MainWindow : Window
         var dialog = new Avalonia.Controls.Window
         {
             Title = "AI Settings",
-            Width = 480,
-            Height = 330,
+            Width = 520,
+            Height = 430,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             CanResize = false,
             Content = new Avalonia.Controls.StackPanel
@@ -3114,8 +3196,13 @@ public sealed partial class MainWindow : Window
                     },
                     new Avalonia.Controls.TextBlock
                     {
-                        Text = "Environment variables are preferred for persistent setup: DEEPSEEK_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY. A pasted key is session-only and is not saved.",
+                        Text = "Environment variables are preferred for persistent setup: DEEPSEEK_API_KEY or OPENAI_API_KEY. A pasted key is session-only and is not saved.",
                         TextWrapping = Avalonia.Media.TextWrapping.Wrap
+                    },
+                    new Avalonia.Controls.TextBlock
+                    {
+                        Text = "Provider",
+                        FontWeight = Avalonia.Media.FontWeight.SemiBold
                     },
                     new Avalonia.Controls.StackPanel
                     {
@@ -3123,10 +3210,22 @@ public sealed partial class MainWindow : Window
                         Spacing = 8,
                         Children = { providerBox, modelBox }
                     },
-                    keyBox,
                     new Avalonia.Controls.TextBlock
                     {
-                        Text = _wiredViewModel.AssistantConfigurationSummary,
+                        Text = "Optional base URL",
+                        FontWeight = Avalonia.Media.FontWeight.SemiBold
+                    },
+                    baseUrlBox,
+                    new Avalonia.Controls.TextBlock
+                    {
+                        Text = "API key status",
+                        FontWeight = Avalonia.Media.FontWeight.SemiBold
+                    },
+                    keyBox,
+                    statusText,
+                    new Avalonia.Controls.TextBlock
+                    {
+                        Text = "Provider, model, and base URL are stored locally. API keys are read from environment variables or this session field only.",
                         TextWrapping = Avalonia.Media.TextWrapping.Wrap
                     },
                     new Avalonia.Controls.StackPanel
@@ -3147,16 +3246,19 @@ public sealed partial class MainWindow : Window
                 _wiredViewModel.SelectedAssistantProvider = provider;
             }
 
-            if (modelBox.SelectedItem is string model)
+            var model = (modelBox.Text ?? string.Empty).Trim();
+            if (!string.IsNullOrWhiteSpace(model))
             {
                 _wiredViewModel.SelectedAssistantModel = model;
             }
 
+            _wiredViewModel.SelectedAssistantBaseUrl = (baseUrlBox.Text ?? string.Empty).Trim();
             _wiredViewModel.AssistantKeyInput = keyBox.Text ?? string.Empty;
             dialog.Close();
         };
         cancelButton.Click += (_, _) => dialog.Close();
 
+        RefreshPreview();
         await dialog.ShowDialog(this);
     }
 

@@ -2,39 +2,37 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="My3DApp.AvaloniaApp.Dialogs.PolygonSketchToolOptionsView">
   <StackPanel Spacing="10">
-    <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-            BorderBrush="{DynamicResource Studio.BorderBrush}"
-            BorderThickness="1"
-            Padding="12">
+    <Border Classes="FeatureDialogSectionCard">
       <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="96,*">
         <TextBlock Text="Tool"
-                   FontWeight="SemiBold" />
+                   Classes="FeatureDialogFieldLabel" />
         <TextBlock Grid.Column="1"
+                   Classes="FeatureDialogValueText"
                    Text="Polygon" />
         <TextBlock Grid.Row="1"
                    Margin="0,10,0,0"
                    Text="Mode"
-                   FontWeight="SemiBold" />
+                   Classes="FeatureDialogFieldLabel" />
         <TextBlock Grid.Row="1"
                    Grid.Column="1"
                    Margin="0,10,0,0"
-                   Text="Click center, then drag to set radius."
-                   TextWrapping="Wrap" />
+                   Classes="FeatureDialogValueText"
+                   TextWrapping="Wrap"
+                   Text="Click center, then drag to set radius." />
       </Grid>
     </Border>
 
-    <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-            BorderBrush="{DynamicResource Studio.BorderBrush}"
-            BorderThickness="1"
-            Padding="12">
+    <Border Classes="FeatureDialogSectionCard">
       <StackPanel Spacing="10">
         <TextBlock Text="Options"
-                   FontWeight="SemiBold" />
+                   Classes="FeatureDialogFieldLabel" />
         <Grid RowDefinitions="Auto" ColumnDefinitions="120,*">
-          <TextBlock Text="Sides (n)"
+          <TextBlock Classes="FeatureDialogFieldLabel"
+                     Text="Sides (n)"
                      VerticalAlignment="Center" />
           <NumericUpDown x:Name="SidesInput"
                          Grid.Column="1"
+                         Classes="FeatureDialogInput"
                          Minimum="3"
                          Maximum="50"
                          Value="6"
@@ -42,9 +40,9 @@
                          FormatString="0"
                          HorizontalAlignment="Stretch" />
         </Grid>
-        <TextBlock Text="Valid range: 3 to 50 sides. Default is 6 (hexagon)."
-                   Foreground="{DynamicResource Studio.TextMutedBrush}"
-                   TextWrapping="Wrap" />
+        <TextBlock Classes="FeatureDialogHelpText"
+                   TextWrapping="Wrap"
+                   Text="Valid range: 3 to 50 sides. Default is 6 (hexagon)." />
       </StackPanel>
     </Border>
   </StackPanel>

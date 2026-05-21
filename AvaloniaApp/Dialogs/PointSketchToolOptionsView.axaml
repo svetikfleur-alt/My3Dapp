@@ -2,57 +2,57 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="My3DApp.AvaloniaApp.Dialogs.PointSketchToolOptionsView">
   <StackPanel Spacing="10">
-    <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-            BorderBrush="{DynamicResource Studio.BorderBrush}"
-            BorderThickness="1"
-            Padding="12">
+    <Border Classes="FeatureDialogSectionCard">
       <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="96,*">
         <TextBlock Text="Tool"
-                   FontWeight="SemiBold" />
+                   Classes="FeatureDialogFieldLabel" />
         <TextBlock Grid.Column="1"
+                   Classes="FeatureDialogValueText"
                    Text="Point" />
         <TextBlock Grid.Row="1"
                    Margin="0,10,0,0"
                    Text="Mode"
-                   FontWeight="SemiBold" />
+                   Classes="FeatureDialogFieldLabel" />
         <TextBlock Grid.Row="1"
                    Grid.Column="1"
                    Margin="0,10,0,0"
-                   Text="Click in the viewport to place a construction point, or type coordinates below."
-                   TextWrapping="Wrap" />
+                   Classes="FeatureDialogValueText"
+                   TextWrapping="Wrap"
+                   Text="Click in the viewport to place a construction point, or type coordinates below." />
       </Grid>
     </Border>
 
-    <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-            BorderBrush="{DynamicResource Studio.BorderBrush}"
-            BorderThickness="1"
-            Padding="12">
+    <Border Classes="FeatureDialogSectionCard">
       <StackPanel Spacing="8">
         <TextBlock Text="Direct entry (optional)"
-                   FontWeight="SemiBold" />
+                   Classes="FeatureDialogFieldLabel" />
         <Grid ColumnDefinitions="56,*,12,56,*" RowDefinitions="Auto">
-          <TextBlock Text="X" VerticalAlignment="Center" FontWeight="SemiBold" />
+          <TextBlock Classes="FeatureDialogFieldLabel"
+                     Text="X"
+                     VerticalAlignment="Center" />
           <NumericUpDown x:Name="XInput"
                          Grid.Column="1"
+                         Classes="FeatureDialogInput"
                          Value="0"
                          Minimum="-99999"
                          Maximum="99999"
-                         FormatString="0.###"
-                         Classes="FeaturePanelInput" />
+                         FormatString="0.###" />
           <TextBlock Grid.Column="2" />
-          <TextBlock Grid.Column="3" Text="Y" VerticalAlignment="Center" FontWeight="SemiBold" />
+          <TextBlock Grid.Column="3"
+                     Classes="FeatureDialogFieldLabel"
+                     Text="Y"
+                     VerticalAlignment="Center" />
           <NumericUpDown x:Name="YInput"
                          Grid.Column="4"
+                         Classes="FeatureDialogInput"
                          Value="0"
                          Minimum="-99999"
                          Maximum="99999"
-                         FormatString="0.###"
-                         Classes="FeaturePanelInput" />
+                         FormatString="0.###" />
         </Grid>
-        <TextBlock Text="Leave at 0,0 to place by clicking the viewport after confirming."
-                   Foreground="{DynamicResource Studio.TextMutedBrush}"
-                   FontSize="11"
-                   TextWrapping="Wrap" />
+        <TextBlock Classes="FeatureDialogHelpText"
+                   TextWrapping="Wrap"
+                   Text="Leave at 0,0 to place by clicking the viewport after confirming." />
       </StackPanel>
     </Border>
   </StackPanel>

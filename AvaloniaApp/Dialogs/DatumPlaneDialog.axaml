@@ -54,6 +54,8 @@
           <TextBlock Grid.Row="2" Text="Name" Classes="FeatureDialogFieldLabel" VerticalAlignment="Center" Margin="0,10,0,0" />
           <TextBox Grid.Row="2" Grid.Column="1"
                    x:Name="NameInput"
+                   Watermark="Optional custom name"
+                   Classes="AssistantKeyInput"
                    HorizontalAlignment="Stretch"
                    Margin="0,8,0,0" />
 

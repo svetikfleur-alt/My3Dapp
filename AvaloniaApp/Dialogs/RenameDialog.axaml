@@ -27,10 +27,13 @@
                 Click="OnCancelClick" />
       </Grid>
 
-      <TextBox x:Name="NameInput"
-               Classes="AssistantKeyInput"
-               MaxLength="80"
-               KeyDown="OnInputKeyDown" />
+      <Border Classes="FeatureDialogSectionCard">
+        <TextBox x:Name="NameInput"
+                 Classes="FeatureDialogInput"
+                 MaxLength="80"
+                 KeyDown="OnInputKeyDown"
+                 Watermark="Enter a new name" />
+      </Border>
 
     </StackPanel>
   </Border>

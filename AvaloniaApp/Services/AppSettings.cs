@@ -16,7 +16,9 @@ public sealed class AppSettings
 
     public string PreferredAssistantProvider { get; set; } = "DeepSeek";
 
-    public string PreferredAssistantModel { get; set; } = "DeepSeek Chat";
+    public string PreferredAssistantModel { get; set; } = "deepseek-chat";
+
+    public string PreferredAssistantBaseUrl { get; set; } = string.Empty;
 
     public static AppSettings Load()
     {

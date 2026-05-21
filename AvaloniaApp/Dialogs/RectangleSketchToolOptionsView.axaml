@@ -2,47 +2,44 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="My3DApp.AvaloniaApp.Dialogs.RectangleSketchToolOptionsView">
   <StackPanel Spacing="10">
-    <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-            BorderBrush="{DynamicResource Studio.BorderBrush}"
-            BorderThickness="1"
-            Padding="12">
+    <Border Classes="FeatureDialogSectionCard">
       <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="96,*">
         <TextBlock Text="Tool"
-                   FontWeight="SemiBold" />
+                   Classes="FeatureDialogFieldLabel" />
         <TextBlock Grid.Column="1"
+                   Classes="FeatureDialogValueText"
                    Text="Rectangle" />
         <TextBlock Grid.Row="1"
                    Margin="0,10,0,0"
                    Text="Mode"
-                   FontWeight="SemiBold" />
+                   Classes="FeatureDialogFieldLabel" />
         <TextBlock Grid.Row="1"
                    Grid.Column="1"
                    Margin="0,10,0,0"
-                   Text="Corner to corner — click one corner, drag to the opposite corner."
-                   TextWrapping="Wrap" />
+                   Classes="FeatureDialogValueText"
+                   TextWrapping="Wrap"
+                   Text="Corner to corner — click one corner, drag to the opposite corner." />
       </Grid>
     </Border>
 
-    <Border Background="{DynamicResource Studio.PanelInsetBrush}"
-            BorderBrush="{DynamicResource Studio.BorderBrush}"
-            BorderThickness="1"
-            Padding="12">
+    <Border Classes="FeatureDialogSectionCard">
       <StackPanel Spacing="8">
         <TextBlock Text="Draw mode"
-                   FontWeight="SemiBold" />
+                   Classes="FeatureDialogFieldLabel" />
         <StackPanel Orientation="Horizontal" Spacing="6">
           <RadioButton x:Name="CornerModeButton"
+                       Classes="FeatureDialogCheckBox"
                        Content="Corner to corner"
                        IsChecked="True"
                        GroupName="RectMode" />
           <RadioButton x:Name="CenterModeButton"
+                       Classes="FeatureDialogCheckBox"
                        Content="Center to corner"
                        GroupName="RectMode" />
         </StackPanel>
-        <TextBlock Text="Confirm to start placing a rectangle in the viewport."
-                   Foreground="{DynamicResource Studio.TextMutedBrush}"
-                   FontSize="11"
-                   TextWrapping="Wrap" />
+        <TextBlock Classes="FeatureDialogHelpText"
+                   TextWrapping="Wrap"
+                   Text="Confirm to start placing a rectangle in the viewport." />
       </StackPanel>
     </Border>
   </StackPanel>

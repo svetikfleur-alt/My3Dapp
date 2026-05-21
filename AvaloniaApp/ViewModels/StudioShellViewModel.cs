@@ -48,7 +48,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         "Projects");
 
     private AssistantRuntimeConfiguration _assistantConfiguration =
-        AssistantRuntimeConfiguration.FromSelection("DeepSeek", "DeepSeek Chat");
+        AssistantRuntimeConfiguration.FromSelection("DeepSeek", "deepseek-chat");
     private CadRecipeRunViewModel? _activeRecipe;
     private bool _isSketchMode;
     private bool _isThreeDMode = true;
@@ -63,13 +63,16 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     private string _activeDocumentUpdatedAt = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
     private string _selectedAssistantMode = "Auto";
     private string _selectedAssistantProvider = "DeepSeek";
-    private string _selectedAssistantModel = "DeepSeek Chat";
+    private string _selectedAssistantModel = "deepseek-chat";
+    private string _selectedAssistantBaseUrl = string.Empty;
     private string _currentProjectPath = string.Empty;
     private string _projectTitle = "My3DApp Project / unsaved.umxproj";
     private string _assistantInput = string.Empty;
     private string _assistantKeyInput = string.Empty;
     private string _assistantStatus = "Ready";
     private string _assistantConfigurationSummary = string.Empty;
+    private string _lastAssistantRequestStatus = "No AI request sent yet.";
+    private string _lastAssistantError = string.Empty;
     private bool _isAssistantBusy;
     private bool _isAssistantConfigured;
     private CadViewportCommand? _pendingCommand;
@@ -123,7 +126,9 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             _selectedAssistantModel = _appSettings.PreferredAssistantModel;
         }
 
-        _isStartupPageVisible = _appSettings.ShowStartupPageOnLaunch;
+        _selectedAssistantBaseUrl = _appSettings.PreferredAssistantBaseUrl ?? string.Empty;
+
+        _isStartupPageVisible = true;
 
         FeatureNodes = [];
         RecentPrimitiveTools = [];
@@ -131,7 +136,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         AssistantMessages = [];
         ActiveSketchConstraints = [];
         ActiveSketchDimensions = [];
-        AssistantProviders = ["DeepSeek", "OpenAI", "Anthropic"];
+        AssistantProviders = ["DeepSeek", "OpenAI", "Local CAD Only"];
         AssistantModels = [];
 
         AssistantModes =
@@ -175,7 +180,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 System.IO.Path.GetFileName(path),
                 path,
                 string.Equals(path, CurrentProjectPath, StringComparison.OrdinalIgnoreCase)
-                    ? "Open in current studio"
+                    ? "Open in current project"
                     : "Recent project"))
             .ToList();
 
@@ -211,22 +216,20 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public string StartupPageTitle => "AI CAD Studio";
+    public string StartupPageTitle => "My3DApp Home";
 
     public string StartupPageSummary =>
-        "Launch into a part studio, reopen recent work, connect DeepSeek, and drive features with M3 Script from a modern parametric shell.";
+        "Create a local CAD project, reopen recent work, or jump into a part studio with project and document state saved on this machine.";
 
-    public string StartupPageAssistantTitle => $"{SelectedAssistantProvider} copilot";
+    public string StartupPageAssistantTitle => "Local product shell";
 
     public string StartupPageAssistantSummary =>
-        IsAssistantConfigured
-            ? $"{SelectedAssistantProvider} is online with {SelectedAssistantModel}. Paste a temporary key here or prefer environment variables for persistent setup."
-            : AssistantInactiveSummary;
+        $"{ProductProjectTypeLabel} ready. Projects are persisted locally under AppData until you choose Save As.";
 
     public string ModelingLanguageName => "M3 Script";
 
     public string ModelingLanguageSummary =>
-        "A built-in 3D programming language for primitives, sketches, features, templates, and AI-generated modeling steps.";
+        "A built-in 3D command language for primitives, sketches, features, templates, and recipe-driven modeling steps.";
 
     public string ModelingLanguageSample =>
         "create box 120x80x30;\n" +
@@ -278,7 +281,9 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public string LocalCadStatusText => "Local CAD mode available";
 
     public string AiConfigurationStatusText =>
-        IsAssistantConfigured
+        IsAssistantLocalOnlyMode
+            ? "Local CAD only mode"
+            : IsAssistantConfigured
             ? $"AI configured: {SelectedAssistantProvider} / {SelectedAssistantModel}"
             : $"AI provider not configured ({SelectedAssistantProvider})";
 
@@ -1464,7 +1469,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
             _appSettings.PreferredAssistantProvider = value;
             _appSettings.Save();
-            ResetAssistantModelsForProvider(value, preserveSelection: true);
+            ResetAssistantModelsForProvider(value, preserveSelection: false);
             RefreshAssistantConfiguration();
             RaisePropertyChanged(nameof(StartupPageAssistantTitle));
             RaisePropertyChanged(nameof(AiConfigurationStatusText));
@@ -1482,6 +1487,24 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             }
 
             _appSettings.PreferredAssistantModel = value;
+            _appSettings.Save();
+            RefreshAssistantConfiguration();
+            RaisePropertyChanged(nameof(AiConfigurationStatusText));
+        }
+    }
+
+    public string SelectedAssistantBaseUrl
+    {
+        get => _selectedAssistantBaseUrl;
+        set
+        {
+            var next = value ?? string.Empty;
+            if (!SetProperty(ref _selectedAssistantBaseUrl, next))
+            {
+                return;
+            }
+
+            _appSettings.PreferredAssistantBaseUrl = next.Trim();
             _appSettings.Save();
             RefreshAssistantConfiguration();
             RaisePropertyChanged(nameof(AiConfigurationStatusText));
@@ -1549,8 +1572,12 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             RaisePropertyChanged(nameof(ShowAssistantInactiveState));
             RaisePropertyChanged(nameof(StartupPageAssistantSummary));
             RaisePropertyChanged(nameof(AiConfigurationStatusText));
+            RaisePropertyChanged(nameof(AssistantApiKeyStatus));
+            RaisePropertyChanged(nameof(AssistantProviderStatusLine));
         }
     }
+
+    public bool IsAssistantLocalOnlyMode => _assistantConfiguration.IsLocalOnly;
 
     public bool IsAssistantBusy
     {
@@ -1578,13 +1605,41 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public bool ShowAssistantInactiveState => !IsAssistantConfigured;
 
-    public string AssistantInactiveTitle => "AI provider not configured";
+    public string AssistantInactiveTitle => IsAssistantLocalOnlyMode ? "Local CAD only mode" : "AI provider not configured";
 
     public string AssistantInactiveSummary =>
-        !string.IsNullOrWhiteSpace(_assistantConfiguration.ValidationError) &&
-        !_assistantConfiguration.IsConfigured
-            ? $"{SelectedAssistantProvider} is not connected yet. {_assistantConfiguration.MissingKeyHint} Use templates, local recipes, or M3 Script without remote AI."
-            : "Choose a provider and model, then connect a provider key when you are ready. Templates, local recipes, and M3 Script remain available.";
+        IsAssistantLocalOnlyMode
+            ? "Remote AI is disabled. You can still run local M3 Script, prepare built-in recipes, or use parametric templates."
+            : !string.IsNullOrWhiteSpace(_assistantConfiguration.ValidationError) &&
+              !_assistantConfiguration.IsConfigured
+                ? $"{SelectedAssistantProvider} is not connected yet. {_assistantConfiguration.MissingKeyHint} Use templates, local recipes, or M3 Script without remote AI."
+                : "Choose a provider and model, then connect a provider key when you are ready. Templates, local recipes, and M3 Script remain available.";
+
+    public string AssistantApiKeyStatus => _assistantConfiguration.ApiKeyStatus;
+
+    public string AssistantProviderStatusLine => IsAssistantLocalOnlyMode
+        ? "Provider: Local CAD Only | Model: local-cad | No remote requests"
+        : $"Provider: {SelectedAssistantProvider} | Model: {_assistantConfiguration.Model} | {AssistantApiKeyStatus}";
+
+    public string LastAssistantRequestStatus
+    {
+        get => _lastAssistantRequestStatus;
+        private set => SetProperty(ref _lastAssistantRequestStatus, value);
+    }
+
+    public string LastAssistantError
+    {
+        get => _lastAssistantError;
+        private set
+        {
+            if (SetProperty(ref _lastAssistantError, value))
+            {
+                RaisePropertyChanged(nameof(HasAssistantLastError));
+            }
+        }
+    }
+
+    public bool HasAssistantLastError => !string.IsNullOrWhiteSpace(LastAssistantError);
 
     public string PendingCommandSummary
     {
@@ -1601,6 +1656,11 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 return "RUNNING";
             }
 
+            if (IsAssistantLocalOnlyMode)
+            {
+                return "LOCAL";
+            }
+
             return IsAssistantConfigured ? "ONLINE" : "OFFLINE";
         }
     }
@@ -1608,6 +1668,8 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public string AssistantInputHint =>
         IsAssistantConfigured
             ? "Enter sends. Shift+Enter for a newline."
+            : IsAssistantLocalOnlyMode
+                ? "Local M3 Script and recipes are available. Remote AI is disabled."
             : "Local CAD commands still work. Remote AI activates when a provider key is available.";
 
     public string WorkspaceModeBadge => IsSketchMode ? "SKETCH" : "3D";
@@ -1663,15 +1725,30 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         _assistantConfiguration = _assistantChatService.ReadConfiguration(
             SelectedAssistantProvider,
             SelectedAssistantModel,
+            SelectedAssistantBaseUrl,
             keyOverride);
         IsAssistantConfigured = _assistantConfiguration.IsConfigured;
 
         UpdateAssistantShellSummary();
         AssistantStatus = IsAssistantBusy ? $"Running ({SelectedAssistantMode})" : BuildIdleStatusText();
         RaisePropertyChanged(nameof(AssistantInactiveSummary));
+        RaisePropertyChanged(nameof(AssistantInactiveTitle));
+        RaisePropertyChanged(nameof(IsAssistantLocalOnlyMode));
+        RaisePropertyChanged(nameof(AssistantApiKeyStatus));
+        RaisePropertyChanged(nameof(AssistantProviderStatusLine));
         RaisePropertyChanged(nameof(ShowAssistantInactiveState));
         RaisePropertyChanged(nameof(StartupPageAssistantSummary));
     }
+
+    public string PreviewAssistantConfiguration(string provider, string model, string baseUrl, string apiKey)
+    {
+        var configuration = _assistantChatService.ReadConfiguration(provider, model, baseUrl, apiKey);
+        return BuildAssistantConfigurationSummary(configuration, provider, model);
+    }
+
+    public string GetDefaultAssistantModelName(string provider) => AssistantChatService.GetDefaultModelName(provider);
+
+    public string GetDefaultAssistantBaseUrl(string provider) => AssistantChatService.GetDefaultBaseUrl(provider);
 
     public void ClearAssistantHistory()
     {
@@ -2527,6 +2604,21 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         return true;
     }
 
+    private void PrepareAssistantCandidate(AssistantCandidate candidate)
+    {
+        DismissStartupPage();
+        ActiveRecipe = BuildRecipeRun(
+            $"ai-{candidate.Kind.ToString().ToLowerInvariant()}",
+            candidate.Title,
+            $"{candidate.Description} Source format: {candidate.KindLabel}.",
+            $"Provider: {SelectedAssistantProvider}; model: {_assistantConfiguration.Model}; units: {candidate.Units}",
+            "AI output is validated but not executed automatically. Review the steps, then run the recipe into the active part studio.",
+            candidate.CommandText);
+        ActiveRecipe.StatusSummary =
+            $"{candidate.KindLabel} candidate validated. Review the steps, then click Run Recipe to execute it.";
+        RaisePropertyChanged(nameof(CanRunActiveRecipe));
+    }
+
     public async Task RunActiveRecipeAsync(CancellationToken cancellationToken = default)
     {
         if (ActiveRecipe is null)
@@ -2848,6 +2940,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         RaisePropertyChanged(nameof(ActiveDocumentId));
         RaisePropertyChanged(nameof(ActiveDocumentType));
         RaisePropertyChanged(nameof(ActiveDocumentTypeLabel));
+        RaisePropertyChanged(nameof(StartupPageAssistantSummary));
     }
 
     public void MarkAutosaved(DateTimeOffset timestamp)
@@ -3087,6 +3180,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     {
         var state = new StudioDocumentUiState
         {
+            ProductProject = BuildProductProjectState(),
             ProjectId = _productProjectId,
             ProjectName = DocumentName,
             ProjectType = _productProjectType,
@@ -3116,24 +3210,71 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         _workspaceController.UpdateDocumentUiState(state);
     }
 
+    private ProductProjectState BuildProductProjectState()
+    {
+        var studioStates = _workspaceController.GetPartStudioSummaries()
+            .Select(studio => new ProductPartStudioState
+            {
+                Id = studio.Id,
+                Name = studio.Name,
+                CreatedAt = studio.CreatedAt,
+                UpdatedAt = studio.UpdatedAt,
+                Bodies = studio.Bodies.ToList(),
+                History = studio.History.ToList(),
+                ActivePlane = studio.ActivePlane,
+                IsActive = studio.IsActive
+            })
+            .ToList();
+
+        return new ProductProjectState
+        {
+            Id = _productProjectId,
+            Name = DocumentName,
+            Type = _productProjectType,
+            CreatedAt = _productProjectCreatedAt,
+            UpdatedAt = _productProjectUpdatedAt,
+            Documents =
+            [
+                new ProductDocumentState
+                {
+                    Id = _activeDocumentId,
+                    Name = DocumentName,
+                    Type = _activeDocumentType,
+                    CreatedAt = _activeDocumentCreatedAt,
+                    UpdatedAt = _activeDocumentUpdatedAt,
+                    PartStudios = studioStates
+                }
+            ]
+        };
+    }
+
     private void RestoreDocumentUiState(StudioDocumentUiState state)
     {
-        _productProjectId = string.IsNullOrWhiteSpace(state.ProjectId) ? Guid.NewGuid().ToString("D") : state.ProjectId;
-        _productProjectType = NormalizeProjectType(state.ProjectType);
-        _productProjectCreatedAt = string.IsNullOrWhiteSpace(state.ProjectCreatedAt)
+        var productProject = state.ProductProject;
+        var productDocument = productProject?.Documents.FirstOrDefault();
+
+        _productProjectId = !string.IsNullOrWhiteSpace(productProject?.Id)
+            ? productProject.Id
+            : string.IsNullOrWhiteSpace(state.ProjectId) ? Guid.NewGuid().ToString("D") : state.ProjectId;
+        _productProjectType = NormalizeProjectType(!string.IsNullOrWhiteSpace(productProject?.Type) ? productProject.Type : state.ProjectType);
+        _productProjectCreatedAt = string.IsNullOrWhiteSpace(productProject?.CreatedAt) && string.IsNullOrWhiteSpace(state.ProjectCreatedAt)
             ? DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture)
-            : state.ProjectCreatedAt;
-        _productProjectUpdatedAt = string.IsNullOrWhiteSpace(state.ProjectUpdatedAt)
+            : !string.IsNullOrWhiteSpace(productProject?.CreatedAt) ? productProject.CreatedAt : state.ProjectCreatedAt;
+        _productProjectUpdatedAt = string.IsNullOrWhiteSpace(productProject?.UpdatedAt) && string.IsNullOrWhiteSpace(state.ProjectUpdatedAt)
             ? _productProjectCreatedAt
-            : state.ProjectUpdatedAt;
-        _activeDocumentId = string.IsNullOrWhiteSpace(state.DocumentId) ? Guid.NewGuid().ToString("D") : state.DocumentId;
-        _activeDocumentType = string.IsNullOrWhiteSpace(state.DocumentType) ? "partStudio" : state.DocumentType;
-        _activeDocumentCreatedAt = string.IsNullOrWhiteSpace(state.DocumentCreatedAt)
+            : !string.IsNullOrWhiteSpace(productProject?.UpdatedAt) ? productProject.UpdatedAt : state.ProjectUpdatedAt;
+        _activeDocumentId = !string.IsNullOrWhiteSpace(productDocument?.Id)
+            ? productDocument.Id
+            : string.IsNullOrWhiteSpace(state.DocumentId) ? Guid.NewGuid().ToString("D") : state.DocumentId;
+        _activeDocumentType = !string.IsNullOrWhiteSpace(productDocument?.Type)
+            ? productDocument.Type
+            : string.IsNullOrWhiteSpace(state.DocumentType) ? "partStudio" : state.DocumentType;
+        _activeDocumentCreatedAt = string.IsNullOrWhiteSpace(productDocument?.CreatedAt) && string.IsNullOrWhiteSpace(state.DocumentCreatedAt)
             ? _productProjectCreatedAt
-            : state.DocumentCreatedAt;
-        _activeDocumentUpdatedAt = string.IsNullOrWhiteSpace(state.DocumentUpdatedAt)
+            : !string.IsNullOrWhiteSpace(productDocument?.CreatedAt) ? productDocument.CreatedAt : state.DocumentCreatedAt;
+        _activeDocumentUpdatedAt = string.IsNullOrWhiteSpace(productDocument?.UpdatedAt) && string.IsNullOrWhiteSpace(state.DocumentUpdatedAt)
             ? _productProjectUpdatedAt
-            : state.DocumentUpdatedAt;
+            : !string.IsNullOrWhiteSpace(productDocument?.UpdatedAt) ? productDocument.UpdatedAt : state.DocumentUpdatedAt;
         RaiseProjectMetadataProperties();
 
         ExportJobs.Clear();
@@ -3374,6 +3515,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             localSequence.All(step => step.Result.IsSuccess && step.Result.Commands.Count > 0))
         {
             AddMessage("user", userInput);
+            SetAssistantRequestStatus("Local command sequence executed.");
             foreach (var step in localSequence)
             {
                 foreach (var command in step.Result.Commands)
@@ -3389,6 +3531,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         if (localCommand.IsSuccess && localCommand.Commands.Count > 0)
         {
             AddMessage("user", userInput);
+            SetAssistantRequestStatus("Local command executed.");
             foreach (var command in localCommand.Commands)
             {
                 await HandleParsedCommandAsync(command, "Parsed command", cancellationToken);
@@ -3400,6 +3543,9 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         if (!IsAssistantConfigured)
         {
             AddMessage("user", userInput);
+            SetAssistantRequestStatus(
+                IsAssistantLocalOnlyMode ? "Local CAD fallback used." : "Remote AI skipped because provider is not configured.",
+                IsAssistantLocalOnlyMode ? string.Empty : "AI provider not configured.");
             if (TryPrepareRecipeFromPrompt(userInput, out var localRecipeMessage))
             {
                 AddMessage("system", localRecipeMessage);
@@ -3417,6 +3563,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         AddMessage("user", userInput);
         IsAssistantBusy = true;
         AssistantStatus = $"Running ({SelectedAssistantMode})";
+        SetAssistantRequestStatus($"Sending request to {SelectedAssistantProvider} ({_assistantConfiguration.Model}).");
 
         try
         {
@@ -3445,34 +3592,20 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             if (result.IsSuccess)
             {
                 AddMessage("assistant", result.Reply);
-                if (!string.IsNullOrWhiteSpace(result.Command))
+                if (result.Candidate is not null)
                 {
-                    var parsedSuggestionSequence = _commandParser.ParseSequence(result.Command);
-                    var allOk = parsedSuggestionSequence.Count > 0 &&
-                                parsedSuggestionSequence.All(step => step.Result.IsSuccess && step.Result.Commands.Count > 0);
-
-                    if (allOk)
-                    {
-                        foreach (var step in parsedSuggestionSequence)
-                        {
-                            foreach (var command in step.Result.Commands)
-                            {
-                                await HandleParsedCommandAsync(command, $"Assistant step {step.Index}", cancellationToken);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        AddMessage("system", $"Assistant suggested unsupported command: {result.Command}");
-                    }
+                    PrepareAssistantCandidate(result.Candidate);
+                    AddMessage("system", "AI candidate validated and staged as a recipe. Review the steps, then click Run Recipe when ready.");
                 }
 
+                SetAssistantRequestStatus($"Last request succeeded: {SelectedAssistantProvider} / {_assistantConfiguration.Model}.");
                 AssistantStatus = BuildIdleStatusText();
                 ShowAssistantPanel();
             }
             else
             {
                 AddMessage("system", result.Reply);
+                SetAssistantRequestStatus("Last request failed.", result.Reply);
                 AssistantStatus = "Last request failed";
                 ShowAssistantPanel();
             }
@@ -3480,6 +3613,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             AddMessage("system", $"Assistant request failed: {ex.Message}");
+            SetAssistantRequestStatus("Last request failed.", ex.Message);
             AssistantStatus = "Error";
             ShowAssistantPanel();
         }
@@ -3645,11 +3779,11 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     private void SeedAssistantHistory()
     {
-        if (IsAssistantConfigured)
+        if (_assistantConfiguration.IsConfigured)
         {
             AddMessage(
                 "system",
-                "CAD assistant ready. Try M3 Script like: create box, start sketch on top plane; rectangle 0 0 20 10; finish sketch; extrude 8.");
+                "AI provider ready. Describe a CAD part to request a validated ACL or CAD Recipe JSON candidate, or type local M3 Script directly.");
         }
     }
 
@@ -3667,6 +3801,12 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         AssistantMessages.Add(new AssistantMessageViewModel(role, content.Trim(), DateTimeOffset.Now));
         RaisePropertyChanged(nameof(HasAssistantMessages));
         RaisePropertyChanged(nameof(ShowAssistantInactiveState));
+    }
+
+    private void SetAssistantRequestStatus(string status, string? error = null)
+    {
+        LastAssistantRequestStatus = status;
+        LastAssistantError = string.IsNullOrWhiteSpace(error) ? string.Empty : error.Trim();
     }
 
     private void SetPendingCommand(CadViewportCommand command, string caption)
@@ -3687,6 +3827,11 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     private string BuildIdleStatusText()
     {
+        if (IsAssistantLocalOnlyMode)
+        {
+            return "Local CAD only";
+        }
+
         if (!IsAssistantConfigured)
         {
             return "Local CAD mode";
@@ -3736,42 +3881,50 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     {
         FeatureNodes.Clear();
 
+        var productState = BuildProductProjectState();
         var documentRoot = new FeatureNodeViewModel(
-            "Project",
+            productState.Name,
             "document-group",
             ProductProjectTypeLabel,
             ProductProjectSummary,
             isExpanded: true);
-        documentRoot.Children.Add(new FeatureNodeViewModel(
-            DocumentName,
-            "document",
-            ActiveDocumentTypeLabel,
-            $"{ProductProjectCreatedLabel} | {ProductProjectUpdatedLabel}",
-            $"Project ID: {ProductProjectId}"));
+
+        var documentsRoot = new FeatureNodeViewModel(
+            "Documents",
+            "document-group",
+            string.Empty,
+            $"{productState.Documents.Count.ToString(CultureInfo.InvariantCulture)} document(s)",
+            isExpanded: true);
+        foreach (var document in productState.Documents)
+        {
+            var documentNode = new FeatureNodeViewModel(
+                document.Name,
+                "document",
+                ActiveDocumentTypeLabel,
+                $"{FormatTimestampLabel(document.CreatedAt, "Created")} | {FormatTimestampLabel(document.UpdatedAt, "Updated")}",
+                $"Document ID: {document.Id}",
+                isExpanded: true);
+
+            foreach (var studio in document.PartStudios)
+            {
+                documentNode.Children.Add(new FeatureNodeViewModel(
+                    studio.Name,
+                    "workspace",
+                    studio.IsActive ? "Active Part Studio" : "Part Studio",
+                    $"{studio.Bodies.Count.ToString(CultureInfo.InvariantCulture)} bodies | {studio.History.Count.ToString(CultureInfo.InvariantCulture)} history items | Active plane {studio.ActivePlane}",
+                    $"Studio ID: {studio.Id}"));
+            }
+
+            documentsRoot.Children.Add(documentNode);
+        }
+
+        documentRoot.Children.Add(documentsRoot);
         documentRoot.Children.Add(new FeatureNodeViewModel(
             string.IsNullOrWhiteSpace(CurrentProjectPath) ? "unsaved.umxproj" : Path.GetFileName(CurrentProjectPath),
             "document",
-            "Project file",
+            "Local file",
             $"{SaveStateLabel} | {SelectedWorkspaceKind} | {PartStudios.Count.ToString(CultureInfo.InvariantCulture)} studio tab(s)",
             string.IsNullOrWhiteSpace(CurrentProjectPath) ? "Unsaved local document" : CurrentProjectPath));
-
-        var partStudioRoot = new FeatureNodeViewModel(
-            "Part studios",
-            "workspace-group",
-            string.Empty,
-            string.Empty,
-            isExpanded: true);
-        foreach (var studio in PartStudios)
-        {
-            partStudioRoot.Children.Add(new FeatureNodeViewModel(
-                studio.Name,
-                "workspace",
-                studio.IsActive ? "Active part studio" : "Part studio",
-                studio.IsActive
-                    ? $"{compileResult.Bodies.Count.ToString(CultureInfo.InvariantCulture)} visible body/bodies | {project.Scene.Bodies.Sum(body => body.Features.Count).ToString(CultureInfo.InvariantCulture)} history item(s)"
-                    : "Saved in this local project file",
-                $"Document ID: {ActiveDocumentId}"));
-        }
 
         var workspaceRoot = new FeatureNodeViewModel(
             "Workspaces",
@@ -3825,7 +3978,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             string.Empty,
             string.Empty,
             isExpanded: true);
-        var roots = new List<FeatureNodeViewModel> { documentRoot, partStudioRoot, workspaceRoot, geometryRoot };
+        var roots = new List<FeatureNodeViewModel> { documentRoot, workspaceRoot, geometryRoot };
 
         foreach (var body in project.Scene.Bodies)
         {
@@ -4691,17 +4844,17 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         AssistantModels.Clear();
 
         string[] options;
-        if (string.Equals(provider, "Anthropic", StringComparison.Ordinal))
+        if (string.Equals(provider, "Local CAD Only", StringComparison.Ordinal))
         {
-            options = ["Claude Sonnet 4.5"];
+            options = ["local-cad"];
         }
         else if (string.Equals(provider, "DeepSeek", StringComparison.Ordinal))
         {
-            options = ["DeepSeek Chat", "DeepSeek Reasoner"];
+            options = ["deepseek-chat", "deepseek-reasoner"];
         }
         else
         {
-            options = ["GPT-5.4 mini", "GPT-5.4"];
+            options = ["gpt-4o-mini", "gpt-4.1-mini", "gpt-5-mini"];
         }
 
         foreach (var option in options)
@@ -4709,7 +4862,16 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             AssistantModels.Add(option);
         }
 
-        var nextSelection = preserveSelection && options.Contains(previousSelection, StringComparer.Ordinal)
+        if (preserveSelection &&
+            !string.IsNullOrWhiteSpace(previousSelection) &&
+            !options.Contains(previousSelection, StringComparer.Ordinal))
+        {
+            AssistantModels.Add(previousSelection);
+        }
+
+        var nextSelection = preserveSelection &&
+                            !string.IsNullOrWhiteSpace(previousSelection) &&
+                            AssistantModels.Contains(previousSelection)
             ? previousSelection
             : options[0];
 
@@ -4727,31 +4889,45 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     {
         return provider?.Trim().ToLowerInvariant() switch
         {
-            "anthropic" => "Anthropic",
             "openai" => "OpenAI",
             "deepseek" => "DeepSeek",
+            "local" or "local cad" or "local cad only" => "Local CAD Only",
             _ => "DeepSeek"
         };
     }
 
     private void UpdateAssistantShellSummary()
     {
-        if (IsAssistantConfigured)
+        AssistantConfigurationSummary = BuildAssistantConfigurationSummary(
+            _assistantConfiguration,
+            SelectedAssistantProvider,
+            SelectedAssistantModel);
+    }
+
+    private static string BuildAssistantConfigurationSummary(
+        AssistantRuntimeConfiguration configuration,
+        string selectedProvider,
+        string selectedModel)
+    {
+        if (configuration.IsLocalOnly)
         {
-            AssistantConfigurationSummary =
-                $"Connected via {SelectedAssistantProvider} | {SelectedAssistantModel} | key {MaskApiKey(_assistantConfiguration.ApiKey)}";
-            return;
+            return "Local CAD Only selected. Remote AI requests are disabled; templates, recipes, and M3 Script remain available.";
         }
 
-        if (!string.IsNullOrWhiteSpace(_assistantConfiguration.ValidationError))
+        if (configuration.IsConfigured)
         {
-            AssistantConfigurationSummary =
-                $"{SelectedAssistantProvider} selected | {SelectedAssistantModel}. {_assistantConfiguration.MissingKeyHint}";
-            return;
+            return
+                $"Connected via {selectedProvider} | model {configuration.Model} | key {MaskApiKey(configuration.ApiKey)} | base URL {configuration.BaseUrl}";
         }
 
-        AssistantConfigurationSummary =
-            $"{SelectedAssistantProvider} selected | {SelectedAssistantModel}. Local CAD commands remain available.";
+        if (!string.IsNullOrWhiteSpace(configuration.ValidationError))
+        {
+            return
+                $"{selectedProvider} selected | model {selectedModel}. {configuration.ValidationError} {configuration.MissingKeyHint}";
+        }
+
+        return
+            $"{selectedProvider} selected | model {selectedModel}. Local CAD commands remain available.";
     }
 
     private void UpdateSketchHints(CadProject project)
