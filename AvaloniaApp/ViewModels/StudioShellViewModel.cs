@@ -42,14 +42,28 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     private readonly CadCommandParser _commandParser = new();
     private readonly StudioWorkspaceController _workspaceController = new();
     private readonly AppSettings _appSettings = AppSettings.Load();
+    private static readonly string LocalProjectsDirectory = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "My3DApp",
+        "Projects");
 
     private AssistantRuntimeConfiguration _assistantConfiguration =
-        AssistantRuntimeConfiguration.FromSelection("OpenAI", "GPT-5.4 mini");
+        AssistantRuntimeConfiguration.FromSelection("DeepSeek", "DeepSeek Chat");
+    private CadRecipeRunViewModel? _activeRecipe;
     private bool _isSketchMode;
     private bool _isThreeDMode = true;
+    private bool _isStartupPageVisible = true;
+    private string _productProjectId = Guid.NewGuid().ToString("D");
+    private string _productProjectType = "standard";
+    private string _productProjectCreatedAt = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
+    private string _productProjectUpdatedAt = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
+    private string _activeDocumentId = Guid.NewGuid().ToString("D");
+    private string _activeDocumentType = "partStudio";
+    private string _activeDocumentCreatedAt = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
+    private string _activeDocumentUpdatedAt = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
     private string _selectedAssistantMode = "Auto";
-    private string _selectedAssistantProvider = "OpenAI";
-    private string _selectedAssistantModel = "GPT-5.4 mini";
+    private string _selectedAssistantProvider = "DeepSeek";
+    private string _selectedAssistantModel = "DeepSeek Chat";
     private string _currentProjectPath = string.Empty;
     private string _projectTitle = "My3DApp Project / unsaved.umxproj";
     private string _assistantInput = string.Empty;
@@ -98,13 +112,26 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public StudioShellViewModel()
     {
+        var savedProvider = NormalizeAssistantProvider(_appSettings.PreferredAssistantProvider);
+        if (!string.IsNullOrWhiteSpace(savedProvider))
+        {
+            _selectedAssistantProvider = savedProvider;
+        }
+
+        if (!string.IsNullOrWhiteSpace(_appSettings.PreferredAssistantModel))
+        {
+            _selectedAssistantModel = _appSettings.PreferredAssistantModel;
+        }
+
+        _isStartupPageVisible = _appSettings.ShowStartupPageOnLaunch;
+
         FeatureNodes = [];
         RecentPrimitiveTools = [];
         Parameters = [];
         AssistantMessages = [];
         ActiveSketchConstraints = [];
         ActiveSketchDimensions = [];
-        AssistantProviders = ["OpenAI", "Anthropic"];
+        AssistantProviders = ["DeepSeek", "OpenAI", "Anthropic"];
         AssistantModels = [];
 
         AssistantModes =
@@ -121,7 +148,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         TemplateCatalog = new ObservableCollection<MakerTemplateDefinition>(MakerTemplateLibrary.All);
         TemplateParameters = new ObservableCollection<ParameterItemViewModel>();
         ExportJobs = new ObservableCollection<ExportJobViewModel>();
-        ResetAssistantModelsForProvider(_selectedAssistantProvider, preserveSelection: false);
+        ResetAssistantModelsForProvider(_selectedAssistantProvider, preserveSelection: true);
         RefreshRecentPrimitiveTools();
         _workspaceController.WorkspaceChanged += OnWorkspaceChanged;
         _workspaceController.DocumentChanged += OnDocumentChanged;
@@ -155,6 +182,129 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public bool HasRecentDocumentItems => _appSettings.RecentFiles.Count > 0;
 
     public bool HasNoRecentDocumentItems => !HasRecentDocumentItems;
+
+    public bool IsStartupPageVisible
+    {
+        get => _isStartupPageVisible;
+        private set
+        {
+            if (SetProperty(ref _isStartupPageVisible, value))
+            {
+                RaisePropertyChanged(nameof(IsPartStudioEmptyStateVisible));
+            }
+        }
+    }
+
+    public bool ShowStartupPageOnLaunch
+    {
+        get => _appSettings.ShowStartupPageOnLaunch;
+        set
+        {
+            if (_appSettings.ShowStartupPageOnLaunch == value)
+            {
+                return;
+            }
+
+            _appSettings.ShowStartupPageOnLaunch = value;
+            _appSettings.Save();
+            RaisePropertyChanged(nameof(ShowStartupPageOnLaunch));
+        }
+    }
+
+    public string StartupPageTitle => "AI CAD Studio";
+
+    public string StartupPageSummary =>
+        "Launch into a part studio, reopen recent work, connect DeepSeek, and drive features with M3 Script from a modern parametric shell.";
+
+    public string StartupPageAssistantTitle => $"{SelectedAssistantProvider} copilot";
+
+    public string StartupPageAssistantSummary =>
+        IsAssistantConfigured
+            ? $"{SelectedAssistantProvider} is online with {SelectedAssistantModel}. Paste a temporary key here or prefer environment variables for persistent setup."
+            : AssistantInactiveSummary;
+
+    public string ModelingLanguageName => "M3 Script";
+
+    public string ModelingLanguageSummary =>
+        "A built-in 3D programming language for primitives, sketches, features, templates, and AI-generated modeling steps.";
+
+    public string ModelingLanguageSample =>
+        "create box 120x80x30;\n" +
+        "shell 2;\n" +
+        "select plane top;\n" +
+        "start sketch;\n" +
+        "circle 60 40 radius 18;\n" +
+        "finish sketch;\n" +
+        "extrude cut 12";
+
+    public string ProductProjectId => _productProjectId;
+
+    public string ProductProjectType => _productProjectType;
+
+    public string ProductProjectTypeLabel => _productProjectType switch
+    {
+        "large" => "Large Project",
+        "quick" => "Quick Design",
+        _ => "Standard Project"
+    };
+
+    public string ProductProjectSummary =>
+        $"{ProductProjectTypeLabel} | {PartStudios.Count.ToString(CultureInfo.InvariantCulture)} part studio(s) | {FeatureTreeSummary}";
+
+    public string ProductProjectCreatedLabel => FormatTimestampLabel(_productProjectCreatedAt, "Created");
+
+    public string ProductProjectUpdatedLabel => FormatTimestampLabel(_productProjectUpdatedAt, "Updated");
+
+    public string ActiveDocumentId => _activeDocumentId;
+
+    public string ActiveDocumentType => _activeDocumentType;
+
+    public string ActiveDocumentTypeLabel => _activeDocumentType switch
+    {
+        "sketch" => "Sketch",
+        "template" => "Template",
+        "export" => "Export",
+        _ => "Part Studio"
+    };
+
+    public bool HasBodies => _workspaceController.CurrentState.CompileResult.Bodies.Count > 0;
+
+    public bool IsPartStudioEmptyStateVisible =>
+        IsPartStudioWorkspace &&
+        !IsStartupPageVisible &&
+        !IsSketchMode &&
+        !HasBodies;
+
+    public string LocalCadStatusText => "Local CAD mode available";
+
+    public string AiConfigurationStatusText =>
+        IsAssistantConfigured
+            ? $"AI configured: {SelectedAssistantProvider} / {SelectedAssistantModel}"
+            : $"AI provider not configured ({SelectedAssistantProvider})";
+
+    public CadRecipeRunViewModel? ActiveRecipe
+    {
+        get => _activeRecipe;
+        private set
+        {
+            if (SetProperty(ref _activeRecipe, value))
+            {
+                RaisePropertyChanged(nameof(HasActiveRecipe));
+                RaisePropertyChanged(nameof(HasNoActiveRecipe));
+                RaisePropertyChanged(nameof(CanRunActiveRecipe));
+            }
+        }
+    }
+
+    public bool HasActiveRecipe => ActiveRecipe is not null;
+
+    public bool HasNoActiveRecipe => !HasActiveRecipe;
+
+    public bool CanRunActiveRecipe =>
+        ActiveRecipe is not null &&
+        ActiveRecipe.Steps.Count > 0 &&
+        ActiveRecipe.Steps.All(step => step.Status is "pending" or "completed") &&
+        ActiveRecipe.Steps.Any(step => step.Status == "pending");
 
     public string DocumentName
     {
@@ -227,7 +377,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         WorkspaceTabs.Add(new StudioWorkspaceTabItem("Sketch", "Sketch", IsSketchWorkspace));
         WorkspaceTabs.Add(new StudioWorkspaceTabItem("Templates", "Templates", IsTemplatesWorkspace));
         WorkspaceTabs.Add(new StudioWorkspaceTabItem("Prepare", "Prepare", IsPrepareWorkspace));
-        WorkspaceTabs.Add(new StudioWorkspaceTabItem("AI Chat", "Assistant", IsAssistantWorkspace));
+        WorkspaceTabs.Add(new StudioWorkspaceTabItem("Copilot", "Assistant", IsAssistantWorkspace));
         WorkspaceTabs.Add(new StudioWorkspaceTabItem("+", "Add", false, IsAddButton: true));
     }
 
@@ -482,13 +632,10 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public void InsertAssistantRecipe(string recipeName)
     {
-        var recipe = CadRecipeLibrary.Find(recipeName);
-        if (recipe is null)
+        if (!PrepareRecipeFromLibrary(recipeName))
         {
             return;
         }
-
-        AssistantInput = recipe.Example;
     }
 
     public void SelectMakerTemplate(string templateId)
@@ -557,6 +704,8 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public void SelectWorkspace(string workspaceKind)
     {
+        DismissStartupPage();
+
         switch (workspaceKind)
         {
             case "Add":
@@ -719,7 +868,13 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public string FeatureTreeSummary
     {
         get => _featureTreeSummary;
-        private set => SetProperty(ref _featureTreeSummary, value);
+        private set
+        {
+            if (SetProperty(ref _featureTreeSummary, value))
+            {
+                RaisePropertyChanged(nameof(ProductProjectSummary));
+            }
+        }
     }
 
     public string FeatureListHeader
@@ -876,6 +1031,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 RaisePropertyChanged(nameof(IsFeatureTreeVisible));
                 RaisePropertyChanged(nameof(IsTemplateOverlayVisible));
                 RaisePropertyChanged(nameof(IsPrepareOverlayVisible));
+                RaisePropertyChanged(nameof(IsPartStudioEmptyStateVisible));
                 RaisePropertyChanged(nameof(WorkspaceSurfaceTitle));
                 RaisePropertyChanged(nameof(WorkspaceSurfaceSummary));
                 RaisePropertyChanged(nameof(LeftPaneSummary));
@@ -915,7 +1071,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     {
         "Templates" => SelectedMakerTemplate?.Description ?? "Choose a maker template, edit parameters, and generate a printable starter part.",
         "Prepare" => PrepareWorkspaceSummary,
-        "Assistant" => "Use the copilot to explain features, suggest templates, or generate local CAD command sequences.",
+        "Assistant" => "Use the copilot to explain features, suggest templates, or generate local M3 Script sequences.",
         "Sketch" when IsSelectingSketchPlane => "Select a reference plane or planar face to begin sketching.",
         "Sketch" when IsSketchMode => ViewportSketchSessionSummary,
         _ => AssistantWorkspaceSummary
@@ -1300,8 +1456,12 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 return;
             }
 
+            _appSettings.PreferredAssistantProvider = value;
+            _appSettings.Save();
             ResetAssistantModelsForProvider(value, preserveSelection: true);
             RefreshAssistantConfiguration();
+            RaisePropertyChanged(nameof(StartupPageAssistantTitle));
+            RaisePropertyChanged(nameof(AiConfigurationStatusText));
         }
     }
 
@@ -1315,7 +1475,10 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 return;
             }
 
+            _appSettings.PreferredAssistantModel = value;
+            _appSettings.Save();
             RefreshAssistantConfiguration();
+            RaisePropertyChanged(nameof(AiConfigurationStatusText));
         }
     }
 
@@ -1356,7 +1519,13 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public string AssistantConfigurationSummary
     {
         get => _assistantConfigurationSummary;
-        private set => SetProperty(ref _assistantConfigurationSummary, value);
+        private set
+        {
+            if (SetProperty(ref _assistantConfigurationSummary, value))
+            {
+                RaisePropertyChanged(nameof(StartupPageAssistantSummary));
+            }
+        }
     }
 
     public bool IsAssistantConfigured
@@ -1372,6 +1541,8 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             RaisePropertyChanged(nameof(AssistantStatusBadge));
             RaisePropertyChanged(nameof(AssistantInputHint));
             RaisePropertyChanged(nameof(ShowAssistantInactiveState));
+            RaisePropertyChanged(nameof(StartupPageAssistantSummary));
+            RaisePropertyChanged(nameof(AiConfigurationStatusText));
         }
     }
 
@@ -1401,13 +1572,13 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public bool ShowAssistantInactiveState => !IsAssistantConfigured;
 
-    public string AssistantInactiveTitle => "Assistant unavailable";
+    public string AssistantInactiveTitle => "AI provider not configured";
 
     public string AssistantInactiveSummary =>
         !string.IsNullOrWhiteSpace(_assistantConfiguration.ValidationError) &&
         !_assistantConfiguration.IsConfigured
-            ? $"{SelectedAssistantProvider} is not connected yet. {_assistantConfiguration.MissingKeyHint} Local CAD commands still work without remote AI."
-            : "Choose a provider and model below, then connect a provider key when you are ready. Local CAD commands still work without remote AI.";
+            ? $"{SelectedAssistantProvider} is not connected yet. {_assistantConfiguration.MissingKeyHint} Use templates, local recipes, or M3 Script without remote AI."
+            : "Choose a provider and model, then connect a provider key when you are ready. Templates, local recipes, and M3 Script remain available.";
 
     public string PendingCommandSummary
     {
@@ -1493,6 +1664,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         AssistantStatus = IsAssistantBusy ? $"Running ({SelectedAssistantMode})" : BuildIdleStatusText();
         RaisePropertyChanged(nameof(AssistantInactiveSummary));
         RaisePropertyChanged(nameof(ShowAssistantInactiveState));
+        RaisePropertyChanged(nameof(StartupPageAssistantSummary));
     }
 
     public void ClearAssistantHistory()
@@ -2207,11 +2379,29 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         await Task.CompletedTask;
     }
 
-    public void NewProject()
+    public void NewProject() => StartNewProject("standard", "Standard Project");
+
+    public void StartNewProject(string projectType, string? projectName = null, bool saveImmediately = true)
     {
+        var normalizedType = NormalizeProjectType(projectType);
+        var now = DateTimeOffset.UtcNow;
+        var displayName = string.IsNullOrWhiteSpace(projectName)
+            ? BuildDefaultProjectName(normalizedType, now)
+            : projectName.Trim();
+
+        DismissStartupPage();
         _workspaceController.NewProject();
+        DocumentName = displayName;
         CurrentProjectPath = string.Empty;
-        ProjectTitleBase = "My3DApp Project / unsaved.umxproj";
+        ProjectTitleBase = $"{displayName} / unsaved.umxproj";
+        _productProjectId = Guid.NewGuid().ToString("D");
+        _productProjectType = normalizedType;
+        _productProjectCreatedAt = now.ToString("O", CultureInfo.InvariantCulture);
+        _productProjectUpdatedAt = _productProjectCreatedAt;
+        _activeDocumentId = Guid.NewGuid().ToString("D");
+        _activeDocumentType = "partStudio";
+        _activeDocumentCreatedAt = _productProjectCreatedAt;
+        _activeDocumentUpdatedAt = _productProjectCreatedAt;
         IsSelectingSketchPlane = false;
         HasExplicitSketchBaseSelection = false;
         SelectedWorkspaceKind = "PartStudio";
@@ -2219,24 +2409,235 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         LastExportSummary = "No exports yet.";
         SaveStateLabel = "Unsaved";
         UpdateRecoveryStatus(false, null);
+
+        if (normalizedType == "large")
+        {
+            _workspaceController.AddPartStudio();
+            _workspaceController.AddPartStudio();
+            if (_workspaceController.PartStudioNames.Count > 0)
+            {
+                _workspaceController.SwitchPartStudio(_workspaceController.PartStudioNames[0]);
+            }
+        }
+
+        RefreshDocumentTabs();
         if (TemplateCatalog.Count > 0)
         {
             SelectMakerTemplate(TemplateCatalog[0].Id);
         }
-        AppendToLog("New document created.");
-        ShowNotification("New document created.", NotificationSeverity.Info);
+
+        UpdateProjectMetadataChanged(now);
+        UpdateDocumentUiStateInController();
+
+        if (saveImmediately)
+        {
+            SaveProject(CreateLocalProjectPath(displayName, normalizedType));
+        }
+
+        AppendToLog($"New {ProductProjectTypeLabel.ToLowerInvariant()} created: {displayName}.");
+        ShowNotification($"Created {ProductProjectTypeLabel}: {displayName}", NotificationSeverity.Info);
+        RaiseProjectMetadataProperties();
+    }
+
+    public async Task CreateQuickDesignAsync(string useCase, CancellationToken cancellationToken = default)
+    {
+        var recipeName = MapQuickUseCaseToRecipe(useCase);
+        var label = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(useCase.Replace('-', ' '));
+        StartNewProject("quick", $"Quick {label}", saveImmediately: true);
+
+        if (!PrepareRecipeFromLibrary(recipeName, autoRunSource: $"Quick Design: {label}"))
+        {
+            ShowNotification($"No local recipe is available for {label} yet.", NotificationSeverity.Warning);
+            return;
+        }
+
+        await RunActiveRecipeAsync(cancellationToken);
+        if (!string.IsNullOrWhiteSpace(CurrentProjectPath))
+        {
+            SaveProject(CurrentProjectPath);
+        }
+    }
+
+    public async Task CreateSampleProjectAsync(CancellationToken cancellationToken = default)
+    {
+        StartNewProject("standard", "Sample mounting plate", saveImmediately: true);
+        PrepareRecipeFromLibrary("plate-with-hole", autoRunSource: "Sample template");
+        await RunActiveRecipeAsync(cancellationToken);
+        if (!string.IsNullOrWhiteSpace(CurrentProjectPath))
+        {
+            SaveProject(CurrentProjectPath);
+        }
+    }
+
+    public bool PrepareRecipeFromLibrary(string recipeName, string? autoRunSource = null)
+    {
+        var recipe = CadRecipeLibrary.Find(recipeName);
+        if (recipe is null)
+        {
+            return false;
+        }
+
+        var commandText = CadRecipeLibrary.ExpandSequence(recipe.Example);
+        ActiveRecipe = BuildRecipeRun(
+            recipe.Name,
+            recipe.DisplayName,
+            recipe.Description,
+            string.Join(", ", recipe.Parameters),
+            "STL and OBJ export are available after the recipe creates at least one body.",
+            commandText);
+        SelectedInspectorTabIndex = 2;
+        AssistantInput = recipe.Example;
+        ActiveRecipe.StatusSummary = string.IsNullOrWhiteSpace(autoRunSource)
+            ? "Recipe validated. Review the steps, then run it into the active part studio."
+            : $"{autoRunSource} recipe validated. Running creates real CAD history and bodies.";
+        RaisePropertyChanged(nameof(CanRunActiveRecipe));
+        return true;
+    }
+
+    public bool TryPrepareRecipeFromPrompt(string prompt, out string message)
+    {
+        message = string.Empty;
+        var normalized = prompt.Trim().ToLowerInvariant();
+        var recipeName = normalized switch
+        {
+            var text when text.Contains("bracket", StringComparison.Ordinal) => "bracket",
+            var text when text.Contains("spacer", StringComparison.Ordinal) || text.Contains("standoff", StringComparison.Ordinal) => "standoff",
+            var text when text.Contains("clip", StringComparison.Ordinal) => "channel",
+            var text when text.Contains("mount", StringComparison.Ordinal) => "plate-with-hole",
+            var text when text.Contains("enclosure", StringComparison.Ordinal) || text.Contains("box", StringComparison.Ordinal) => "shelled-box",
+            var text when text.Contains("adapter", StringComparison.Ordinal) => "plate-with-hole",
+            var text when text.Contains("plate", StringComparison.Ordinal) => "plate",
+            _ => string.Empty
+        };
+
+        if (string.IsNullOrWhiteSpace(recipeName) || !PrepareRecipeFromLibrary(recipeName, "Local prompt"))
+        {
+            message = "I could not map that prompt to a supported local recipe. Use a template, M3 Script command, or configure AI for free-form generation.";
+            return false;
+        }
+
+        message = $"Prepared local recipe '{ActiveRecipe?.Title}'. Review the steps, then click Run Recipe.";
+        return true;
+    }
+
+    public async Task RunActiveRecipeAsync(CancellationToken cancellationToken = default)
+    {
+        if (ActiveRecipe is null)
+        {
+            ShowNotification("Select or prepare a recipe first.", NotificationSeverity.Warning);
+            return;
+        }
+
+        ActiveRecipe.StatusSummary = "Running recipe...";
+        RaisePropertyChanged(nameof(CanRunActiveRecipe));
+        foreach (var step in ActiveRecipe.Steps)
+        {
+            if (step.Status == "completed")
+            {
+                continue;
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                step.Status = "failed";
+                step.Error = "Canceled.";
+                ActiveRecipe.StatusSummary = "Recipe canceled.";
+                RaisePropertyChanged(nameof(CanRunActiveRecipe));
+                return;
+            }
+
+            step.Status = "running";
+            step.Error = string.Empty;
+            var parsed = _commandParser.Parse(step.CommandText);
+            if (!parsed.IsSuccess || parsed.Commands.Count == 0)
+            {
+                step.Status = "failed";
+                step.Error = parsed.Message;
+                ActiveRecipe.StatusSummary = $"Recipe failed at {step.Id}: {parsed.Message}";
+                RaisePropertyChanged(nameof(CanRunActiveRecipe));
+                return;
+            }
+
+            foreach (var command in parsed.Commands)
+            {
+                var result = await ExecuteWorkspaceCommandAsync(command, cancellationToken);
+                if (!result.Success)
+                {
+                    step.Status = "failed";
+                    step.Error = result.Message;
+                    ActiveRecipe.StatusSummary = $"Recipe failed at {step.Id}: {result.Message}";
+                    RaisePropertyChanged(nameof(CanRunActiveRecipe));
+                    return;
+                }
+            }
+
+            step.Status = "completed";
+        }
+
+        ActiveRecipe.StatusSummary = "Recipe completed. Generated bodies are now in the viewport and project tree.";
+        SelectedWorkspaceKind = "PartStudio";
+        ShowPropertiesPanel();
+        ShowNotification("Recipe completed.", NotificationSeverity.Success);
+        RaisePropertyChanged(nameof(CanRunActiveRecipe));
+    }
+
+    private CadRecipeRunViewModel BuildRecipeRun(
+        string recipeId,
+        string title,
+        string description,
+        string parameterSummary,
+        string exportHints,
+        string commandText)
+    {
+        var run = new CadRecipeRunViewModel(recipeId, title, "mm", description, parameterSummary, exportHints, commandText);
+        var steps = _commandParser.ParseSequence(commandText);
+        foreach (var step in steps)
+        {
+            var operation = step.Result.Commands.Count == 1
+                ? step.Result.Commands[0].Describe()
+                : step.Text;
+            var model = new RecipeStepViewModel($"step-{step.Index.ToString(CultureInfo.InvariantCulture)}", operation, step.Text, step.Text);
+            if (!step.Result.IsSuccess || step.Result.Commands.Count == 0)
+            {
+                model.Status = "failed";
+                model.Error = step.Result.Message;
+            }
+
+            run.Steps.Add(model);
+        }
+
+        run.StatusSummary = run.Steps.Any(step => step.Status == "failed")
+            ? "Recipe contains unsupported steps and cannot run until corrected."
+            : "Recipe validated. Ready to run.";
+        return run;
+    }
+
+    private static string MapQuickUseCaseToRecipe(string useCase)
+    {
+        return useCase.Trim().ToLowerInvariant() switch
+        {
+            "bracket" => "bracket",
+            "spacer" => "standoff",
+            "clip" => "channel",
+            "mount" => "plate-with-hole",
+            "enclosure" => "shelled-box",
+            "adapter" => "plate-with-hole",
+            _ => "plate"
+        };
     }
 
     public bool SaveProject(string path)
     {
         try
         {
+            UpdateProjectMetadataChanged();
             UpdateDocumentUiStateInController();
             _workspaceController.SaveProject(path);
             CurrentProjectPath = path;
             ProjectTitleBase = BuildProjectTitle(path);
             _appSettings.AddRecentFile(path);
             SaveStateLabel = "Saved";
+            RaiseProjectMetadataProperties();
             RaisePropertyChanged(nameof(RecentFiles));
             RaisePropertyChanged(nameof(RecentDocumentItems));
             RaisePropertyChanged(nameof(HasRecentDocumentItems));
@@ -2261,6 +2662,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         var result = _workspaceController.OpenProject(path);
         if (result.Success)
         {
+            DismissStartupPage();
             CurrentProjectPath = path;
             ProjectTitleBase = BuildProjectTitle(path);
             _appSettings.AddRecentFile(path);
@@ -2373,6 +2775,70 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         return string.IsNullOrWhiteSpace(fileName)
             ? "My3DApp Project / unsaved.umxproj"
             : $"My3DApp Project / {fileName}";
+    }
+
+    private static string NormalizeProjectType(string projectType)
+    {
+        return projectType.Trim().ToLowerInvariant() switch
+        {
+            "large" => "large",
+            "quick" => "quick",
+            _ => "standard"
+        };
+    }
+
+    private static string BuildDefaultProjectName(string projectType, DateTimeOffset timestamp)
+    {
+        var suffix = timestamp.ToLocalTime().ToString("yyyyMMdd-HHmm", CultureInfo.InvariantCulture);
+        return projectType switch
+        {
+            "large" => $"Large Project {suffix}",
+            "quick" => $"Quick Design {suffix}",
+            _ => $"Standard Project {suffix}"
+        };
+    }
+
+    private static string CreateLocalProjectPath(string projectName, string projectType)
+    {
+        Directory.CreateDirectory(LocalProjectsDirectory);
+        var safeName = SanitizeFileName(projectName);
+        var suffix = DateTimeOffset.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
+        return Path.Combine(LocalProjectsDirectory, $"{safeName}-{projectType}-{suffix}.umxproj");
+    }
+
+    private static string SanitizeFileName(string value)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        var cleaned = new string(value.Select(ch => invalid.Contains(ch) ? '-' : ch).ToArray()).Trim();
+        return string.IsNullOrWhiteSpace(cleaned) ? "My3DApp-Project" : cleaned;
+    }
+
+    private static string FormatTimestampLabel(string value, string prefix)
+    {
+        return DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var timestamp)
+            ? $"{prefix} {timestamp.ToLocalTime():yyyy-MM-dd HH:mm}"
+            : $"{prefix} unknown";
+    }
+
+    private void UpdateProjectMetadataChanged(DateTimeOffset? timestamp = null)
+    {
+        var now = (timestamp ?? DateTimeOffset.UtcNow).ToString("O", CultureInfo.InvariantCulture);
+        _productProjectUpdatedAt = now;
+        _activeDocumentUpdatedAt = now;
+        RaiseProjectMetadataProperties();
+    }
+
+    private void RaiseProjectMetadataProperties()
+    {
+        RaisePropertyChanged(nameof(ProductProjectId));
+        RaisePropertyChanged(nameof(ProductProjectType));
+        RaisePropertyChanged(nameof(ProductProjectTypeLabel));
+        RaisePropertyChanged(nameof(ProductProjectSummary));
+        RaisePropertyChanged(nameof(ProductProjectCreatedLabel));
+        RaisePropertyChanged(nameof(ProductProjectUpdatedLabel));
+        RaisePropertyChanged(nameof(ActiveDocumentId));
+        RaisePropertyChanged(nameof(ActiveDocumentType));
+        RaisePropertyChanged(nameof(ActiveDocumentTypeLabel));
     }
 
     public void MarkAutosaved(DateTimeOffset timestamp)
@@ -2612,6 +3078,16 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     {
         var state = new StudioDocumentUiState
         {
+            ProjectId = _productProjectId,
+            ProjectName = DocumentName,
+            ProjectType = _productProjectType,
+            ProjectCreatedAt = _productProjectCreatedAt,
+            ProjectUpdatedAt = _productProjectUpdatedAt,
+            DocumentId = _activeDocumentId,
+            DocumentName = DocumentName,
+            DocumentType = _activeDocumentType,
+            DocumentCreatedAt = _activeDocumentCreatedAt,
+            DocumentUpdatedAt = _activeDocumentUpdatedAt,
             ActiveWorkspaceKind = SelectedWorkspaceKind,
             SelectedTemplateId = SelectedMakerTemplate?.Id ?? string.Empty,
             TemplateParameterValues = TemplateParameters.ToDictionary(item => item.Key, item => item.Value, StringComparer.OrdinalIgnoreCase),
@@ -2633,6 +3109,24 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     private void RestoreDocumentUiState(StudioDocumentUiState state)
     {
+        _productProjectId = string.IsNullOrWhiteSpace(state.ProjectId) ? Guid.NewGuid().ToString("D") : state.ProjectId;
+        _productProjectType = NormalizeProjectType(state.ProjectType);
+        _productProjectCreatedAt = string.IsNullOrWhiteSpace(state.ProjectCreatedAt)
+            ? DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture)
+            : state.ProjectCreatedAt;
+        _productProjectUpdatedAt = string.IsNullOrWhiteSpace(state.ProjectUpdatedAt)
+            ? _productProjectCreatedAt
+            : state.ProjectUpdatedAt;
+        _activeDocumentId = string.IsNullOrWhiteSpace(state.DocumentId) ? Guid.NewGuid().ToString("D") : state.DocumentId;
+        _activeDocumentType = string.IsNullOrWhiteSpace(state.DocumentType) ? "partStudio" : state.DocumentType;
+        _activeDocumentCreatedAt = string.IsNullOrWhiteSpace(state.DocumentCreatedAt)
+            ? _productProjectCreatedAt
+            : state.DocumentCreatedAt;
+        _activeDocumentUpdatedAt = string.IsNullOrWhiteSpace(state.DocumentUpdatedAt)
+            ? _productProjectUpdatedAt
+            : state.DocumentUpdatedAt;
+        RaiseProjectMetadataProperties();
+
         ExportJobs.Clear();
         foreach (var job in state.ExportJobs)
         {
@@ -2896,6 +3390,16 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
         if (!IsAssistantConfigured)
         {
+            AddMessage("user", userInput);
+            if (TryPrepareRecipeFromPrompt(userInput, out var localRecipeMessage))
+            {
+                AddMessage("system", localRecipeMessage);
+                AssistantStatus = "Local recipe ready";
+                ShowAssistantPanel();
+                return;
+            }
+
+            AddMessage("system", localRecipeMessage);
             AssistantStatus = BuildIdleStatusText();
             ShowAssistantPanel();
             return;
@@ -3118,6 +3622,10 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         }
 
         var result = _workspaceController.ExecuteCommand(command);
+        if (result.Mutated)
+        {
+            UpdateProjectMetadataChanged();
+        }
         if (result.RequestFocusSelection)
         {
             FocusSelectionRequested?.Invoke(this, EventArgs.Empty);
@@ -3132,9 +3640,13 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         {
             AddMessage(
                 "system",
-                "CAD assistant ready. Try commands like: create box, start sketch on top plane; rectangle 0 0 20 10; finish sketch; extrude 8.");
+                "CAD assistant ready. Try M3 Script like: create box, start sketch on top plane; rectangle 0 0 20 10; finish sketch; extrude 8.");
         }
     }
+
+    public void DismissStartupPage() => IsStartupPageVisible = false;
+
+    public void ShowStartupPage() => IsStartupPageVisible = true;
 
     private void AddMessage(string role, string content)
     {
@@ -3216,17 +3728,41 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         FeatureNodes.Clear();
 
         var documentRoot = new FeatureNodeViewModel(
-            "Document",
+            "Project",
             "document-group",
-            string.Empty,
-            string.Empty,
+            ProductProjectTypeLabel,
+            ProductProjectSummary,
             isExpanded: true);
+        documentRoot.Children.Add(new FeatureNodeViewModel(
+            DocumentName,
+            "document",
+            ActiveDocumentTypeLabel,
+            $"{ProductProjectCreatedLabel} | {ProductProjectUpdatedLabel}",
+            $"Project ID: {ProductProjectId}"));
         documentRoot.Children.Add(new FeatureNodeViewModel(
             string.IsNullOrWhiteSpace(CurrentProjectPath) ? "unsaved.umxproj" : Path.GetFileName(CurrentProjectPath),
             "document",
-            "Project",
+            "Project file",
             $"{SaveStateLabel} | {SelectedWorkspaceKind} | {PartStudios.Count.ToString(CultureInfo.InvariantCulture)} studio tab(s)",
             string.IsNullOrWhiteSpace(CurrentProjectPath) ? "Unsaved local document" : CurrentProjectPath));
+
+        var partStudioRoot = new FeatureNodeViewModel(
+            "Part studios",
+            "workspace-group",
+            string.Empty,
+            string.Empty,
+            isExpanded: true);
+        foreach (var studio in PartStudios)
+        {
+            partStudioRoot.Children.Add(new FeatureNodeViewModel(
+                studio.Name,
+                "workspace",
+                studio.IsActive ? "Active part studio" : "Part studio",
+                studio.IsActive
+                    ? $"{compileResult.Bodies.Count.ToString(CultureInfo.InvariantCulture)} visible body/bodies | {project.Scene.Bodies.Sum(body => body.Features.Count).ToString(CultureInfo.InvariantCulture)} history item(s)"
+                    : "Saved in this local project file",
+                $"Document ID: {ActiveDocumentId}"));
+        }
 
         var workspaceRoot = new FeatureNodeViewModel(
             "Workspaces",
@@ -3280,7 +3816,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             string.Empty,
             string.Empty,
             isExpanded: true);
-        var roots = new List<FeatureNodeViewModel> { documentRoot, workspaceRoot, geometryRoot };
+        var roots = new List<FeatureNodeViewModel> { documentRoot, partStudioRoot, workspaceRoot, geometryRoot };
 
         foreach (var body in project.Scene.Bodies)
         {
@@ -3529,6 +4065,8 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         RaisePropertyChanged(nameof(PrepareWorkspaceChecks));
         RaisePropertyChanged(nameof(HasPrepareWorkspaceChecks));
         RaisePropertyChanged(nameof(CanExportCurrentPart));
+        RaisePropertyChanged(nameof(HasBodies));
+        RaisePropertyChanged(nameof(IsPartStudioEmptyStateVisible));
         RaisePropertyChanged(nameof(WorkspaceSurfaceSummary));
     }
 
@@ -4143,9 +4681,19 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         var previousSelection = _selectedAssistantModel;
         AssistantModels.Clear();
 
-        var options = string.Equals(provider, "Anthropic", StringComparison.Ordinal)
-            ? new[] { "Claude Sonnet 4.5" }
-            : new[] { "GPT-5.4 mini", "GPT-5.4" };
+        string[] options;
+        if (string.Equals(provider, "Anthropic", StringComparison.Ordinal))
+        {
+            options = ["Claude Sonnet 4.5"];
+        }
+        else if (string.Equals(provider, "DeepSeek", StringComparison.Ordinal))
+        {
+            options = ["DeepSeek Chat", "DeepSeek Reasoner"];
+        }
+        else
+        {
+            options = ["GPT-5.4 mini", "GPT-5.4"];
+        }
 
         foreach (var option in options)
         {
@@ -4161,6 +4709,20 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             _selectedAssistantModel = nextSelection;
             RaisePropertyChanged(nameof(SelectedAssistantModel));
         }
+
+        _appSettings.PreferredAssistantModel = _selectedAssistantModel;
+        _appSettings.Save();
+    }
+
+    private static string NormalizeAssistantProvider(string? provider)
+    {
+        return provider?.Trim().ToLowerInvariant() switch
+        {
+            "anthropic" => "Anthropic",
+            "openai" => "OpenAI",
+            "deepseek" => "DeepSeek",
+            _ => "DeepSeek"
+        };
     }
 
     private void UpdateAssistantShellSummary()

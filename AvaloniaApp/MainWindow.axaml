@@ -105,8 +105,127 @@
                 Grid.ColumnSpan="3"
                 Classes="ToolbarCommandStrip"
                 Margin="0,12,0,0">
+          <Grid>
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Button Content="File" Classes="ToolbarMenuButton">
+              <Button.Flyout>
+                <MenuFlyout>
+                  <MenuItem Header="New Project..." Click="OnNewProjectDialogClick" />
+                  <MenuItem Header="New Large Project" Click="OnNewLargeProjectClick" />
+                  <MenuItem Header="New Standard Project" Click="OnNewStandardProjectClick" />
+                  <MenuItem Header="New Quick Design" Click="OnNewQuickDesignClick" />
+                  <MenuItem Header="Open Existing Project..." Click="OnOpenProjectClick" />
+                  <MenuItem Header="Recent Projects" IsEnabled="{Binding HasRecentFiles}" Click="OnRecentFilesClick" />
+                  <MenuItem Header="Save" Click="OnSaveProjectClick" />
+                  <MenuItem Header="Save As..." Click="OnSaveAsProjectClick" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+
+            <Button Content="Create" Classes="ToolbarMenuButton" IsEnabled="{Binding CanPrimitiveTools}">
+              <Button.Flyout>
+                <MenuFlyout>
+                  <MenuItem Header="Box" Tag="box" Click="OnPrimitiveMenuItemClick" />
+                  <MenuItem Header="Cylinder" Tag="cylinder" Click="OnPrimitiveMenuItemClick" />
+                  <MenuItem Header="Sphere" Tag="sphere" Click="OnPrimitiveMenuItemClick" />
+                  <MenuItem Header="Cone" Tag="cone" Click="OnPrimitiveMenuItemClick" />
+                  <MenuItem Header="Torus" Tag="torus" Click="OnPrimitiveMenuItemClick" />
+                  <MenuItem Header="Wedge" Tag="wedge" Click="OnPrimitiveMenuItemClick" />
+                  <MenuItem Header="Prism" Tag="prism" Click="OnPrimitiveMenuItemClick" />
+                  <MenuItem Header="Open Sample / Template" Click="OnOpenSampleTemplateClick" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+
+            <Button Content="Sketch" Classes="ToolbarMenuButton">
+              <Button.Flyout>
+                <MenuFlyout>
+                  <MenuItem Header="Start / Finish Sketch" IsEnabled="{Binding CanSketchPrimaryAction}" Click="OnSketchPrimaryClick" />
+                  <MenuItem Header="Cancel Sketch" IsEnabled="{Binding CanCancelSketch}" Click="OnSketchCancelClick" />
+                  <MenuItem Header="Line" Tag="Line" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick" />
+                  <MenuItem Header="Rectangle" Tag="Rectangle" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick" />
+                  <MenuItem Header="Circle" Tag="Circle" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick" />
+                  <MenuItem Header="Arc" Tag="Arc" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick" />
+                  <MenuItem Header="Point" Tag="Point" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick" />
+                  <MenuItem Header="Linear Dimension" Tag="LinearDimension" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+
+            <Button Content="Solid" Classes="ToolbarMenuButton">
+              <Button.Flyout>
+                <MenuFlyout>
+                  <MenuItem Header="Extrude" IsEnabled="{Binding CanProfileTools}" Click="OnExtrudeClick" />
+                  <MenuItem Header="Revolve" IsEnabled="{Binding CanProfileTools}" Click="OnRevolveClick" />
+                  <MenuItem Header="Sweep" IsEnabled="{Binding CanProfileTools}" Click="OnSweepClick" />
+                  <MenuItem Header="Loft" IsEnabled="{Binding CanLoftTools}" Click="OnLoftClick" />
+                  <MenuItem Header="Boolean Union" IsEnabled="{Binding CanBooleanTools}" Click="OnBooleanUnionClick" />
+                  <MenuItem Header="Boolean Subtract" IsEnabled="{Binding CanBooleanTools}" Click="OnBooleanSubtractClick" />
+                  <MenuItem Header="Boolean Intersect" IsEnabled="{Binding CanBooleanTools}" Click="OnBooleanIntersectClick" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+
+            <Button Content="Transform" Classes="ToolbarMenuButton">
+              <Button.Flyout>
+                <MenuFlyout>
+                  <MenuItem Header="Move Tool" IsEnabled="{Binding IsThreeDMode}" Click="OnMoveToolClick" />
+                  <MenuItem Header="Mirror Body" IsEnabled="{Binding CanEdgeTools}" Click="OnMirrorMenuItemClick" />
+                  <MenuItem Header="Create Datum Plane" IsEnabled="{Binding IsThreeDMode}" Click="OnCreateDatumPlaneClick" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+
+            <Button Content="Modify" Classes="ToolbarMenuButton">
+              <Button.Flyout>
+                <MenuFlyout>
+                  <MenuItem Header="Fillet" IsEnabled="{Binding CanEdgeTools}" Click="OnFilletClick" />
+                  <MenuItem Header="Chamfer" IsEnabled="{Binding CanEdgeTools}" Click="OnChamferClick" />
+                  <MenuItem Header="Shell" IsEnabled="{Binding CanEdgeTools}" Click="OnShellClick" />
+                  <MenuItem Header="Hole" IsEnabled="{Binding CanEdgeTools}" Click="OnHoleClick" />
+                  <MenuItem Header="Linear Pattern" IsEnabled="{Binding CanEdgeTools}" Click="OnLinearPatternClick" />
+                  <MenuItem Header="Circular Pattern" IsEnabled="{Binding CanEdgeTools}" Click="OnCircularPatternClick" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+
+            <Button Content="View" Classes="ToolbarMenuButton">
+              <Button.Flyout>
+                <MenuFlyout>
+                  <MenuItem Header="Focus / Fit View" Click="OnFocusSelectionClick" />
+                  <MenuItem Header="Command Palette" Click="OnCommandPaletteClick" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+
+            <Button Content="Export" Classes="ToolbarMenuButton">
+              <Button.Flyout>
+                <MenuFlyout>
+                  <MenuItem Header="Prepare Workspace" Click="OnPrepareWorkspaceMenuClick" />
+                  <MenuItem Header="Export STL / OBJ..." IsEnabled="{Binding CanExportCurrentPart}" Click="OnExportClick" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+
+            <Button Content="AI / Recipe" Classes="ToolbarMenuButton">
+              <Button.Flyout>
+                <MenuFlyout>
+                  <MenuItem Header="Configure AI..." Click="OnAiSettingsClick" />
+                  <MenuItem Header="Open Copilot" Click="OnOpenAssistantWorkspaceClick" />
+                  <MenuItem Header="Open Sample Recipe" Click="OnOpenSampleRecipeClick" />
+                  <MenuItem Header="Run Active Recipe" IsEnabled="{Binding CanRunActiveRecipe}" Click="OnRunActiveRecipeClick" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+
+            <Border Classes="ToolbarDivider" />
+            <Button Classes="CommandButton"
+                    Content="Commands - Ctrl+K"
+                    Click="OnCommandPaletteClick" />
+          </StackPanel>
           <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                        VerticalScrollBarVisibility="Disabled">
+                        VerticalScrollBarVisibility="Disabled"
+                        IsVisible="False">
           <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
             <TextBlock Text="Workflow" Classes="ToolbarGroupLabel" />
             <Border Classes="ToolSplitGroup" Padding="4" IsVisible="{Binding IsThreeDMode}">
@@ -763,6 +882,7 @@
             </StackPanel>
           </StackPanel>
           </ScrollViewer>
+          </Grid>
         </Border>
       </Grid>
     </Border>
@@ -1454,7 +1574,7 @@
                   </Border>
                   <Border Classes="AssistantContextCard">
                     <StackPanel Spacing="6">
-                      <TextBlock Text="Script command preview"
+                      <TextBlock Text="M3 Script preview"
                                  Classes="AssistantContextPrimary" />
                       <TextBox Text="{Binding SelectedTemplateCommandPreview}"
                                IsReadOnly="True"
@@ -1575,6 +1695,334 @@
                     </StackPanel>
                   </Border>
                 </StackPanel>
+               </Border>
+
+              <Border Grid.RowSpan="3"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      MaxWidth="560"
+                      Classes="ViewportSketchSessionCard"
+                      IsVisible="{Binding IsPartStudioEmptyStateVisible}">
+                <StackPanel Spacing="12" Width="520">
+                  <TextBlock Text="Create your first part"
+                             Classes="ViewportSessionTitle" />
+                  <TextBlock Text="This part studio is empty. Start with a real local template, command, primitive, sketch, or sample recipe; generated geometry will appear in the viewport and project tree."
+                             TextWrapping="Wrap"
+                             Classes="ViewportSessionSummary" />
+                  <WrapPanel>
+                    <Button Content="Use a template"
+                            Margin="0,0,8,8"
+                            Classes="AssistantApplyButton"
+                            Click="OnOpenTemplatesWorkspaceClick" />
+                    <Button Content="Describe a part"
+                            Margin="0,0,8,8"
+                            Classes="AssistantSecondaryButton"
+                            Click="OnOpenAssistantWorkspaceClick" />
+                    <Button Content="Start a sketch"
+                            Margin="0,0,8,8"
+                            Classes="AssistantSecondaryButton"
+                            IsEnabled="{Binding CanSketchPrimaryAction}"
+                            Click="OnSketchPrimaryClick" />
+                    <Button Content="Create box primitive"
+                            Tag="box"
+                            Margin="0,0,8,8"
+                            Classes="AssistantSecondaryButton"
+                            IsEnabled="{Binding CanPrimitiveTools}"
+                            Click="OnPrimitiveMenuItemClick" />
+                    <Button Content="Open sample recipe"
+                            Margin="0,0,8,8"
+                            Classes="AssistantSecondaryButton"
+                            Click="OnOpenSampleRecipeClick" />
+                  </WrapPanel>
+                  <TextBlock Text="Export becomes available after at least one visible body exists. Supported export formats in this build: STL and OBJ."
+                             TextWrapping="Wrap"
+                             Classes="ToolbarSubtleText" />
+                </StackPanel>
+              </Border>
+
+              <Border Grid.RowSpan="3"
+                      Margin="18"
+                      Padding="18"
+                      Classes="StartupBackdrop"
+                      IsVisible="{Binding IsStartupPageVisible}">
+                <Grid ColumnDefinitions="1.25*,0.95*"
+                      RowDefinitions="Auto,*,Auto">
+                  <Border Grid.Column="0"
+                          Grid.RowSpan="2"
+                          Margin="0,0,16,0"
+                          Classes="StartupHeroCard">
+                    <Grid RowDefinitions="Auto,Auto,*">
+                      <StackPanel Spacing="8">
+                        <Border Classes="StartupChip"
+                                HorizontalAlignment="Left">
+                          <TextBlock Text="Launchpad"
+                                     Classes="ToolbarMetaLabel" />
+                        </Border>
+                        <TextBlock Text="{Binding StartupPageTitle}"
+                                   Classes="StartupTitleText" />
+                        <TextBlock Text="{Binding StartupPageSummary}"
+                                   MaxWidth="560"
+                                   TextWrapping="Wrap"
+                                   Classes="StartupBodyText" />
+                      </StackPanel>
+
+                      <Grid Grid.Row="1"
+                            ColumnDefinitions="*,*"
+                            RowDefinitions="Auto,Auto,Auto"
+                            Margin="0,16,0,0">
+                        <Button Grid.Row="0"
+                                Grid.Column="0"
+                                Margin="0,0,6,6"
+                                Classes="StartupActionCard"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Stretch"
+                                Click="OnNewLargeProjectClick">
+                          <StackPanel Spacing="4">
+                            <TextBlock Text="New Large Project"
+                                       Classes="StartupActionTitle" />
+                            <TextBlock Text="Creates a saved local project with multiple part studios for longer work."
+                                       TextWrapping="Wrap"
+                                       Classes="StartupActionSummary" />
+                          </StackPanel>
+                        </Button>
+
+                        <Button Grid.Row="0"
+                                Grid.Column="1"
+                                Margin="6,0,0,6"
+                                Classes="StartupActionCard"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Stretch"
+                                Click="OnNewStandardProjectClick">
+                          <StackPanel Spacing="4">
+                            <TextBlock Text="New Standard Project"
+                                       Classes="StartupActionTitle" />
+                            <TextBlock Text="Creates a normal saved project with one active part studio."
+                                       TextWrapping="Wrap"
+                                       Classes="StartupActionSummary" />
+                          </StackPanel>
+                        </Button>
+
+                        <Button Grid.Row="1"
+                                Grid.Column="0"
+                                Margin="0,6,6,0"
+                                Classes="StartupActionCard"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Stretch"
+                                Click="OnNewQuickDesignClick">
+                          <StackPanel Spacing="4">
+                            <TextBlock Text="New Quick Design"
+                                       Classes="StartupActionTitle" />
+                            <TextBlock Text="Fast saved local scratch project for small household or repair parts."
+                                       TextWrapping="Wrap"
+                                       Classes="StartupActionSummary" />
+                          </StackPanel>
+                        </Button>
+
+                        <Button Grid.Row="1"
+                                Grid.Column="1"
+                                Margin="6,6,0,0"
+                                Classes="StartupActionCard"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Stretch"
+                                Click="OnOpenProjectClick">
+                          <StackPanel Spacing="4">
+                            <TextBlock Text="Open Existing Project"
+                                       Classes="StartupActionTitle" />
+                            <TextBlock Text="Open a `.umxproj` file and restore its studios, exports, and UI state."
+                                       TextWrapping="Wrap"
+                                       Classes="StartupActionSummary" />
+                          </StackPanel>
+                        </Button>
+
+                        <Button Grid.Row="2"
+                                Grid.ColumnSpan="2"
+                                Margin="0,12,0,0"
+                                Classes="StartupActionCard"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Stretch"
+                                Click="OnOpenSampleTemplateClick">
+                          <StackPanel Spacing="4">
+                            <TextBlock Text="Open Sample / Template"
+                                       Classes="StartupActionTitle" />
+                            <TextBlock Text="Creates a real sample mounting plate with a hole using the local recipe pipeline."
+                                       TextWrapping="Wrap"
+                                       Classes="StartupActionSummary" />
+                          </StackPanel>
+                        </Button>
+                      </Grid>
+
+                      <Border Grid.Row="2"
+                              Margin="0,16,0,0"
+                              Classes="StartupStatusStrip">
+                        <Grid ColumnDefinitions="*,*,*">
+                          <StackPanel Spacing="2">
+                            <TextBlock Text="Local"
+                                       Classes="ToolbarMetaLabel" />
+                            <TextBlock Text="{Binding LocalCadStatusText}"
+                                       TextWrapping="Wrap"
+                                       Classes="StartupStatusText" />
+                          </StackPanel>
+                          <StackPanel Grid.Column="1"
+                                      Margin="12,0,0,0"
+                                      Spacing="2">
+                            <TextBlock Text="AI"
+                                       Classes="ToolbarMetaLabel" />
+                            <TextBlock Text="{Binding AiConfigurationStatusText}"
+                                       TextWrapping="Wrap"
+                                       Classes="StartupStatusText" />
+                          </StackPanel>
+                          <StackPanel Grid.Column="2"
+                                      Margin="12,0,0,0"
+                                      Spacing="2">
+                            <TextBlock Text="Language"
+                                       Classes="ToolbarMetaLabel" />
+                            <TextBlock Text="{Binding ModelingLanguageName}"
+                                       TextWrapping="Wrap"
+                                       Classes="StartupStatusText" />
+                          </StackPanel>
+                        </Grid>
+                      </Border>
+                    </Grid>
+                  </Border>
+
+                  <Border Grid.Column="1"
+                          Classes="StartupSideCard">
+                    <StackPanel Spacing="10">
+                      <StackPanel Spacing="4">
+                        <TextBlock Text="{Binding StartupPageAssistantTitle}"
+                                   Classes="StartupSectionTitle" />
+                        <TextBlock Text="{Binding StartupPageAssistantSummary}"
+                                   TextWrapping="Wrap"
+                                   Classes="StartupBodyText" />
+                      </StackPanel>
+                      <Grid ColumnDefinitions="*,*">
+                        <ComboBox ItemsSource="{Binding AssistantProviders}"
+                                  SelectedItem="{Binding SelectedAssistantProvider}"
+                                  Classes="AssistantSelector" />
+                        <ComboBox Grid.Column="1"
+                                  Margin="8,0,0,0"
+                                  ItemsSource="{Binding AssistantModels}"
+                                  SelectedItem="{Binding SelectedAssistantModel}"
+                                  Classes="AssistantSelector" />
+                      </Grid>
+                      <Grid ColumnDefinitions="*,Auto">
+                        <TextBox Text="{Binding AssistantKeyInput, Mode=TwoWay}"
+                                 PasswordChar="*"
+                                 Watermark="Paste session key (not saved)"
+                                 Classes="AssistantKeyInput" />
+                        <Border Grid.Column="1"
+                                Margin="8,0,0,0"
+                                Classes="AssistantStatusBadge"
+                                VerticalAlignment="Center">
+                          <TextBlock Text="{Binding AssistantStatusBadge}"
+                                     FontSize="10"
+                                     FontWeight="SemiBold" />
+                        </Border>
+                      </Grid>
+                      <TextBlock Text="{Binding AssistantConfigurationSummary}"
+                                 TextWrapping="Wrap"
+                                 Classes="AssistantHintText" />
+                      <Button Content="Configure AI"
+                              Classes="AssistantSecondaryButton"
+                              HorizontalAlignment="Left"
+                              Click="OnAiSettingsClick" />
+                      <TextBlock Text="For persistent setup, prefer `DEEPSEEK_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY`."
+                                 TextWrapping="Wrap"
+                                 Classes="ToolbarSubtleText" />
+                    </StackPanel>
+                  </Border>
+
+                  <Border Grid.Column="1"
+                          Grid.Row="1"
+                          Margin="0,16,0,0"
+                          Classes="StartupSideCard">
+                    <StackPanel Spacing="10">
+                      <StackPanel Spacing="4">
+                        <TextBlock Text="Quick Design use cases"
+                                   Classes="StartupSectionTitle" />
+                        <TextBlock Text="These create real quick projects and run a supported local recipe into the scene."
+                                   TextWrapping="Wrap"
+                                   Classes="StartupBodyText" />
+                      </StackPanel>
+                      <WrapPanel>
+                        <Button Content="Bracket" Tag="bracket" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
+                        <Button Content="Spacer" Tag="spacer" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
+                        <Button Content="Clip" Tag="clip" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
+                        <Button Content="Mount" Tag="mount" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
+                        <Button Content="Enclosure" Tag="enclosure" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
+                        <Button Content="Adapter" Tag="adapter" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
+                      </WrapPanel>
+                      <Border Height="1" Background="{DynamicResource Studio.BorderBrush}" Opacity="0.7" />
+                      <StackPanel Spacing="4">
+                        <TextBlock Text="Recent documents"
+                                   Classes="StartupSectionTitle" />
+                        <TextBlock Text="Jump back into active projects without leaving the studio shell."
+                                   TextWrapping="Wrap"
+                                   Classes="StartupBodyText" />
+                      </StackPanel>
+                      <ItemsControl ItemsSource="{Binding RecentDocumentItems}"
+                                    IsVisible="{Binding HasRecentDocumentItems}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate DataType="vm:RecentDocumentItemViewModel">
+                            <Button Tag="{Binding FullPath}"
+                                    Margin="0,0,0,6"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Classes="AssistantSecondaryButton"
+                                    ToolTip.Tip="{Binding FullPath}"
+                                    Click="OnRecentDocumentLibraryClick">
+                              <StackPanel Spacing="1">
+                                <TextBlock Text="{Binding DisplayName}" />
+                                <TextBlock Text="{Binding Summary}"
+                                           Classes="ToolbarMetaLabel" />
+                              </StackPanel>
+                            </Button>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                      <TextBlock Text="No recent documents yet. Save a project and it will appear here on the next launch."
+                                 TextWrapping="Wrap"
+                                 Classes="ToolbarSubtleText"
+                                 IsVisible="{Binding HasNoRecentDocumentItems}" />
+                    </StackPanel>
+                  </Border>
+
+                  <Border Grid.Row="2"
+                          Grid.ColumnSpan="2"
+                          Margin="0,16,0,0"
+                          Classes="StartupCodeCard">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <StackPanel Spacing="8">
+                        <TextBlock Text="{Binding ModelingLanguageName}"
+                                   Classes="StartupSectionTitle" />
+                        <TextBlock Text="{Binding ModelingLanguageSummary}"
+                                   TextWrapping="Wrap"
+                                   Classes="StartupBodyText" />
+                        <TextBox Text="{Binding ModelingLanguageSample}"
+                                 IsReadOnly="True"
+                                 AcceptsReturn="True"
+                                 TextWrapping="NoWrap"
+                                 FontFamily="Consolas, Cascadia Mono, monospace"
+                                 Classes="StartupCodePreview" />
+                      </StackPanel>
+                      <StackPanel Grid.Column="1"
+                                  Margin="16,0,0,0"
+                                  Width="180"
+                                  Spacing="8"
+                                  VerticalAlignment="Top">
+                        <Button Content="Open commands"
+                                Classes="AssistantApplyButton"
+                                Click="OnCommandPaletteClick" />
+                        <Button Content="Enter studio"
+                                Classes="AssistantSecondaryButton"
+                                Click="OnDismissStartupPageClick" />
+                        <CheckBox Content="Show this page on launch"
+                                  IsChecked="{Binding ShowStartupPageOnLaunch}"
+                                  Foreground="{DynamicResource Studio.TextSecondaryBrush}" />
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </Grid>
               </Border>
 
             </Grid>
@@ -1724,6 +2172,9 @@
                   <TextBlock Text="{Binding AssistantConfigurationSummary}"
                              TextWrapping="Wrap"
                              Classes="AssistantHintText" />
+                  <TextBlock Text="{Binding AssistantStatus}"
+                             TextWrapping="Wrap"
+                             Classes="ToolbarMetaLabel" />
                 </StackPanel>
               </Border>
 
@@ -1768,12 +2219,26 @@
                     <Border Classes="AssistantInactiveCard"
                             Margin="0,0,0,8"
                             IsVisible="{Binding ShowAssistantInactiveState}">
-                      <StackPanel Spacing="4">
+                      <StackPanel Spacing="6">
                         <TextBlock Text="{Binding AssistantInactiveTitle}"
                                    Classes="AssistantContextPrimary" />
                         <TextBlock Text="{Binding AssistantInactiveSummary}"
                                    TextWrapping="Wrap"
                                    Classes="AssistantContextSecondary" />
+                        <WrapPanel>
+                          <Button Content="Configure AI"
+                                  Margin="0,0,6,6"
+                                  Classes="AssistantSecondaryButton"
+                                  Click="OnAiSettingsClick" />
+                          <Button Content="Use templates"
+                                  Margin="0,0,6,6"
+                                  Classes="AssistantSecondaryButton"
+                                  Click="OnOpenTemplatesWorkspaceClick" />
+                          <Button Content="Run local recipe"
+                                  Margin="0,0,6,6"
+                                  Classes="AssistantSecondaryButton"
+                                  Click="OnOpenSampleRecipeClick" />
+                        </WrapPanel>
                       </StackPanel>
                     </Border>
                     <!-- Message log -->
@@ -1852,20 +2317,81 @@
                 <svg:Svg Path="avares://My3DApp/Assets/Icons/line.svg"
                          Width="15"
                          Height="15" />
-                <TextBlock Text="Recipe" />
+                <TextBlock Text="M3 Script" />
               </StackPanel>
             </TabItem.Header>
-            <Grid RowDefinitions="Auto,*" Margin="10">
+            <Grid RowDefinitions="Auto,Auto,*" Margin="10">
               <Border Classes="RecipeHeaderCard">
                 <StackPanel Spacing="4">
-                  <TextBlock Text="Feature Recipe"
+                  <TextBlock Text="M3 Script"
                              Classes="RecipeHeaderTitle" />
-                  <TextBlock Text="Solid-first command history for the current part studio. Features stay readable, ordered, and ready for AI-assisted editing."
+                  <TextBlock Text="AI-native command history for the current part studio. Sketches, features, and template output stay readable, ordered, and ready for editing."
                              TextWrapping="Wrap"
                              Classes="RecipeHeaderSummary" />
                 </StackPanel>
               </Border>
-              <TextBox Grid.Row="1"
+              <Border Grid.Row="1"
+                      Margin="0,10,0,0"
+                      Classes="AssistantContextCard"
+                      IsVisible="{Binding HasActiveRecipe}">
+                <StackPanel Spacing="8">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="2">
+                      <TextBlock Text="{Binding ActiveRecipe.Title}"
+                                 Classes="AssistantContextPrimary" />
+                      <TextBlock Text="{Binding ActiveRecipe.Description}"
+                                 TextWrapping="Wrap"
+                                 Classes="AssistantContextSecondary" />
+                      <TextBlock Text="{Binding ActiveRecipe.ParameterSummary}"
+                                 TextWrapping="Wrap"
+                                 Classes="ToolbarMetaLabel" />
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Content="Run Recipe"
+                            Classes="AssistantApplyButton"
+                            IsEnabled="{Binding CanRunActiveRecipe}"
+                            Click="OnRunActiveRecipeClick" />
+                  </Grid>
+                  <TextBlock Text="{Binding ActiveRecipe.StatusSummary}"
+                             TextWrapping="Wrap"
+                             Classes="AssistantHintText" />
+                  <ItemsControl ItemsSource="{Binding ActiveRecipe.Steps}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate DataType="vm:RecipeStepViewModel">
+                        <Grid ColumnDefinitions="76,*,96" Margin="0,2,0,2">
+                          <TextBlock Text="{Binding Id}"
+                                     Classes="ToolbarMetaLabel" />
+                          <StackPanel Grid.Column="1" Spacing="1">
+                            <TextBlock Text="{Binding Operation}"
+                                       Foreground="{DynamicResource Studio.TextPrimaryBrush}" />
+                            <TextBlock Text="{Binding Parameters}"
+                                       TextWrapping="Wrap"
+                                       Classes="ToolbarSubtleText" />
+                            <TextBlock Text="{Binding Error}"
+                                       TextWrapping="Wrap"
+                                       Foreground="#C96B22"
+                                       IsVisible="{Binding HasError}" />
+                          </StackPanel>
+                          <TextBlock Grid.Column="2"
+                                     Text="{Binding Status}"
+                                     Classes="ToolbarMetaLabel"
+                                     HorizontalAlignment="Right" />
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <TextBlock Text="{Binding ActiveRecipe.ExportHints}"
+                             TextWrapping="Wrap"
+                             Classes="ToolbarSubtleText" />
+                </StackPanel>
+              </Border>
+              <TextBlock Grid.Row="1"
+                         Margin="0,10,0,0"
+                         Text="No active recipe yet. Use AI / Recipe → Open Sample Recipe, click a recipe in Copilot, or describe a local part prompt."
+                         TextWrapping="Wrap"
+                         Classes="ToolbarSubtleText"
+                         IsVisible="{Binding HasNoActiveRecipe}" />
+              <TextBox Grid.Row="2"
                        Margin="0,10,0,0"
                        Text="{Binding CodeText}"
                        IsReadOnly="True"

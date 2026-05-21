@@ -12,6 +12,12 @@ public sealed class AppSettings
 
     public List<string> RecentFiles { get; set; } = [];
 
+    public bool ShowStartupPageOnLaunch { get; set; } = true;
+
+    public string PreferredAssistantProvider { get; set; } = "DeepSeek";
+
+    public string PreferredAssistantModel { get; set; } = "DeepSeek Chat";
+
     public static AppSettings Load()
     {
         try

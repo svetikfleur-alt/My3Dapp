@@ -35,6 +35,22 @@ public static class CadScriptLibrary
         @"^for\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)\s+in\s+(?<start>.+?)\s*\.\.\s*(?<end>.+?)(?:\s+step\s+(?<step>.+))?$",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    private static readonly Regex ForEachPattern = new(
+        @"^for\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)\s+in\s*\[(?<values>.*)\]$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex IfPattern = new(
+        @"^if\s+(?<condition>.+)$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex ElseIfPattern = new(
+        @"^else\s+if\s+(?<condition>.+)$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex ElsePattern = new(
+        @"^else$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     private static readonly Regex DefPattern = new(
         @"^(?:def|function)\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)\s*\((?<params>.*)\)$",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -311,6 +327,73 @@ public static class CadScriptLibrary
                 continue;
             }
 
+            var forEachMatch = ForEachPattern.Match(token);
+            if (forEachMatch.Success)
+            {
+                var variableName = forEachMatch.Groups["name"].Value;
+                var values = ParseListValues(forEachMatch.Groups["values"].Value, scope);
+                var blockTokens = ReadBraceBlock(tokens, ref index);
+                for (var listIndex = 0; listIndex < values.Count; listIndex++)
+                {
+                    var loopScope = new CadScriptScope(scope);
+                    loopScope.Set(variableName, values[listIndex]);
+                    loopScope.Set("index", listIndex);
+                    loopScope.Set("iteration", listIndex + 1);
+                    var nestedIndex = 0;
+                    output.AddRange(ExecuteBlock(blockTokens, macros, loopScope, ref nestedIndex));
+                }
+
+                continue;
+            }
+
+            if (TryExtractIfCondition(token, out var ifCondition))
+            {
+                var handled = false;
+                var currentCondition = EvaluateCondition(ifCondition, scope);
+                var currentBlock = ReadBraceBlock(tokens, ref index);
+                if (currentCondition)
+                {
+                    var nestedIndex = 0;
+                    output.AddRange(ExecuteBlock(currentBlock, macros, scope, ref nestedIndex));
+                    handled = true;
+                }
+
+                while (index < tokens.Count)
+                {
+                    var branchToken = tokens[index];
+                    if (TryExtractElseIfCondition(branchToken, out var elseIfCondition))
+                    {
+                        index++;
+                        var elseIfBlock = ReadBraceBlock(tokens, ref index);
+                        if (!handled && EvaluateCondition(elseIfCondition, scope))
+                        {
+                            var nestedIndex = 0;
+                            output.AddRange(ExecuteBlock(elseIfBlock, macros, scope, ref nestedIndex));
+                            handled = true;
+                        }
+
+                        continue;
+                    }
+
+                    if (IsElseToken(branchToken))
+                    {
+                        index++;
+                        var elseBlock = ReadBraceBlock(tokens, ref index);
+                        if (!handled)
+                        {
+                            var nestedIndex = 0;
+                            output.AddRange(ExecuteBlock(elseBlock, macros, scope, ref nestedIndex));
+                        }
+
+                        break;
+                    }
+
+                    break;
+                }
+
+                continue;
+            }
+
             var defMatch = DefPattern.Match(token);
             if (defMatch.Success)
             {
@@ -431,6 +514,52 @@ public static class CadScriptLibrary
         return arguments;
     }
 
+    private static IReadOnlyList<double> ParseListValues(string text, CadScriptScope scope)
+    {
+        var values = new List<double>();
+        foreach (var part in SplitTopLevel(text, ','))
+        {
+            var token = NormalizePart(part);
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                continue;
+            }
+
+            values.Add(EvaluateExpression(token, scope));
+        }
+
+        return values;
+    }
+
+    private static bool TryExtractIfCondition(string token, out string condition)
+    {
+        token = token.Trim();
+        if (token.StartsWith("if ", StringComparison.OrdinalIgnoreCase))
+        {
+            condition = token[3..].Trim();
+            return !string.IsNullOrWhiteSpace(condition);
+        }
+
+        condition = string.Empty;
+        return false;
+    }
+
+    private static bool TryExtractElseIfCondition(string token, out string condition)
+    {
+        token = token.Trim();
+        if (token.StartsWith("else if ", StringComparison.OrdinalIgnoreCase))
+        {
+            condition = token[8..].Trim();
+            return !string.IsNullOrWhiteSpace(condition);
+        }
+
+        condition = string.Empty;
+        return false;
+    }
+
+    private static bool IsElseToken(string token) =>
+        string.Equals(token.Trim(), "else", StringComparison.OrdinalIgnoreCase);
+
     private static void BindMacroArguments(
         CadScriptMacro macro,
         IReadOnlyList<CadScriptArgument> arguments,
@@ -490,6 +619,9 @@ public static class CadScriptLibrary
 
     private static double EvaluateExpression(string expression, CadScriptScope scope) =>
         new ExpressionParser(expression, scope).Parse();
+
+    private static bool EvaluateCondition(string expression, CadScriptScope scope) =>
+        new ConditionParser(expression, scope).Parse();
 
     private static IEnumerable<string> SplitTopLevel(string text, char separator = ';')
     {
@@ -813,5 +945,259 @@ public static class CadScriptLibrary
         }
 
         private char Current => _index < _text.Length ? _text[_index] : '\0';
+    }
+
+    private sealed class ConditionParser
+    {
+        private readonly string _text;
+        private readonly CadScriptScope _scope;
+        private int _index;
+
+        public ConditionParser(string text, CadScriptScope scope)
+        {
+            _text = text.Trim();
+            _scope = scope;
+        }
+
+        public bool Parse()
+        {
+            var value = ParseOr();
+            SkipWhitespace();
+            if (_index < _text.Length)
+            {
+                throw new InvalidOperationException($"Unexpected token in condition '{_text}'.");
+            }
+
+            return value;
+        }
+
+        private bool ParseOr()
+        {
+            var value = ParseAnd();
+            while (true)
+            {
+                SkipWhitespace();
+                if (MatchWord("or") || MatchOperator("||"))
+                {
+                    value = value || ParseAnd();
+                }
+                else
+                {
+                    return value;
+                }
+            }
+        }
+
+        private bool ParseAnd()
+        {
+            var value = ParseNot();
+            while (true)
+            {
+                SkipWhitespace();
+                if (MatchWord("and") || MatchOperator("&&"))
+                {
+                    value = value && ParseNot();
+                }
+                else
+                {
+                    return value;
+                }
+            }
+        }
+
+        private bool ParseNot()
+        {
+            SkipWhitespace();
+            if (MatchWord("not") || MatchOperator("!"))
+            {
+                return !ParseNot();
+            }
+
+            return ParseComparison();
+        }
+
+        private bool ParseComparison()
+        {
+            SkipWhitespace();
+            if (Match('('))
+            {
+                var nested = ParseOr();
+                Expect(')');
+                return nested;
+            }
+
+            var left = ParseNumeric();
+            SkipWhitespace();
+
+            if (MatchOperator(">="))
+            {
+                return left >= ParseNumeric();
+            }
+
+            if (MatchOperator("<="))
+            {
+                return left <= ParseNumeric();
+            }
+
+            if (MatchOperator("=="))
+            {
+                return Math.Abs(left - ParseNumeric()) < 0.000001d;
+            }
+
+            if (MatchOperator("!="))
+            {
+                return Math.Abs(left - ParseNumeric()) >= 0.000001d;
+            }
+
+            if (Match('>'))
+            {
+                return left > ParseNumeric();
+            }
+
+            if (Match('<'))
+            {
+                return left < ParseNumeric();
+            }
+
+            return Math.Abs(left) > 0.000001d;
+        }
+
+        private double ParseNumeric()
+        {
+            var start = _index;
+            var depth = 0;
+            while (_index < _text.Length)
+            {
+                var ch = _text[_index];
+                if (ch == '(')
+                {
+                    depth++;
+                    _index++;
+                    continue;
+                }
+
+                if (ch == ')')
+                {
+                    if (depth == 0)
+                    {
+                        break;
+                    }
+
+                    depth--;
+                    _index++;
+                    continue;
+                }
+
+                if (depth == 0)
+                {
+                    if (StartsWith("&&") || StartsWith("||") || StartsWith(">=") || StartsWith("<=") || StartsWith("==") || StartsWith("!="))
+                    {
+                        break;
+                    }
+
+                    if (char.IsWhiteSpace(ch))
+                    {
+                        var lookahead = _index;
+                        while (lookahead < _text.Length && char.IsWhiteSpace(_text[lookahead]))
+                        {
+                            lookahead++;
+                        }
+
+                        if (lookahead >= _text.Length ||
+                            StartsWithAt(lookahead, "and") ||
+                            StartsWithAt(lookahead, "or") ||
+                            StartsWithAt(lookahead, "not") ||
+                            StartsWithAt(lookahead, ">=") ||
+                            StartsWithAt(lookahead, "<=") ||
+                            StartsWithAt(lookahead, "==") ||
+                            StartsWithAt(lookahead, "!=") ||
+                            _text[lookahead] is '>' or '<')
+                        {
+                            break;
+                        }
+                    }
+
+                    if (ch is '>' or '<')
+                    {
+                        break;
+                    }
+                }
+
+                _index++;
+            }
+
+            var expr = _text[start.._index].Trim();
+            if (string.IsNullOrWhiteSpace(expr))
+            {
+                throw new InvalidOperationException($"Expected expression in condition '{_text}'.");
+            }
+
+            return EvaluateExpression(expr, _scope);
+        }
+
+        private void SkipWhitespace()
+        {
+            while (_index < _text.Length && char.IsWhiteSpace(_text[_index]))
+            {
+                _index++;
+            }
+        }
+
+        private bool Match(char value)
+        {
+            SkipWhitespace();
+            if (_index < _text.Length && _text[_index] == value)
+            {
+                _index++;
+                return true;
+            }
+
+            return false;
+        }
+
+        private void Expect(char value)
+        {
+            if (!Match(value))
+            {
+                throw new InvalidOperationException($"Expected '{value}' in condition '{_text}'.");
+            }
+        }
+
+        private bool MatchOperator(string op)
+        {
+            SkipWhitespace();
+            if (!StartsWith(op))
+            {
+                return false;
+            }
+
+            _index += op.Length;
+            return true;
+        }
+
+        private bool MatchWord(string word)
+        {
+            SkipWhitespace();
+            if (!StartsWith(word))
+            {
+                return false;
+            }
+
+            var end = _index + word.Length;
+            var validEnd = end >= _text.Length || !char.IsLetterOrDigit(_text[end]) && _text[end] != '_';
+            if (!validEnd)
+            {
+                return false;
+            }
+
+            _index = end;
+            return true;
+        }
+
+        private bool StartsWith(string value) => StartsWithAt(_index, value);
+
+        private bool StartsWithAt(int index, string value) =>
+            index + value.Length <= _text.Length &&
+            string.Compare(_text, index, value, 0, value.Length, StringComparison.OrdinalIgnoreCase) == 0;
     }
 }

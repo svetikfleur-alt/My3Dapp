@@ -2553,6 +2553,16 @@ public sealed class StudioWorkspaceController
     {
         return new StudioDocumentUiState
         {
+            ProjectId = state.ProjectId,
+            ProjectName = state.ProjectName,
+            ProjectType = state.ProjectType,
+            ProjectCreatedAt = state.ProjectCreatedAt,
+            ProjectUpdatedAt = state.ProjectUpdatedAt,
+            DocumentId = state.DocumentId,
+            DocumentName = state.DocumentName,
+            DocumentType = state.DocumentType,
+            DocumentCreatedAt = state.DocumentCreatedAt,
+            DocumentUpdatedAt = state.DocumentUpdatedAt,
             ActiveWorkspaceKind = state.ActiveWorkspaceKind,
             SelectedTemplateId = state.SelectedTemplateId,
             TemplateParameterValues = new Dictionary<string, string>(state.TemplateParameterValues, StringComparer.OrdinalIgnoreCase),

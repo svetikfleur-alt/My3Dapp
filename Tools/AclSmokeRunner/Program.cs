@@ -2,7 +2,24 @@ using System.Reflection;
 
 var invocation = args.Length > 0
     ? string.Join(' ', args)
-    : "template controller-box-kit boxWidth=140 boxDepth=95 boxHeight=48 wallThickness=3 lidThickness=3 standoffHeight=10 cableDiameter=7 fanSize=80";
+    : """
+      let width = 120
+      let height = 70
+
+      if width >= 100 and height > 60
+      {
+        template mounting-plate width=$width height=$height thickness=5 holeCount=4
+      }
+      else
+      {
+        template mounting-plate width=$width height=50 thickness=4 holeCount=2
+      }
+
+      for size in [40, 60]
+      {
+        template fan-adapter fanSize=$size thickness=3 screwHoleDiameter=4.5 centerOpeningDiameter=${size - 18}
+      }
+      """;
 
 var assemblyPath = ResolveAppAssemblyPath();
 var assembly = Assembly.LoadFrom(assemblyPath);

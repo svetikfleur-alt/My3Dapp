@@ -94,10 +94,11 @@ public sealed class AssistantChatService
     private static string BuildSystemPrompt(CadAssistantContext ctx)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("You are the CAD assistant inside My3DApp Studio — a parametric, solid-body modeler similar to Onshape/Fusion.");
+        sb.AppendLine("You are the CAD assistant inside My3DApp Studio — a parametric, solid-body modeler with an AI-native workflow similar to modern Onshape/Fusion.");
+        sb.AppendLine("The local modeling language is called M3 Script.");
         sb.AppendLine("Rules:");
         sb.AppendLine("  1. Keep every reply to 1-2 sentences. Never use markdown lists or fences in your reply text.");
-        sb.AppendLine("  2. When a local command can execute the user's intent, return ONLY a JSON object: {\"reply\": \"...\", \"command\": \"...\"}");
+        sb.AppendLine("  2. When a local command can execute the user's intent, return ONLY a JSON object: {\"reply\": \"...\", \"command\": \"...\"}. The command must be valid M3 Script.");
         sb.AppendLine("  3. If no command applies, return the same JSON with command set to \"\".");
         sb.AppendLine("  4. Never invent command syntax not listed below — prefer clarifying questions over bad commands.");
         sb.AppendLine("  5. Prefer a single recipe over a long step sequence when the user describes a standard part.");
@@ -112,7 +113,7 @@ public sealed class AssistantChatService
         sb.AppendLine("  Mirror half:    mirror x");
         sb.AppendLine("  Quick box:      create box 40x20x10");
         sb.AppendLine();
-        sb.AppendLine("## Command vocabulary");
+        sb.AppendLine("## M3 Script vocabulary");
         sb.AppendLine("  Sequence:    separate steps with ';'. Steps execute in order.");
         sb.AppendLine("  Primitives:  create box WxHxD | add sphere radius R | add cylinder radius R height H | add cone | add torus | add pyramid | add wedge | add prism | add capsule | add hemisphere | add ellipsoid | add arrow | add icosphere");
         sb.AppendLine("  Transform:   move object +N in x|y|z");
@@ -418,26 +419,36 @@ public sealed class AssistantRuntimeConfiguration
             : $"{BaseUrl.TrimEnd('/')}/chat/completions";
 
     public string MissingKeyHint =>
-        Provider == AssistantProvider.Anthropic
-            ? "Set ANTHROPIC_API_KEY to enable remote AI."
-            : "Set OPENAI_API_KEY or MY3DAPP_LLM_API_KEY to enable remote AI.";
+        Provider switch
+        {
+            AssistantProvider.Anthropic => "Set ANTHROPIC_API_KEY to enable remote AI.",
+            AssistantProvider.DeepSeek => "Set DEEPSEEK_API_KEY or MY3DAPP_LLM_API_KEY to enable remote AI.",
+            _ => "Set OPENAI_API_KEY or MY3DAPP_LLM_API_KEY to enable remote AI."
+        };
 
     public static AssistantRuntimeConfiguration FromSelection(string provider, string selectedModel, string? keyOverride = null)
     {
         var normalizedProvider = string.Equals(provider?.Trim(), "Anthropic", StringComparison.OrdinalIgnoreCase)
             ? AssistantProvider.Anthropic
-            : AssistantProvider.OpenAI;
+            : string.Equals(provider?.Trim(), "DeepSeek", StringComparison.OrdinalIgnoreCase)
+                ? AssistantProvider.DeepSeek
+                : AssistantProvider.OpenAI;
 
         var trimmedOverride = (keyOverride ?? string.Empty).Trim();
         var apiKey = !string.IsNullOrWhiteSpace(trimmedOverride)
             ? trimmedOverride
             : normalizedProvider == AssistantProvider.Anthropic
                 ? ReadEnvironmentValue("ANTHROPIC_API_KEY", "MY3DAPP_LLM_API_KEY")
-                : ReadEnvironmentValue("OPENAI_API_KEY", "MY3DAPP_LLM_API_KEY");
+                : normalizedProvider == AssistantProvider.DeepSeek
+                    ? ReadEnvironmentValue("DEEPSEEK_API_KEY", "MY3DAPP_LLM_API_KEY")
+                    : ReadEnvironmentValue("OPENAI_API_KEY", "MY3DAPP_LLM_API_KEY");
 
-        var defaultBaseUrl = normalizedProvider == AssistantProvider.Anthropic
-            ? "https://api.anthropic.com/v1"
-            : "https://api.openai.com/v1";
+        var defaultBaseUrl = normalizedProvider switch
+        {
+            AssistantProvider.Anthropic => "https://api.anthropic.com/v1",
+            AssistantProvider.DeepSeek => "https://api.deepseek.com/v1",
+            _ => "https://api.openai.com/v1"
+        };
         var baseUrl = ReadEnvironmentValue("MY3DAPP_LLM_BASE_URL");
         var model = ReadEnvironmentValue("MY3DAPP_LLM_MODEL");
 
@@ -458,9 +469,12 @@ public sealed class AssistantRuntimeConfiguration
         }
         else if (string.IsNullOrWhiteSpace(apiKey))
         {
-            validationError = normalizedProvider == AssistantProvider.Anthropic
-                ? "Anthropic key not found."
-                : "OpenAI key not found.";
+            validationError = normalizedProvider switch
+            {
+                AssistantProvider.Anthropic => "Anthropic key not found.",
+                AssistantProvider.DeepSeek => "DeepSeek key not found.",
+                _ => "OpenAI key not found."
+            };
         }
 
         return new AssistantRuntimeConfiguration
@@ -508,6 +522,15 @@ public sealed class AssistantRuntimeConfiguration
             return "claude-sonnet-4-6";
         }
 
+        if (provider == AssistantProvider.DeepSeek)
+        {
+            return normalized switch
+            {
+                "deepseek reasoner" => "deepseek-reasoner",
+                _ => "deepseek-chat"
+            };
+        }
+
         return normalized switch
         {
             "gpt-5" => "gpt-5",
@@ -522,6 +545,7 @@ public sealed class AssistantRuntimeConfiguration
 public enum AssistantProvider
 {
     OpenAI,
+    DeepSeek,
     Anthropic
 }
 

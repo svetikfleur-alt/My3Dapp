@@ -464,6 +464,142 @@ public sealed partial class MainWindow : Window
         _wiredViewModel.NewProject();
     }
 
+    private async void OnNewProjectDialogClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        if (!await EnsureSafeToReplaceCurrentProjectAsync("New project",
+                "You have unsaved changes. Save the current document before creating a new project?"))
+        {
+            return;
+        }
+
+        var request = await ShowNewProjectDialogAsync();
+        if (request is null)
+        {
+            return;
+        }
+
+        _wiredViewModel.StartNewProject(request.Value.Type, request.Value.Name);
+        e.Handled = true;
+    }
+
+    private async void OnNewLargeProjectClick(object? sender, RoutedEventArgs e)
+    {
+        await StartProjectFromHomeAsync("large", "Large Project");
+        e.Handled = true;
+    }
+
+    private async void OnNewStandardProjectClick(object? sender, RoutedEventArgs e)
+    {
+        await StartProjectFromHomeAsync("standard", "Standard Project");
+        e.Handled = true;
+    }
+
+    private async void OnNewQuickDesignClick(object? sender, RoutedEventArgs e)
+    {
+        await StartProjectFromHomeAsync("quick", "Quick Design");
+        e.Handled = true;
+    }
+
+    private async Task StartProjectFromHomeAsync(string projectType, string defaultName)
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        if (!await EnsureSafeToReplaceCurrentProjectAsync("New project",
+                "You have unsaved changes. Save the current document before creating a new project?"))
+        {
+            return;
+        }
+
+        _wiredViewModel.StartNewProject(projectType, defaultName);
+    }
+
+    private async Task<(string Type, string Name)?> ShowNewProjectDialogAsync()
+    {
+        var nameBox = new ATextBox
+        {
+            Text = "Standard Project",
+            Watermark = "Project name",
+            MinWidth = 280
+        };
+        var typeBox = new Avalonia.Controls.ComboBox
+        {
+            ItemsSource = new[] { "large", "standard", "quick" },
+            SelectedIndex = 1,
+            MinWidth = 160
+        };
+
+        (string Type, string Name)? result = null;
+        var createButton = new Avalonia.Controls.Button
+        {
+            Content = "Create Project",
+            Classes = { "AssistantApplyButton" },
+            MinWidth = 120
+        };
+        var cancelButton = new Avalonia.Controls.Button
+        {
+            Content = "Cancel",
+            Classes = { "AssistantSecondaryButton" },
+            MinWidth = 90
+        };
+
+        var dialog = new Avalonia.Controls.Window
+        {
+            Title = "New Project",
+            Width = 440,
+            Height = 250,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false,
+            Content = new Avalonia.Controls.StackPanel
+            {
+                Margin = new Avalonia.Thickness(18),
+                Spacing = 12,
+                Children =
+                {
+                    new Avalonia.Controls.TextBlock
+                    {
+                        Text = "Create a real local CAD project",
+                        FontWeight = Avalonia.Media.FontWeight.SemiBold,
+                        FontSize = 15
+                    },
+                    new Avalonia.Controls.TextBlock
+                    {
+                        Text = "Large creates multiple part studios. Standard creates one normal project. Quick is for disposable repair/household parts.",
+                        TextWrapping = Avalonia.Media.TextWrapping.Wrap
+                    },
+                    nameBox,
+                    typeBox,
+                    new Avalonia.Controls.StackPanel
+                    {
+                        Orientation = Avalonia.Layout.Orientation.Horizontal,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                        Spacing = 8,
+                        Children = { cancelButton, createButton }
+                    }
+                }
+            }
+        };
+
+        createButton.Click += (_, _) =>
+        {
+            var type = typeBox.SelectedItem?.ToString() ?? "standard";
+            var name = string.IsNullOrWhiteSpace(nameBox.Text) ? "Standard Project" : nameBox.Text.Trim();
+            result = (type, name);
+            dialog.Close();
+        };
+        cancelButton.Click += (_, _) => dialog.Close();
+
+        await dialog.ShowDialog(this);
+        return result;
+    }
+
     private async Task NewProjectWithGuardAsync()
     {
         if (_wiredViewModel is null) return;
@@ -2797,10 +2933,231 @@ public sealed partial class MainWindow : Window
         e.Handled = true;
     }
 
+    private void OnOpenTemplatesWorkspaceClick(object? sender, RoutedEventArgs e)
+    {
+        _wiredViewModel?.SelectWorkspace("Templates");
+        e.Handled = true;
+    }
+
     private void OnOpenPartStudioWorkspaceClick(object? sender, RoutedEventArgs e)
     {
         _wiredViewModel?.SelectWorkspace("PartStudio");
         e.Handled = true;
+    }
+
+    private void OnPrepareWorkspaceMenuClick(object? sender, RoutedEventArgs e)
+    {
+        _wiredViewModel?.SelectWorkspace("Prepare");
+        e.Handled = true;
+    }
+
+    private void OnDismissStartupPageClick(object? sender, RoutedEventArgs e)
+    {
+        _wiredViewModel?.DismissStartupPage();
+        e.Handled = true;
+    }
+
+    private async void OnQuickDesignUseCaseClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not Avalonia.Controls.Button button || button.Tag is not string useCase)
+        {
+            return;
+        }
+
+        if (!await EnsureSafeToReplaceCurrentProjectAsync("New quick design",
+                "You have unsaved changes. Save the current document before creating a quick design?"))
+        {
+            return;
+        }
+
+        try
+        {
+            await _wiredViewModel.CreateQuickDesignAsync(useCase);
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnQuickDesignUseCaseClick), ex);
+        }
+
+        e.Handled = true;
+    }
+
+    private async void OnOpenSampleTemplateClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        if (!await EnsureSafeToReplaceCurrentProjectAsync("Open sample",
+                "You have unsaved changes. Save the current document before opening the sample project?"))
+        {
+            return;
+        }
+
+        try
+        {
+            await _wiredViewModel.CreateSampleProjectAsync();
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnOpenSampleTemplateClick), ex);
+        }
+
+        e.Handled = true;
+    }
+
+    private void OnOpenSampleRecipeClick(object? sender, RoutedEventArgs e)
+    {
+        _wiredViewModel?.PrepareRecipeFromLibrary("plate-with-hole", "Sample recipe");
+        e.Handled = true;
+    }
+
+    private async void OnRunActiveRecipeClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _wiredViewModel.RunActiveRecipeAsync();
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnRunActiveRecipeClick), ex);
+        }
+
+        e.Handled = true;
+    }
+
+    private async void OnAiSettingsClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        await ShowAiSettingsDialogAsync();
+        e.Handled = true;
+    }
+
+    private async Task ShowAiSettingsDialogAsync()
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        var providerBox = new Avalonia.Controls.ComboBox
+        {
+            ItemsSource = _wiredViewModel.AssistantProviders,
+            SelectedItem = _wiredViewModel.SelectedAssistantProvider,
+            MinWidth = 180
+        };
+        var modelBox = new Avalonia.Controls.ComboBox
+        {
+            ItemsSource = _wiredViewModel.AssistantModels,
+            SelectedItem = _wiredViewModel.SelectedAssistantModel,
+            MinWidth = 180
+        };
+        var keyBox = new ATextBox
+        {
+            Text = _wiredViewModel.AssistantKeyInput,
+            PasswordChar = '*',
+            Watermark = "Session API key (not saved)",
+            MinWidth = 380
+        };
+
+        providerBox.SelectionChanged += (_, _) =>
+        {
+            if (providerBox.SelectedItem is string provider)
+            {
+                _wiredViewModel.SelectedAssistantProvider = provider;
+                modelBox.ItemsSource = _wiredViewModel.AssistantModels;
+                modelBox.SelectedItem = _wiredViewModel.SelectedAssistantModel;
+            }
+        };
+
+        var saveButton = new Avalonia.Controls.Button
+        {
+            Content = "Apply",
+            Classes = { "AssistantApplyButton" },
+            MinWidth = 90
+        };
+        var cancelButton = new Avalonia.Controls.Button
+        {
+            Content = "Close",
+            Classes = { "AssistantSecondaryButton" },
+            MinWidth = 90
+        };
+
+        var dialog = new Avalonia.Controls.Window
+        {
+            Title = "AI Settings",
+            Width = 480,
+            Height = 330,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false,
+            Content = new Avalonia.Controls.StackPanel
+            {
+                Margin = new Avalonia.Thickness(18),
+                Spacing = 12,
+                Children =
+                {
+                    new Avalonia.Controls.TextBlock
+                    {
+                        Text = "Configure real AI provider access",
+                        FontWeight = Avalonia.Media.FontWeight.SemiBold,
+                        FontSize = 15
+                    },
+                    new Avalonia.Controls.TextBlock
+                    {
+                        Text = "Environment variables are preferred for persistent setup: DEEPSEEK_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY. A pasted key is session-only and is not saved.",
+                        TextWrapping = Avalonia.Media.TextWrapping.Wrap
+                    },
+                    new Avalonia.Controls.StackPanel
+                    {
+                        Orientation = Avalonia.Layout.Orientation.Horizontal,
+                        Spacing = 8,
+                        Children = { providerBox, modelBox }
+                    },
+                    keyBox,
+                    new Avalonia.Controls.TextBlock
+                    {
+                        Text = _wiredViewModel.AssistantConfigurationSummary,
+                        TextWrapping = Avalonia.Media.TextWrapping.Wrap
+                    },
+                    new Avalonia.Controls.StackPanel
+                    {
+                        Orientation = Avalonia.Layout.Orientation.Horizontal,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                        Spacing = 8,
+                        Children = { cancelButton, saveButton }
+                    }
+                }
+            }
+        };
+
+        saveButton.Click += (_, _) =>
+        {
+            if (providerBox.SelectedItem is string provider)
+            {
+                _wiredViewModel.SelectedAssistantProvider = provider;
+            }
+
+            if (modelBox.SelectedItem is string model)
+            {
+                _wiredViewModel.SelectedAssistantModel = model;
+            }
+
+            _wiredViewModel.AssistantKeyInput = keyBox.Text ?? string.Empty;
+            dialog.Close();
+        };
+        cancelButton.Click += (_, _) => dialog.Close();
+
+        await dialog.ShowDialog(this);
     }
 
     private void OnPrepareExportClick(object? sender, RoutedEventArgs e)

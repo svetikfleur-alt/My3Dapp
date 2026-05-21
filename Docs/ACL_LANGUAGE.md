@@ -68,6 +68,34 @@ Supported math:
 - variables
 - built-ins: `min`, `max`, `abs`, `round`, `floor`, `ceil`, `clamp`, `pow`, `sqrt`
 
+### Conditionals
+
+```acl
+let width = 120
+
+if width > 100
+{
+  template mounting-plate width=$width height=70 thickness=5 holeCount=4
+}
+else
+{
+  template mounting-plate width=$width height=50 thickness=4 holeCount=2
+}
+```
+
+Supported comparisons:
+- `>`
+- `<`
+- `>=`
+- `<=`
+- `==`
+- `!=`
+
+Supported boolean operators:
+- `and` or `&&`
+- `or` or `||`
+- `not` or `!`
+
 ### Repeat blocks
 
 ```acl
@@ -96,6 +124,15 @@ Optional step value:
 for hole in 10..40 step 10
 {
   template mounting-plate width=100 height=60 thickness=4 holeMargin=$hole
+}
+```
+
+### List iteration
+
+```acl
+for size in [40, 60, 80]
+{
+  template fan-adapter fanSize=$size thickness=3 screwHoleDiameter=4.5 centerOpeningDiameter=${size - 18}
 }
 ```
 
@@ -192,14 +229,14 @@ This keeps the public template surface external and readable while preserving a 
 
 - It is still a compact engineering DSL, not a full general-purpose language
 - No custom types or user-defined objects yet
-- No arrays, dictionaries, or string interpolation beyond numeric script expansion
-- No conditionals yet (`if/else` is not implemented)
+- No dictionaries or string interpolation beyond numeric script expansion
+- List support is numeric-only today
 - Template geometry builders still route through the current MVP feature pipeline
 
 ## Next upgrades
 
-- conditionals and comparisons
 - reusable part packs and importable script modules
 - external recipe files
+- richer list and array support
 - richer feature authoring constructs
 - stronger AI-assisted script generation and repair

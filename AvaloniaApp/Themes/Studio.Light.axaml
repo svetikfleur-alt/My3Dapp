@@ -222,6 +222,111 @@
     <Setter Property="Background" Value="#dcedfc" />
   </Style>
 
+  <Style Selector="Button.ToolbarMenuButton">
+    <Setter Property="Height" Value="30" />
+    <Setter Property="MinWidth" Value="76" />
+    <Setter Property="Padding" Value="12,5" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style Selector="Button.ToolbarMenuButton:pointerover">
+    <Setter Property="Background" Value="#eaf3fe" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="Border.StartupBackdrop">
+    <Setter Property="Background" Value="#f5f9fdef" />
+    <Setter Property="BorderBrush" Value="#d6e0eb" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="22" />
+    <Setter Property="BoxShadow" Value="0 18 40 0 #20304722" />
+  </Style>
+
+  <Style Selector="Border.StartupHeroCard, Border.StartupSideCard, Border.StartupCodeCard">
+    <Setter Property="Background" Value="#fcfdff" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="20" />
+    <Setter Property="Padding" Value="18" />
+  </Style>
+
+  <Style Selector="Border.StartupHeroCard">
+    <Setter Property="Background" Value="#f8fbff" />
+  </Style>
+
+  <Style Selector="Border.StartupChip">
+    <Setter Property="Background" Value="#e8f2ff" />
+    <Setter Property="BorderBrush" Value="#bfd6f2" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="999" />
+    <Setter Property="Padding" Value="10,4" />
+  </Style>
+
+  <Style Selector="Border.StartupStatusStrip">
+    <Setter Property="Background" Value="#eef4fb" />
+    <Setter Property="BorderBrush" Value="#d4e1ef" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="16" />
+    <Setter Property="Padding" Value="14" />
+  </Style>
+
+  <Style Selector="TextBlock.StartupTitleText">
+    <Setter Property="FontSize" Value="26" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.StartupSectionTitle">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.StartupBodyText, TextBlock.StartupActionSummary, TextBlock.StartupStatusText">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.StartupActionTitle">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="Button.StartupActionCard">
+    <Setter Property="MinHeight" Value="104" />
+    <Setter Property="Padding" Value="16" />
+    <Setter Property="Background" Value="#ffffff" />
+    <Setter Property="BorderBrush" Value="#d5e0ec" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="18" />
+  </Style>
+
+  <Style Selector="Button.StartupActionCard:pointerover">
+    <Setter Property="Background" Value="#f1f7ff" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="Button.StartupActionCard:pressed">
+    <Setter Property="Background" Value="#e5f0ff" />
+  </Style>
+
+  <Style Selector="TextBox.StartupCodePreview">
+    <Setter Property="MinHeight" Value="118" />
+    <Setter Property="Background" Value="#0f1724" />
+    <Setter Property="Foreground" Value="#d8e7ff" />
+    <Setter Property="BorderBrush" Value="#243447" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="12" />
+    <Setter Property="CornerRadius" Value="16" />
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+
   <Style Selector="Button.ToolbarActionButton">
     <Setter Property="Width" Value="30" />
     <Setter Property="Height" Value="28" />

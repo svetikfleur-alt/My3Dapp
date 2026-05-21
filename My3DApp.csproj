@@ -24,6 +24,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="temp_*.cs" />
     <Compile Remove="temp_*\**\*.cs" />
     <Compile Remove="cloud_sync_mirror\**\*.cs" />
     <Compile Remove="ThirdParty\**\*.cs" />

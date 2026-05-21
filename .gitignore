@@ -1,3 +1,4 @@
+<<<<<<< ours
 # AgentOps runtime artifacts
 bin/
 obj/
@@ -61,3 +62,10 @@ PicoGK-main.zip
 modeling-app-*.zip
 ThirdParty/
 References/_imports/
+=======
+node_modules/
+dist/
+logs/*.log
+!.gitkeep
+.DS_Store
+>>>>>>> theirs
