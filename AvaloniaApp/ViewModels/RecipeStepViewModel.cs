@@ -46,6 +46,7 @@ public sealed class RecipeStepViewModel : ViewModelBase
 
 public sealed class CadRecipeRunViewModel : ViewModelBase
 {
+    private string _status = "pending";
     private string _statusSummary = "Recipe ready to validate.";
 
     public CadRecipeRunViewModel(
@@ -82,9 +83,45 @@ public sealed class CadRecipeRunViewModel : ViewModelBase
 
     public ObservableCollection<RecipeStepViewModel> Steps { get; } = [];
 
+    public string Status
+    {
+        get => _status;
+        set => SetProperty(ref _status, value);
+    }
+
     public string StatusSummary
     {
         get => _statusSummary;
-        set => SetProperty(ref _statusSummary, value);
+        set
+        {
+            if (!SetProperty(ref _statusSummary, value))
+            {
+                return;
+            }
+
+            Status = InferStatus(value);
+        }
+    }
+
+    private static string InferStatus(string summary)
+    {
+        if (summary.StartsWith("Running", StringComparison.OrdinalIgnoreCase))
+        {
+            return "running";
+        }
+
+        if (summary.StartsWith("Recipe completed", StringComparison.OrdinalIgnoreCase))
+        {
+            return "completed";
+        }
+
+        if (summary.Contains("failed", StringComparison.OrdinalIgnoreCase) ||
+            summary.Contains("unsupported", StringComparison.OrdinalIgnoreCase) ||
+            summary.Contains("canceled", StringComparison.OrdinalIgnoreCase))
+        {
+            return "failed";
+        }
+
+        return "pending";
     }
 }

@@ -38,6 +38,11 @@ public static class CadRecipeLibrary
             return input;
         }
 
+        if (CadRecipeSchemaCompiler.TryCompileToCommandText(input, out var recipeCommandText, out _))
+        {
+            return recipeCommandText;
+        }
+
         var parts = Regex.Split(input, @"(?:\r?\n|;|->|\bthen\b)", RegexOptions.IgnoreCase);
         var result = new StringBuilder();
         var first = true;
@@ -89,6 +94,11 @@ public static class CadRecipeLibrary
         try
         {
             expanded = recipe.Build(args);
+            if (CadRecipeSchemaCompiler.TryCompileToCommandText(expanded, out var recipeCommandText, out _))
+            {
+                expanded = recipeCommandText;
+            }
+
             return true;
         }
         catch
@@ -117,6 +127,13 @@ public static class CadRecipeLibrary
     {
         return new CadRecipe[]
         {
+            new("sample-box",
+                "Sample box",
+                "Structured JSON sample that creates one visible box body.",
+                [],
+                CadRecipeSchemaCompiler.BuildSampleBoxJson(50, 30, 20),
+                _ => CadRecipeSchemaCompiler.BuildSampleBoxJson(50, 30, 20)),
+
             new("plate",
                 "Plate",
                 "Rectangular plate L × W × T (length × width × thickness).",

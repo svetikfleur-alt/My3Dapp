@@ -1,0 +1,18 @@
+{
+  "schema": "my3dapp.cad.recipe.v1",
+  "id": "sample-box",
+  "title": "Sample Box",
+  "units": "mm",
+  "description": "Creates one visible extruded box body in the active part studio.",
+  "steps": [
+    {
+      "id": "create-body",
+      "operation": "create_box",
+      "parameters": {
+        "width": 50,
+        "depth": 30,
+        "height": 20
+      }
+    }
+  ]
+}

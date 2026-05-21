@@ -111,6 +111,12 @@ public sealed record CadViewportCommand(
             CadViewportCommandKind.CircularPatternBody when Distance > 0d =>
                 $"Circular pattern: {(int)Distance}x, {U:0.###}° around {Axis?.ToUpperInvariant() ?? "Y"}",
             CadViewportCommandKind.CircularPatternBody => "Circular pattern selected body",
+            CadViewportCommandKind.HoleBody when Distance > 0d =>
+                $"Hole selected body (d={Distance:0.###}, offset={U:0.###},{V:0.###})",
+            CadViewportCommandKind.HoleBody => "Hole selected body",
+            CadViewportCommandKind.BooleanUnion => "Boolean union",
+            CadViewportCommandKind.BooleanSubtract => "Boolean subtract",
+            CadViewportCommandKind.BooleanIntersect => "Boolean intersect",
             _ => Kind.ToString()
         };
     }
@@ -162,6 +168,18 @@ public sealed class CadCommandParser
 
     private static readonly Regex CreatePrimitivePattern = new(
         @"^(?:create|add|make|insert|place)\s+(?:a\s+|an\s+|one\s+)?(?<primitive>box|cube|sphere|cylinder|cone|torus|pyramid|wedge|prism|capsule|hemisphere|ellipsoid|arrow|icosphere|tetrahedron|octahedron|icosahedron)\b",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex CreateBoxDimensionsPattern = new(
+        $@"^(?:create|add|make|insert|place)\s+(?:a\s+|an\s+|one\s+)?(?:box|cube)\s+(?<width>{NumberPattern})\s*(?:x|by|,)\s*(?<depth>{NumberPattern})\s*(?:x|by|,)\s*(?<height>{NumberPattern})$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex CreateCylinderDimensionsPattern = new(
+        $@"^(?:create|add|make|insert|place)\s+(?:a\s+|an\s+|one\s+)?cylinder(?:\s+(?:radius|r)\s+(?<radius>{NumberPattern})|\s+(?:diameter|dia|d)\s+(?<diameter>{NumberPattern}))(?:\s+(?:height|h|depth)\s+(?<height>{NumberPattern}))$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex CreateSphereDimensionsPattern = new(
+        $@"^(?:create|add|make|insert|place)\s+(?:a\s+|an\s+|one\s+)?sphere\s+(?:(?:radius|r|diameter|dia|d)\s+)?{NumberPattern}$",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex MovePattern = new(
@@ -253,7 +271,7 @@ public sealed class CadCommandParser
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex HolePattern = new(
-        @"^hole(?:\s+depth\s+(?<depth>[+-]?\d+(?:\.\d+)?))?$",
+        $@"^(?:subtract\s+|cut\s+|add\s+)?hole(?:\s+(?:(?:diameter|dia|d)\s+(?<diameter>{NumberPattern})|(?:radius|r)\s+(?<radius>{NumberPattern})))?(?:\s+depth\s+(?<depth>{NumberPattern}|through|throughall))?(?:\s+(?:offset|center|at)\s+(?<x>{NumberPattern})[,\s]+(?<y>{NumberPattern}))?$",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Regex BooleanPattern = new(
@@ -262,6 +280,15 @@ public sealed class CadCommandParser
 
     public IReadOnlyList<CadCommandSequenceStep> ParseSequence(string input)
     {
+        if (CadRecipeSchemaCompiler.TryCompileToCommandText(input, out var recipeCommandText, out var recipeError))
+        {
+            input = recipeCommandText;
+        }
+        else if (CadRecipeSchemaCompiler.LooksLikeRecipeJson(input))
+        {
+            return [new CadCommandSequenceStep(1, "recipe", CadCommandParseResult.NotMatched(recipeError ?? "Recipe JSON is invalid."))];
+        }
+
         var expanded = CadScriptLibrary.ExpandSequence(input);
 
         var parts = CommandSeparatorPattern
@@ -290,6 +317,47 @@ public sealed class CadCommandParser
         if (string.IsNullOrWhiteSpace(text))
         {
             return CadCommandParseResult.NotMatched("Command is empty.");
+        }
+
+        var boxDimensionsMatch = CreateBoxDimensionsPattern.Match(text);
+        if (boxDimensionsMatch.Success &&
+            TryReadNumber(boxDimensionsMatch.Groups["width"].Value, out var boxWidth) &&
+            TryReadNumber(boxDimensionsMatch.Groups["depth"].Value, out var boxDepth) &&
+            TryReadNumber(boxDimensionsMatch.Groups["height"].Value, out var boxHeight))
+        {
+            if (boxWidth <= 0d || boxDepth <= 0d || boxHeight <= 0d)
+            {
+                return CadCommandParseResult.NotMatched("Box width, depth, and height must be greater than zero.");
+            }
+
+            return BuildBoxCommands(boxWidth, boxDepth, boxHeight);
+        }
+
+        var cylinderDimensionsMatch = CreateCylinderDimensionsPattern.Match(text);
+        if (cylinderDimensionsMatch.Success)
+        {
+            var hasRadius = TryReadNumber(cylinderDimensionsMatch.Groups["radius"].Value, out var cylinderRadius);
+            if (!hasRadius && TryReadNumber(cylinderDimensionsMatch.Groups["diameter"].Value, out var cylinderDiameter))
+            {
+                cylinderRadius = cylinderDiameter / 2d;
+                hasRadius = true;
+            }
+
+            if (!hasRadius ||
+                !TryReadNumber(cylinderDimensionsMatch.Groups["height"].Value, out var cylinderHeight) ||
+                cylinderRadius <= 0d ||
+                cylinderHeight <= 0d)
+            {
+                return CadCommandParseResult.NotMatched("Cylinder radius/diameter and height must be greater than zero.");
+            }
+
+            return BuildCylinderCommands(cylinderRadius, cylinderHeight);
+        }
+
+        if (CreateSphereDimensionsPattern.IsMatch(text))
+        {
+            return CadCommandParseResult.NotMatched(
+                "Parameterized sphere radius is not supported by the current command executor. Use 'create sphere' to create the default sphere.");
         }
 
         var createMatch = CreatePrimitivePattern.Match(text);
@@ -487,8 +555,20 @@ public sealed class CadCommandParser
         var holeMatch = HolePattern.Match(text);
         if (holeMatch.Success)
         {
-            var depth = ParseOrDefault(holeMatch.Groups["depth"].Value, 10, min: 0.5, max: 10000);
-            var command = new CadViewportCommand(CadViewportCommandKind.HoleBody, Distance: depth);
+            var diameter = ParseOrDefault(holeMatch.Groups["diameter"].Value, 10, min: 0.1, max: 10000);
+            if (TryReadNumber(holeMatch.Groups["radius"].Value, out var parsedRadius) && parsedRadius > 0d)
+            {
+                diameter = Math.Clamp(parsedRadius * 2d, 0.1d, 10000d);
+            }
+
+            var x = TryReadNumber(holeMatch.Groups["x"].Value, out var parsedX) ? parsedX : 0d;
+            var y = TryReadNumber(holeMatch.Groups["y"].Value, out var parsedY) ? parsedY : 0d;
+            var depthRaw = holeMatch.Groups["depth"].Value;
+            var depthInfo = TryReadNumber(depthRaw, out var parsedDepth) && parsedDepth > 0d
+                ? $"Blind:{Math.Clamp(parsedDepth, 0.1d, 10000d).ToString("0.###", CultureInfo.InvariantCulture)}"
+                : "ThroughAll";
+
+            var command = new CadViewportCommand(CadViewportCommandKind.HoleBody, Distance: diameter, U: x, V: y, Axis: depthInfo);
             return CadCommandParseResult.Success(command, $"Command parsed: {command.Describe()}");
         }
 
@@ -582,6 +662,40 @@ public sealed class CadCommandParser
         }
 
         return CadCommandParseResult.Success(commands, $"Command parsed: place {label} from coordinates.");
+    }
+
+    private static CadCommandParseResult BuildBoxCommands(double width, double depth, double height)
+    {
+        var commands = new List<CadViewportCommand>
+        {
+            new(CadViewportCommandKind.StartSketch, Plane: "Top"),
+            new(CadViewportCommandKind.SetSketchTool, SketchTool: "Rectangle"),
+            new(CadViewportCommandKind.PlaceSketchAt, U: 0d, V: 0d),
+            new(CadViewportCommandKind.PlaceSketchAt, U: width, V: depth),
+            new(CadViewportCommandKind.FinishSketch),
+            new(CadViewportCommandKind.ExtrudeSketch, Distance: height)
+        };
+
+        return CadCommandParseResult.Success(
+            commands,
+            $"Command parsed: create box {width:0.###} x {depth:0.###} x {height:0.###}.");
+    }
+
+    private static CadCommandParseResult BuildCylinderCommands(double radius, double height)
+    {
+        var commands = new List<CadViewportCommand>
+        {
+            new(CadViewportCommandKind.StartSketch, Plane: "Top"),
+            new(CadViewportCommandKind.SetSketchTool, SketchTool: "Circle"),
+            new(CadViewportCommandKind.PlaceSketchAt, U: 0d, V: 0d),
+            new(CadViewportCommandKind.PlaceSketchAt, U: radius, V: 0d),
+            new(CadViewportCommandKind.FinishSketch),
+            new(CadViewportCommandKind.ExtrudeSketch, Distance: height)
+        };
+
+        return CadCommandParseResult.Success(
+            commands,
+            $"Command parsed: create cylinder r={radius:0.###}, h={height:0.###}.");
     }
 
     private static bool TryReadPoint(Match match, string xGroup, string yGroup, out (double X, double Y) point)
