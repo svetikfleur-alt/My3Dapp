@@ -11,10 +11,9 @@
         Classes="FeatureDialogWindow"
         Title="Mirror">
   <Border Classes="FeatureDialogPanel" Margin="0">
-    <StackPanel Margin="16,14,16,16" Spacing="0">
+    <StackPanel Margin="16,14,16,16" Classes="FeatureDialogBodyStack">
 
-      <!-- Header: title + confirm/cancel -->
-      <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
+      <Grid Classes="FeatureDialogHeaderBar" ColumnDefinitions="*,Auto,Auto">
         <TextBlock Classes="FeatureDialogTitle"
                    Text="Mirror"
                    VerticalAlignment="Center" />
@@ -31,7 +30,11 @@
                 ToolTip.Tip="Cancel (Esc)" />
       </Grid>
 
-      <!-- Parameters -->
+      <Border Classes="FeatureDialogHintCard">
+        <TextBlock Classes="FeatureDialogHintText"
+                   Text="Mirror copies the selected geometry across a reference plane. Choose the plane that should act as the symmetry boundary." />
+      </Border>
+
       <Border Classes="FeatureDialogSectionCard">
         <StackPanel Spacing="0">
           <TextBlock Text="Mirror plane"

@@ -5,12 +5,27 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using ANumericUpDown = Avalonia.Controls.NumericUpDown;
 using AWindow = Avalonia.Controls.Window;
+using Button = Avalonia.Controls.Button;
 
 namespace My3DApp.AvaloniaApp.Dialogs;
 
 public sealed partial class ParameterEditDialog : AWindow
 {
     private readonly List<ParameterRow> _rows = [];
+    private TextBlock TitleTextBlockControl => this.FindControl<TextBlock>("TitleTextBlock")
+        ?? throw new InvalidOperationException("ParameterEditDialog is missing TitleTextBlock.");
+
+    private TextBlock SubtitleTextBlockControl => this.FindControl<TextBlock>("SubtitleTextBlock")
+        ?? throw new InvalidOperationException("ParameterEditDialog is missing SubtitleTextBlock.");
+
+    private StackPanel RowsPanelControl => this.FindControl<StackPanel>("RowsPanel")
+        ?? throw new InvalidOperationException("ParameterEditDialog is missing RowsPanel.");
+
+    private TextBlock ErrorLabelControl => this.FindControl<TextBlock>("ErrorLabel")
+        ?? throw new InvalidOperationException("ParameterEditDialog is missing ErrorLabel.");
+
+    private Button OkButtonControl => this.FindControl<Button>("OkButton")
+        ?? throw new InvalidOperationException("ParameterEditDialog is missing OkButton.");
 
     public ParameterEditDialog()
     {
@@ -24,8 +39,8 @@ public sealed partial class ParameterEditDialog : AWindow
         : this()
     {
         Title = title;
-        TitleTextBlock.Text = title;
-        SubtitleTextBlock.Text = subtitle;
+        TitleTextBlockControl.Text = title;
+        SubtitleTextBlockControl.Text = subtitle;
 
         foreach (var parameter in parameters)
         {
@@ -39,9 +54,9 @@ public sealed partial class ParameterEditDialog : AWindow
 
         if (_rows.Count == 0)
         {
-            ErrorLabel.Text = "No numeric editable parameters are available for this selection.";
-            ErrorLabel.IsVisible = true;
-            OkButton.IsEnabled = false;
+            ErrorLabelControl.Text = "No numeric editable parameters are available for this selection.";
+            ErrorLabelControl.IsVisible = true;
+            OkButtonControl.IsEnabled = false;
         }
     }
 
@@ -74,7 +89,7 @@ public sealed partial class ParameterEditDialog : AWindow
         Grid.SetColumn(input, 1);
         grid.Children.Add(label);
         grid.Children.Add(input);
-        RowsPanel.Children.Add(grid);
+        RowsPanelControl.Children.Add(grid);
         _rows.Add(new ParameterRow(key, input));
     }
 

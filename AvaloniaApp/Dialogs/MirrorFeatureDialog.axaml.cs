@@ -1,11 +1,16 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using AWindow = Avalonia.Controls.Window;
+using ComboBox = Avalonia.Controls.ComboBox;
+using ComboBoxItem = Avalonia.Controls.ComboBoxItem;
 
 namespace My3DApp.AvaloniaApp.Dialogs;
 
 public sealed partial class MirrorFeatureDialog : AWindow
 {
+    private ComboBox AxisComboBoxControl => this.FindControl<ComboBox>("AxisComboBox")
+        ?? throw new InvalidOperationException("MirrorFeatureDialog is missing AxisComboBox.");
+
     public MirrorFeatureDialog()
     {
         InitializeComponent();
@@ -13,7 +18,7 @@ public sealed partial class MirrorFeatureDialog : AWindow
 
     public MirrorFeatureDialog(string initialAxis) : this()
     {
-        AxisComboBox.SelectedIndex = initialAxis.ToLowerInvariant() switch
+        AxisComboBoxControl.SelectedIndex = initialAxis.ToLowerInvariant() switch
         {
             "y" => 1,
             "z" => 2,
@@ -27,7 +32,7 @@ public sealed partial class MirrorFeatureDialog : AWindow
 
     private void OnConfirmClick(object? sender, RoutedEventArgs e)
     {
-        ConfirmedAxis = (AxisComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "x";
+        ConfirmedAxis = (AxisComboBoxControl.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "x";
         Close(new MirrorFeatureDialogResult(ConfirmedAxis));
     }
 }

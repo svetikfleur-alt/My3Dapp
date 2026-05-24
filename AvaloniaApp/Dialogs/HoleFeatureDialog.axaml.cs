@@ -1,10 +1,31 @@
 using Avalonia.Interactivity;
+using Avalonia.Controls;
 using AWindow = Avalonia.Controls.Window;
+using NumericUpDown = Avalonia.Controls.NumericUpDown;
+using RadioButton = Avalonia.Controls.RadioButton;
 
 namespace My3DApp.AvaloniaApp.Dialogs;
 
 public sealed partial class HoleFeatureDialog : AWindow
 {
+    private NumericUpDown DiameterInputControl => this.FindControl<NumericUpDown>("DiameterInput")
+        ?? throw new InvalidOperationException("HoleFeatureDialog is missing DiameterInput.");
+
+    private NumericUpDown CenterXInputControl => this.FindControl<NumericUpDown>("CenterXInput")
+        ?? throw new InvalidOperationException("HoleFeatureDialog is missing CenterXInput.");
+
+    private NumericUpDown CenterYInputControl => this.FindControl<NumericUpDown>("CenterYInput")
+        ?? throw new InvalidOperationException("HoleFeatureDialog is missing CenterYInput.");
+
+    private RadioButton ThroughAllRadioControl => this.FindControl<RadioButton>("ThroughAllRadio")
+        ?? throw new InvalidOperationException("HoleFeatureDialog is missing ThroughAllRadio.");
+
+    private RadioButton BlindRadioControl => this.FindControl<RadioButton>("BlindRadio")
+        ?? throw new InvalidOperationException("HoleFeatureDialog is missing BlindRadio.");
+
+    private NumericUpDown DepthValueInputControl => this.FindControl<NumericUpDown>("DepthValueInput")
+        ?? throw new InvalidOperationException("HoleFeatureDialog is missing DepthValueInput.");
+
     public HoleFeatureDialog()
     {
         InitializeComponent();
@@ -13,15 +34,15 @@ public sealed partial class HoleFeatureDialog : AWindow
     public HoleFeatureDialog(double diameter, string depthKind, double depthValue, double centerOffsetX, double centerOffsetY)
         : this()
     {
-        DiameterInput.Value = (decimal)diameter;
-        CenterXInput.Value = (decimal)centerOffsetX;
-        CenterYInput.Value = (decimal)centerOffsetY;
+        DiameterInputControl.Value = (decimal)diameter;
+        CenterXInputControl.Value = (decimal)centerOffsetX;
+        CenterYInputControl.Value = (decimal)centerOffsetY;
 
         var isBlind = string.Equals(depthKind, "Blind", StringComparison.OrdinalIgnoreCase);
-        ThroughAllRadio.IsChecked = !isBlind;
-        BlindRadio.IsChecked = isBlind;
-        DepthValueInput.Value = (decimal)depthValue;
-        DepthValueInput.IsEnabled = isBlind;
+        ThroughAllRadioControl.IsChecked = !isBlind;
+        BlindRadioControl.IsChecked = isBlind;
+        DepthValueInputControl.Value = (decimal)depthValue;
+        DepthValueInputControl.IsEnabled = isBlind;
     }
 
     public double ConfirmedDiameter { get; private set; } = 10d;
@@ -36,12 +57,14 @@ public sealed partial class HoleFeatureDialog : AWindow
 
     private void OnDepthKindChanged(object? sender, RoutedEventArgs e)
     {
-        if (DepthValueInput is null)
+        var depthValueInput = this.FindControl<NumericUpDown>("DepthValueInput");
+        var blindRadio = this.FindControl<RadioButton>("BlindRadio");
+        if (depthValueInput is null)
         {
             return;
         }
 
-        DepthValueInput.IsEnabled = BlindRadio?.IsChecked == true;
+        depthValueInput.IsEnabled = blindRadio?.IsChecked == true;
     }
 
     private void OnCancelClick(object? sender, RoutedEventArgs e)
@@ -51,23 +74,23 @@ public sealed partial class HoleFeatureDialog : AWindow
 
     private void OnConfirmClick(object? sender, RoutedEventArgs e)
     {
-        var diameter = (double)(DiameterInput.Value ?? 10m);
+        var diameter = (double)(DiameterInputControl.Value ?? 10m);
         if (diameter <= 0d)
         {
-            DiameterInput.Value = 10m;
+            DiameterInputControl.Value = 10m;
             return;
         }
 
         ConfirmedDiameter = diameter;
-        ConfirmedCenterOffsetX = (double)(CenterXInput.Value ?? 0m);
-        ConfirmedCenterOffsetY = (double)(CenterYInput.Value ?? 0m);
+        ConfirmedCenterOffsetX = (double)(CenterXInputControl.Value ?? 0m);
+        ConfirmedCenterOffsetY = (double)(CenterYInputControl.Value ?? 0m);
 
-        if (BlindRadio.IsChecked == true)
+        if (BlindRadioControl.IsChecked == true)
         {
-            var depthValue = (double)(DepthValueInput.Value ?? 20m);
+            var depthValue = (double)(DepthValueInputControl.Value ?? 20m);
             if (depthValue <= 0d)
             {
-                DepthValueInput.Value = 20m;
+                DepthValueInputControl.Value = 20m;
                 return;
             }
 

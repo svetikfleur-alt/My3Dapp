@@ -455,6 +455,14 @@
     <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
   </Style>
 
+  <Style Selector="Grid.FeatureDialogHeaderBar">
+    <Setter Property="Margin" Value="0,0,0,12" />
+  </Style>
+
+  <Style Selector="StackPanel.FeatureDialogBodyStack">
+    <Setter Property="Spacing" Value="10" />
+  </Style>
+
   <Style Selector="Border.FeatureDialogTag">
     <Setter Property="Background" Value="{DynamicResource Studio.PanelInsetBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
@@ -476,6 +484,20 @@
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius" Value="14" />
     <Setter Property="Padding" Value="14" />
+  </Style>
+
+  <Style Selector="Border.FeatureDialogHintCard">
+    <Setter Property="Background" Value="#152131" />
+    <Setter Property="BorderBrush" Value="#2b4660" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="Padding" Value="12,10" />
+  </Style>
+
+  <Style Selector="TextBlock.FeatureDialogHintText">
+    <Setter Property="FontSize" Value="11.5" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
   </Style>
 
   <Style Selector="TextBlock.FeatureDialogFieldLabel">
@@ -598,6 +620,13 @@
   </Style>
   <Style Selector="ToggleButton.FeatureDialogOperationTab:pointerover /template/ ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+  </Style>
+
+  <Style Selector="StackPanel.FeatureDialogActionRow">
+    <Setter Property="Orientation" Value="Horizontal" />
+    <Setter Property="HorizontalAlignment" Value="Right" />
+    <Setter Property="Spacing" Value="8" />
+    <Setter Property="Margin" Value="0,12,0,0" />
   </Style>
 
   <Style Selector="Border.NavigatorSectionSwitcher">

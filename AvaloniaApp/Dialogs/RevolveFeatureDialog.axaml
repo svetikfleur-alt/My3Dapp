@@ -11,10 +11,9 @@
         Classes="FeatureDialogWindow"
         Title="Revolve">
   <Border Classes="FeatureDialogPanel" Margin="0">
-    <StackPanel Margin="16,14,16,16" Spacing="0">
+    <StackPanel Margin="16,14,16,16" Classes="FeatureDialogBodyStack">
 
-      <!-- Header: title + confirm/cancel -->
-      <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
+      <Grid Classes="FeatureDialogHeaderBar" ColumnDefinitions="*,Auto,Auto">
         <TextBlock Classes="FeatureDialogTitle"
                    Text="Revolve"
                    VerticalAlignment="Center" />
@@ -31,11 +30,15 @@
                 ToolTip.Tip="Cancel (Esc)" />
       </Grid>
 
-      <!-- Profile selection field -->
+      <Border Classes="FeatureDialogHintCard">
+        <TextBlock Classes="FeatureDialogHintText"
+                   Text="Use revolve for symmetric parts built around a sketch axis. Pick a closed profile first, then choose the axis and angle." />
+      </Border>
+
       <TextBlock Classes="FeatureDialogFieldLabel"
                  Text="Faces and sketch regions to revolve"
                  Margin="0,0,0,4" />
-      <Border Classes="FeatureDialogSelectionField" Margin="0,0,0,8">
+      <Border Classes="FeatureDialogSelectionField">
         <TextBlock x:Name="ProfileValueTextBlock"
                    Classes="FeatureDialogSelectionText"
                    Text="Select a closed sketch profile" />

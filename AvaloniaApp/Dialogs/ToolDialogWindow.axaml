@@ -12,24 +12,30 @@
         Title="Tool">
   <Border Classes="FeatureDialogPanel" Margin="0">
     <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="18">
-      <TextBlock x:Name="TitleTextBlock"
-                 Classes="FeatureDialogTitle"
-                 Text="Tool" />
-      <TextBlock x:Name="SubtitleTextBlock"
-                 Grid.Row="1"
-                 Margin="0,6,0,0"
-                 Classes="FeatureDialogSubtitle"
-                 TextWrapping="Wrap"
-                 Text="Configure tool options, then confirm." />
+      <Grid Classes="FeatureDialogHeaderBar"
+            ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock x:Name="TitleTextBlock"
+                     Classes="FeatureDialogTitle"
+                     Text="Tool" />
+          <TextBlock x:Name="SubtitleTextBlock"
+                     Classes="FeatureDialogSubtitle"
+                     TextWrapping="Wrap"
+                     Text="Configure tool options, then confirm." />
+        </StackPanel>
+        <Border Grid.Column="1"
+                Classes="FeatureDialogTag"
+                VerticalAlignment="Top">
+          <TextBlock Text="ACTION" />
+        </Border>
+      </Grid>
 
       <ContentControl x:Name="BodyHost"
                       Grid.Row="2"
                       Margin="0,16,0,16" />
 
       <StackPanel Grid.Row="3"
-                  Orientation="Horizontal"
-                  HorizontalAlignment="Right"
-                  Spacing="8">
+                  Classes="FeatureDialogActionRow">
         <Button x:Name="CancelButton"
                 Content="Cancel"
                 Classes="FeatureDialogButtonSecondary"

@@ -12,7 +12,8 @@
         Title="Edit Parameters">
   <Border Classes="FeatureDialogPanel" Margin="0">
     <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="18">
-      <Grid ColumnDefinitions="*,Auto">
+      <Grid Classes="FeatureDialogHeaderBar"
+            ColumnDefinitions="*,Auto">
         <StackPanel Spacing="4">
           <TextBlock x:Name="TitleTextBlock"
                      Classes="FeatureDialogTitle"
@@ -29,18 +30,19 @@
                 BorderThickness="1"
                 Padding="9,5"
                 VerticalAlignment="Top">
-          <TextBlock Text="FEATURE"
-                     FontSize="10"
-                     FontWeight="SemiBold" />
+          <TextBlock Text="FEATURE" />
         </Border>
       </Grid>
 
+      <Border Grid.Row="1"
+              Classes="FeatureDialogHintCard">
+        <TextBlock Classes="FeatureDialogHintText"
+                   Text="Use this editor to tune feature parameters directly. Changes are applied back into the selected feature only after you confirm them." />
+      </Border>
+
       <Border Grid.Row="2"
               Margin="0,16,0,10"
-              Background="{DynamicResource Studio.PanelInsetBrush}"
-              BorderBrush="{DynamicResource Studio.BorderBrush}"
-              BorderThickness="1"
-              Padding="12">
+              Classes="FeatureDialogSectionCard">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
           <StackPanel x:Name="RowsPanel" Spacing="10" />
         </ScrollViewer>
@@ -54,10 +56,7 @@
                  IsVisible="False" />
 
       <StackPanel Grid.Row="4"
-                  Orientation="Horizontal"
-                  HorizontalAlignment="Right"
-                  Spacing="8"
-                  Margin="0,12,0,0">
+                  Classes="FeatureDialogActionRow">
         <Button Content="Cancel"
                 Classes="FeatureDialogButtonSecondary"
                 IsCancel="True"

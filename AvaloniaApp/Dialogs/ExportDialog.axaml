@@ -10,9 +10,9 @@
         Classes="FeatureDialogWindow"
         Title="Export Model">
   <Border Classes="FeatureDialogPanel" Margin="0">
-    <StackPanel Margin="16,14,16,16" Spacing="0">
+    <StackPanel Margin="16,14,16,16" Classes="FeatureDialogBodyStack">
 
-      <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,12">
+      <Grid Classes="FeatureDialogHeaderBar" ColumnDefinitions="*,Auto,Auto">
         <TextBlock Classes="FeatureDialogTitle" Text="Export Model" VerticalAlignment="Center" />
         <Button x:Name="ExportButton"
                 Grid.Column="1"
@@ -27,8 +27,12 @@
                 Click="OnCancelClick" />
       </Grid>
 
-      <!-- Format -->
-      <Border Classes="FeatureDialogSectionCard" Margin="0,0,0,8">
+      <Border Classes="FeatureDialogHintCard">
+        <TextBlock Classes="FeatureDialogHintText"
+                   Text="Choose a printable export format, decide whether to export the whole part set or the current body, then pick the output path." />
+      </Border>
+
+      <Border Classes="FeatureDialogSectionCard">
         <StackPanel Spacing="0">
           <TextBlock Text="Format" Classes="FeatureDialogFieldLabel" Margin="0,0,0,8" />
           <StackPanel Orientation="Horizontal" Spacing="16">
@@ -47,8 +51,7 @@
         </StackPanel>
       </Border>
 
-      <!-- Scope -->
-      <Border Classes="FeatureDialogSectionCard" Margin="0,0,0,8">
+      <Border Classes="FeatureDialogSectionCard">
         <StackPanel Spacing="0">
           <TextBlock Text="Scope" Classes="FeatureDialogFieldLabel" Margin="0,0,0,8" />
           <StackPanel Orientation="Horizontal" Spacing="16">
@@ -65,12 +68,12 @@
         </StackPanel>
       </Border>
 
-      <!-- File path -->
-      <Border Classes="FeatureDialogSectionCard" Margin="0,0,0,8">
+      <Border Classes="FeatureDialogSectionCard">
         <StackPanel Spacing="6">
           <TextBlock Text="Output file" Classes="FeatureDialogFieldLabel" />
           <Grid ColumnDefinitions="*,8,Auto">
             <TextBox x:Name="PathBox"
+                     Classes="FeatureDialogInput"
                      Watermark="Choose a file path…"
                      IsReadOnly="True" />
             <Button x:Name="BrowseButton"

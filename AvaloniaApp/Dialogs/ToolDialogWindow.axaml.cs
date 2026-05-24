@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using AWindow = Avalonia.Controls.Window;
+using Button = Avalonia.Controls.Button;
 
 namespace My3DApp.AvaloniaApp.Dialogs;
 
@@ -12,6 +13,21 @@ namespace My3DApp.AvaloniaApp.Dialogs;
 /// </summary>
 public sealed partial class ToolDialogWindow : AWindow
 {
+    private TextBlock TitleTextBlockControl => this.FindControl<TextBlock>("TitleTextBlock")
+        ?? throw new InvalidOperationException("ToolDialogWindow is missing TitleTextBlock.");
+
+    private TextBlock SubtitleTextBlockControl => this.FindControl<TextBlock>("SubtitleTextBlock")
+        ?? throw new InvalidOperationException("ToolDialogWindow is missing SubtitleTextBlock.");
+
+    private ContentControl BodyHostControl => this.FindControl<ContentControl>("BodyHost")
+        ?? throw new InvalidOperationException("ToolDialogWindow is missing BodyHost.");
+
+    private Button ConfirmButtonControl => this.FindControl<Button>("ConfirmButton")
+        ?? throw new InvalidOperationException("ToolDialogWindow is missing ConfirmButton.");
+
+    private Button CancelButtonControl => this.FindControl<Button>("CancelButton")
+        ?? throw new InvalidOperationException("ToolDialogWindow is missing CancelButton.");
+
     public ToolDialogWindow()
     {
         InitializeComponent();
@@ -21,49 +37,49 @@ public sealed partial class ToolDialogWindow : AWindow
         : this()
     {
         Title = toolTitle;
-        TitleTextBlock.Text = toolTitle;
-        SubtitleTextBlock.Text = subtitle;
-        BodyHost.Content = body;
+        TitleTextBlockControl.Text = toolTitle;
+        SubtitleTextBlockControl.Text = subtitle;
+        BodyHostControl.Content = body;
     }
 
     public Avalonia.Controls.Control? Body
     {
-        get => BodyHost.Content as Avalonia.Controls.Control;
-        set => BodyHost.Content = value;
+        get => BodyHostControl.Content as Avalonia.Controls.Control;
+        set => BodyHostControl.Content = value;
     }
 
     public string ToolTitle
     {
-        get => TitleTextBlock.Text ?? string.Empty;
+        get => TitleTextBlockControl.Text ?? string.Empty;
         set
         {
             Title = value;
-            TitleTextBlock.Text = value;
+            TitleTextBlockControl.Text = value;
         }
     }
 
     public string Subtitle
     {
-        get => SubtitleTextBlock.Text ?? string.Empty;
-        set => SubtitleTextBlock.Text = value;
+        get => SubtitleTextBlockControl.Text ?? string.Empty;
+        set => SubtitleTextBlockControl.Text = value;
     }
 
     public string ConfirmButtonText
     {
-        get => ConfirmButton.Content?.ToString() ?? string.Empty;
-        set => ConfirmButton.Content = value;
+        get => ConfirmButtonControl.Content?.ToString() ?? string.Empty;
+        set => ConfirmButtonControl.Content = value;
     }
 
     public string CancelButtonText
     {
-        get => CancelButton.Content?.ToString() ?? string.Empty;
-        set => CancelButton.Content = value;
+        get => CancelButtonControl.Content?.ToString() ?? string.Empty;
+        set => CancelButtonControl.Content = value;
     }
 
     public bool ShowCancelButton
     {
-        get => CancelButton.IsVisible;
-        set => CancelButton.IsVisible = value;
+        get => CancelButtonControl.IsVisible;
+        set => CancelButtonControl.IsVisible = value;
     }
 
     private void InitializeComponent()

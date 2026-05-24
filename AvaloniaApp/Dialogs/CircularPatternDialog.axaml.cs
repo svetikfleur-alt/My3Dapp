@@ -1,11 +1,23 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using AWindow = Avalonia.Controls.Window;
+using ComboBox = Avalonia.Controls.ComboBox;
+using ComboBoxItem = Avalonia.Controls.ComboBoxItem;
+using NumericUpDown = Avalonia.Controls.NumericUpDown;
 
 namespace My3DApp.AvaloniaApp.Dialogs;
 
 public sealed partial class CircularPatternDialog : AWindow
 {
+    private NumericUpDown CountInputControl => this.FindControl<NumericUpDown>("CountInput")
+        ?? throw new InvalidOperationException("CircularPatternDialog is missing CountInput.");
+
+    private NumericUpDown AngleInputControl => this.FindControl<NumericUpDown>("AngleInput")
+        ?? throw new InvalidOperationException("CircularPatternDialog is missing AngleInput.");
+
+    private ComboBox AxisComboBoxControl => this.FindControl<ComboBox>("AxisComboBox")
+        ?? throw new InvalidOperationException("CircularPatternDialog is missing AxisComboBox.");
+
     public CircularPatternDialog()
     {
         InitializeComponent();
@@ -14,9 +26,9 @@ public sealed partial class CircularPatternDialog : AWindow
     public CircularPatternDialog(int initialCount, double initialAngle, string initialAxis)
         : this()
     {
-        CountInput.Value = initialCount;
-        AngleInput.Value = (decimal)initialAngle;
-        AxisComboBox.SelectedIndex = initialAxis.Trim().ToLowerInvariant() switch
+        CountInputControl.Value = initialCount;
+        AngleInputControl.Value = (decimal)initialAngle;
+        AxisComboBoxControl.SelectedIndex = initialAxis.Trim().ToLowerInvariant() switch
         {
             "x" => 0,
             "z" => 2,
@@ -37,23 +49,23 @@ public sealed partial class CircularPatternDialog : AWindow
 
     private void OnConfirmClick(object? sender, RoutedEventArgs e)
     {
-        var count = (int)(CountInput.Value ?? 4m);
+        var count = (int)(CountInputControl.Value ?? 4m);
         if (count < 2)
         {
-            CountInput.Value = 2m;
+            CountInputControl.Value = 2m;
             return;
         }
 
-        var angle = (double)(AngleInput.Value ?? 360m);
+        var angle = (double)(AngleInputControl.Value ?? 360m);
         if (angle <= 0d)
         {
-            AngleInput.Value = 1m;
+            AngleInputControl.Value = 1m;
             return;
         }
 
         ConfirmedCount = count;
         ConfirmedAngle = angle;
-        ConfirmedAxis = (AxisComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString()?.Trim().ToLowerInvariant() ?? "y";
+        ConfirmedAxis = (AxisComboBoxControl.SelectedItem as ComboBoxItem)?.Tag?.ToString()?.Trim().ToLowerInvariant() ?? "y";
         Close(new CircularPatternDialogResult(ConfirmedCount, ConfirmedAngle, ConfirmedAxis));
     }
 }

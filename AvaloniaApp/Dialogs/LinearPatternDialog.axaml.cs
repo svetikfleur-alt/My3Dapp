@@ -1,11 +1,23 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using AWindow = Avalonia.Controls.Window;
+using ComboBox = Avalonia.Controls.ComboBox;
+using ComboBoxItem = Avalonia.Controls.ComboBoxItem;
+using NumericUpDown = Avalonia.Controls.NumericUpDown;
 
 namespace My3DApp.AvaloniaApp.Dialogs;
 
 public sealed partial class LinearPatternDialog : AWindow
 {
+    private NumericUpDown CountInputControl => this.FindControl<NumericUpDown>("CountInput")
+        ?? throw new InvalidOperationException("LinearPatternDialog is missing CountInput.");
+
+    private NumericUpDown SpacingInputControl => this.FindControl<NumericUpDown>("SpacingInput")
+        ?? throw new InvalidOperationException("LinearPatternDialog is missing SpacingInput.");
+
+    private ComboBox AxisComboBoxControl => this.FindControl<ComboBox>("AxisComboBox")
+        ?? throw new InvalidOperationException("LinearPatternDialog is missing AxisComboBox.");
+
     public LinearPatternDialog()
     {
         InitializeComponent();
@@ -14,9 +26,9 @@ public sealed partial class LinearPatternDialog : AWindow
     public LinearPatternDialog(int initialCount, double initialSpacing, string initialAxis)
         : this()
     {
-        CountInput.Value = initialCount;
-        SpacingInput.Value = (decimal)initialSpacing;
-        AxisComboBox.SelectedIndex = initialAxis.Trim().ToLowerInvariant() switch
+        CountInputControl.Value = initialCount;
+        SpacingInputControl.Value = (decimal)initialSpacing;
+        AxisComboBoxControl.SelectedIndex = initialAxis.Trim().ToLowerInvariant() switch
         {
             "y" => 1,
             "z" => 2,
@@ -37,9 +49,9 @@ public sealed partial class LinearPatternDialog : AWindow
 
     private void OnConfirmClick(object? sender, RoutedEventArgs e)
     {
-        ConfirmedCount = Math.Max(2, (int)(CountInput.Value ?? 3m));
-        ConfirmedSpacing = Math.Max(0.1d, (double)(SpacingInput.Value ?? 20m));
-        ConfirmedAxis = (AxisComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString()?.Trim().ToLowerInvariant() ?? "x";
+        ConfirmedCount = Math.Max(2, (int)(CountInputControl.Value ?? 3m));
+        ConfirmedSpacing = Math.Max(0.1d, (double)(SpacingInputControl.Value ?? 20m));
+        ConfirmedAxis = (AxisComboBoxControl.SelectedItem as ComboBoxItem)?.Tag?.ToString()?.Trim().ToLowerInvariant() ?? "x";
         Close(new LinearPatternDialogResult(ConfirmedCount, ConfirmedSpacing, ConfirmedAxis));
     }
 }

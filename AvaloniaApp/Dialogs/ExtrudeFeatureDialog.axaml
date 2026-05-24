@@ -11,10 +11,9 @@
         Classes="FeatureDialogWindow"
         Title="Extrude">
   <Border Classes="FeatureDialogPanel" Margin="0">
-    <StackPanel Margin="16,14,16,16" Spacing="0">
+    <StackPanel Margin="16,14,16,16" Classes="FeatureDialogBodyStack">
 
-      <!-- Header: title + confirm/cancel -->
-      <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,10">
+      <Grid Classes="FeatureDialogHeaderBar" ColumnDefinitions="*,Auto,Auto">
         <TextBlock Classes="FeatureDialogTitle"
                    Text="Extrude"
                    VerticalAlignment="Center" />
@@ -32,8 +31,12 @@
                 ToolTip.Tip="Cancel (Esc)" />
       </Grid>
 
-      <!-- Operation tabs: New | Add | Remove | Symmetric -->
-      <Border Classes="FeatureDialogTabBar" Margin="0,0,0,10">
+      <Border Classes="FeatureDialogHintCard">
+        <TextBlock Classes="FeatureDialogHintText"
+                   Text="Pick one closed normal sketch profile, set the depth, then choose whether this should create a new body or modify an existing one." />
+      </Border>
+
+      <Border Classes="FeatureDialogTabBar">
         <StackPanel Orientation="Horizontal" Spacing="0">
           <ToggleButton x:Name="OpNewTab"
                         Classes="FeatureDialogOperationTab"
@@ -59,7 +62,7 @@
       <TextBlock Classes="FeatureDialogFieldLabel"
                  Text="Faces and sketch regions to extrude"
                  Margin="0,0,0,4" />
-      <Border Classes="FeatureDialogSelectionField" Margin="0,0,0,8">
+      <Border Classes="FeatureDialogSelectionField">
         <TextBlock x:Name="ProfileValueTextBlock"
                    Classes="FeatureDialogSelectionText"
                    Text="Select a closed sketch profile" />
@@ -74,14 +77,14 @@
       <ComboBox x:Name="TargetBodyComboBox"
                 Classes="FeatureDialogInput"
                 HorizontalAlignment="Stretch"
-                Margin="0,0,0,4"
+                Margin="0,0,0,2"
                 IsVisible="False" />
       <TextBlock x:Name="NoBodyWarningText"
                  Text="No bodies available."
                  Foreground="OrangeRed"
                  FontSize="11"
                  TextWrapping="Wrap"
-                 Margin="0,0,0,6"
+                 Margin="0,0,0,2"
                  IsVisible="False" />
 
       <!-- Parameters -->

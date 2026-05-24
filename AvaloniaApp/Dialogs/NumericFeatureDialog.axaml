@@ -11,9 +11,9 @@
         Classes="FeatureDialogWindow"
         Title="Feature">
   <Border Classes="FeatureDialogPanel" Margin="0">
-    <StackPanel Margin="16,14,16,16" Spacing="0">
+    <StackPanel Margin="16,14,16,16" Classes="FeatureDialogBodyStack">
 
-      <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,12">
+      <Grid Classes="FeatureDialogHeaderBar" ColumnDefinitions="*,Auto,Auto">
         <TextBlock x:Name="TitleTextBlock"
                    Classes="FeatureDialogTitle"
                    Text="Feature"
@@ -21,6 +21,11 @@
         <Button Grid.Column="1" Classes="FeatureDialogConfirmBtn" IsDefault="True" Click="OnConfirmClick" />
         <Button Grid.Column="2" Margin="6,0,0,0" Classes="FeatureDialogCancelBtn" IsCancel="True" Click="OnCancelClick" />
       </Grid>
+
+      <Border Classes="FeatureDialogHintCard">
+        <TextBlock Classes="FeatureDialogHintText"
+                   Text="Update the driving value for this feature, then apply the change back into the model." />
+      </Border>
 
       <Border Classes="FeatureDialogSectionCard">
         <Grid ColumnDefinitions="*,72" RowDefinitions="Auto,Auto">
