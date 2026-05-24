@@ -20,7 +20,12 @@ if ((Split-Path -Leaf $scriptRoot) -eq "temp_main_clean_export") {
 }
 $logDir = Join-Path $repoRoot "logs"
 $logPath = Join-Path $logDir "github-sync.log"
-$mirrorRoot = Join-Path $repoRoot $MirrorFolder
+$mirrorRoot = if ([System.IO.Path]::IsPathRooted($MirrorFolder)) {
+    $MirrorFolder
+}
+else {
+    Join-Path (Join-Path $env:LOCALAPPDATA "My3DApp") $MirrorFolder
+}
 
 function Ensure-Directory {
     param([string]$Path)
@@ -132,7 +137,10 @@ function Get-DesiredRelativeFiles {
         Where-Object {
             $normalized = $_.Replace("/", "\")
             $normalized -notlike "cloud_sync_mirror\*" -and
+            $normalized -notlike "temp_github_export\*" -and
             $normalized -notlike "temp_main_clean_export\*" -and
+            $normalized -notlike "temp_sync_backup\*" -and
+            $normalized -notlike "temp_*\*" -and
             $normalized -notlike "logs\*"
         } |
         Sort-Object -Unique

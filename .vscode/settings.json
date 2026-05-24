@@ -5,5 +5,11 @@
             "envManager": "ms-python.python:venv",
             "packageManager": "ms-python.python:pip"
         }
+    ],
+    "git.ignoredRepositories": [
+        "cloud_sync_mirror",
+        "temp_github_export",
+        "temp_main_clean_export",
+        "temp_sync_backup"
     ]
 }

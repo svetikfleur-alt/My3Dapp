@@ -538,13 +538,15 @@ public sealed partial class MainWindow : Window
         {
             Text = "Standard Project",
             Watermark = "Project name",
-            MinWidth = 280
+            MinWidth = 280,
+            Classes = { "FeatureDialogInput" }
         };
         var typeBox = new Avalonia.Controls.ComboBox
         {
             ItemsSource = projectTypes,
             SelectedItem = projectTypes[1],
-            MinWidth = 160
+            MinWidth = 160,
+            Classes = { "FeatureDialogInput" }
         };
         var typeDescription = new Avalonia.Controls.TextBlock
         {
@@ -557,13 +559,13 @@ public sealed partial class MainWindow : Window
         var createButton = new Avalonia.Controls.Button
         {
             Content = "Create Project",
-            Classes = { "AssistantApplyButton" },
+            Classes = { "FeatureDialogButtonPrimary" },
             MinWidth = 120
         };
         var cancelButton = new Avalonia.Controls.Button
         {
             Content = "Cancel",
-            Classes = { "AssistantSecondaryButton" },
+            Classes = { "FeatureDialogButtonSecondary" },
             MinWidth = 90
         };
 
@@ -571,35 +573,64 @@ public sealed partial class MainWindow : Window
         {
             Title = "New Project",
             Width = 440,
-            Height = 300,
+            Height = 340,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             CanResize = false,
-            Content = new Avalonia.Controls.StackPanel
+            ShowInTaskbar = false,
+            Classes = { "FeatureDialogWindow" },
+            Content = new Border
             {
-                Margin = new Avalonia.Thickness(18),
-                Spacing = 12,
-                Children =
+                Classes = { "FeatureDialogPanel" },
+                Child = new StackPanel
                 {
-                    new Avalonia.Controls.TextBlock
+                    Margin = new Avalonia.Thickness(18),
+                    Spacing = 12,
+                    Children =
                     {
-                        Text = "Create a real local CAD project",
-                        FontWeight = Avalonia.Media.FontWeight.SemiBold,
-                        FontSize = 15
-                    },
-                    new Avalonia.Controls.TextBlock
-                    {
-                        Text = "Large creates multiple part studios. Standard creates one normal project. Quick is for disposable repair/household parts.",
-                        TextWrapping = Avalonia.Media.TextWrapping.Wrap
-                    },
-                    nameBox,
-                    typeBox,
-                    typeDescription,
-                    new Avalonia.Controls.StackPanel
-                    {
-                        Orientation = Avalonia.Layout.Orientation.Horizontal,
-                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
-                        Spacing = 8,
-                        Children = { cancelButton, createButton }
+                        new Avalonia.Controls.TextBlock
+                        {
+                            Text = "Create Project",
+                            Classes = { "FeatureDialogTitle" }
+                        },
+                        new Avalonia.Controls.TextBlock
+                        {
+                            Text = "Choose the project scale and give the new document a clear name before you start modeling.",
+                            Classes = { "FeatureDialogSubtitle" },
+                            TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                            Margin = new Avalonia.Thickness(0, 6, 0, 0)
+                        },
+                        new Border
+                        {
+                            Classes = { "FeatureDialogSectionCard" },
+                            Padding = new Avalonia.Thickness(12),
+                            Child = new StackPanel
+                            {
+                                Spacing = 10,
+                                Children =
+                                {
+                                    new Avalonia.Controls.TextBlock
+                                    {
+                                        Text = "Project name",
+                                        Classes = { "FeatureDialogFieldLabel" }
+                                    },
+                                    nameBox,
+                                    new Avalonia.Controls.TextBlock
+                                    {
+                                        Text = "Project type",
+                                        Classes = { "FeatureDialogFieldLabel" }
+                                    },
+                                    typeBox,
+                                    typeDescription
+                                }
+                            }
+                        },
+                        new Avalonia.Controls.StackPanel
+                        {
+                            Orientation = Avalonia.Layout.Orientation.Horizontal,
+                            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                            Spacing = 8,
+                            Children = { cancelButton, createButton }
+                        }
                     }
                 }
             }
@@ -629,7 +660,7 @@ public sealed partial class MainWindow : Window
         };
         cancelButton.Click += (_, _) => dialog.Close();
 
-        await dialog.ShowDialog(this);
+        await ShowAnchoredDialogAsync(dialog, returnFocus: false);
         return result;
     }
 
@@ -966,6 +997,14 @@ public sealed partial class MainWindow : Window
             });
 
         await dialog.ShowDialog<bool?>(this);
+    }
+
+    private void OnQuickExportClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+            return;
+
+        _wiredViewModel.QuickExport();
     }
 
     private async void OnViewportDeleteRequested(object? sender, EventArgs e)
@@ -1664,6 +1703,27 @@ public sealed partial class MainWindow : Window
         }
 
         _wiredViewModel.BeginSketchPlaneSelection();
+        var planes = _wiredViewModel.GetAvailablePlanes();
+        if (planes.Count == 0)
+        {
+            _wiredViewModel.CancelSketchPlaneSelection();
+            await ShowCommandBlockedDialogAsync(
+                "Start Sketch",
+                "No sketch base is available yet.",
+                "Show at least one visible reference plane or select a planar face.",
+                "Use Top, Front, or Right from the tree, or create a datum plane first.");
+            return;
+        }
+
+        var dialog = new SelectPlaneDialog(planes);
+        var selectedPlane = await ShowAnchoredDialogAsync<SelectPlaneDialogResult?>(dialog);
+        if (selectedPlane is not null)
+        {
+            await _wiredViewModel.StartSketchOnPlaneAsync(selectedPlane.PlaneId, selectedPlane.PlaneName);
+            ApplySketchToolHint("Rectangle");
+            return;
+        }
+
         ReturnFocusToViewport();
         ApplySketchToolHint("Rectangle");
     }
@@ -2013,6 +2073,18 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            if (!_wiredViewModel.CanProfileTools)
+            {
+                await ShowCommandBlockedDialogAsync(
+                    "Extrude",
+                    "Select a closed normal sketch profile first.",
+                    "Finish the active sketch if it is still open.",
+                    "Use a closed rectangle, circle, or other valid loop.",
+                    "Construction geometry and open chains cannot be extruded.");
+                e.Handled = true;
+                return;
+            }
+
             var result = await ShowExtrudeFeatureDialogAsync();
             ReturnFocusToViewport();
             if (result is null)
@@ -2040,6 +2112,18 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            if (!_wiredViewModel.CanProfileTools)
+            {
+                await ShowCommandBlockedDialogAsync(
+                    "Revolve",
+                    "Select a closed normal sketch profile before revolving.",
+                    "Finish the current sketch if needed.",
+                    "Pick a profile such as a circle or closed loop.",
+                    "Then choose the revolve axis and angle in the dialog.");
+                e.Handled = true;
+                return;
+            }
+
             var result = await ShowRevolveFeatureDialogAsync();
             ReturnFocusToViewport();
             if (result is null)
@@ -2067,6 +2151,18 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            if (!_wiredViewModel.CanProfileTools)
+            {
+                await ShowCommandBlockedDialogAsync(
+                    "Sweep",
+                    "Sweep needs a valid selected sketch profile in this MVP.",
+                    "Finish the active sketch if it is still open.",
+                    "Select a closed normal profile first.",
+                    "Then set sweep distance and twist in the feature dialog.");
+                e.Handled = true;
+                return;
+            }
+
             var result = await ShowSweepFeatureDialogAsync();
             ReturnFocusToViewport();
             if (result is null)
@@ -2161,6 +2257,17 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            if (!_wiredViewModel.CanEdgeTools)
+            {
+                await ShowCommandBlockedDialogAsync(
+                    "Fillet",
+                    "Select a solid body before filleting.",
+                    "Choose a visible body in the tree or viewport.",
+                    "Then set the edge radius in the dialog.");
+                e.Handled = true;
+                return;
+            }
+
             var dialog = new FilletFeatureDialog(_wiredViewModel.AssistantSelectionSummary, 2d);
             var result = await ShowAnchoredDialogAsync<FilletFeatureDialogResult?>(dialog);
             if (result is null)
@@ -2188,6 +2295,17 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            if (!_wiredViewModel.CanEdgeTools)
+            {
+                await ShowCommandBlockedDialogAsync(
+                    "Shell",
+                    "Select a solid body before shelling it.",
+                    "Choose a visible body in the viewport or tree.",
+                    "Then define the wall thickness in the shell dialog.");
+                e.Handled = true;
+                return;
+            }
+
             var thickness = await ShowNumericFeatureDialogAsync(
                 "Shell",
                 "Create a hollow body from the current solid.",
@@ -2222,6 +2340,17 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            if (!_wiredViewModel.CanEdgeTools)
+            {
+                await ShowCommandBlockedDialogAsync(
+                    "Chamfer",
+                    "Select a solid body before applying a chamfer.",
+                    "Pick a body in the tree or viewport first.",
+                    "Then set the chamfer distance in the dialog.");
+                e.Handled = true;
+                return;
+            }
+
             var distance = await ShowNumericFeatureDialogAsync(
                 "Chamfer",
                 "Bevel the selected solid using a single-distance chamfer.",
@@ -2256,6 +2385,17 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            if (!_wiredViewModel.CanEdgeTools)
+            {
+                await ShowCommandBlockedDialogAsync(
+                    "Linear Pattern",
+                    "Select a body before creating a linear pattern.",
+                    "Patterns duplicate the currently selected body.",
+                    "Then set count, spacing, and axis in the dialog.");
+                e.Handled = true;
+                return;
+            }
+
             var dialog = new LinearPatternDialog(3, 20d, "x");
             var result = await ShowAnchoredDialogAsync<LinearPatternDialogResult?>(dialog);
             if (result is null)
@@ -2283,6 +2423,17 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            if (!_wiredViewModel.CanEdgeTools)
+            {
+                await ShowCommandBlockedDialogAsync(
+                    "Circular Pattern",
+                    "Select a body before creating a circular pattern.",
+                    "Patterns duplicate the currently selected body.",
+                    "Then set count, total angle, and axis in the dialog.");
+                e.Handled = true;
+                return;
+            }
+
             var dialog = new CircularPatternDialog(4, 360d, "y");
             var result = await ShowAnchoredDialogAsync<CircularPatternDialogResult?>(dialog);
             if (result is null)
@@ -2310,6 +2461,17 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            if (!_wiredViewModel.CanEdgeTools)
+            {
+                await ShowCommandBlockedDialogAsync(
+                    "Hole",
+                    "Select a solid body before creating a hole feature.",
+                    "Choose a visible body in the tree or viewport.",
+                    "Then set diameter, offsets, and depth in the dialog.");
+                e.Handled = true;
+                return;
+            }
+
             var dialog = new HoleFeatureDialog(10d, "ThroughAll", 20d, 0d, 0d);
             var result = await ShowAnchoredDialogAsync<HoleFeatureDialogResult?>(dialog);
             if (result is null)
@@ -2365,6 +2527,11 @@ public sealed partial class MainWindow : Window
             var bodies = _wiredViewModel.GetBodyList();
             if (bodies.Count < 2)
             {
+                await ShowCommandBlockedDialogAsync(
+                    "Boolean Operation",
+                    "At least two visible bodies are required.",
+                    "Create or generate another body first.",
+                    "Then select the two bodies you want to union, subtract, or intersect.");
                 return;
             }
 
@@ -2400,6 +2567,17 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            if (!_wiredViewModel.CanEdgeTools)
+            {
+                await ShowCommandBlockedDialogAsync(
+                    "Mirror",
+                    "Select a body before creating a mirror feature.",
+                    "Choose a visible body in the viewport or tree.",
+                    "Then select the mirror axis in the dialog.");
+                e.Handled = true;
+                return;
+            }
+
             var dialog = new MirrorFeatureDialog("x");
             var result = await ShowAnchoredDialogAsync<MirrorFeatureDialogResult?>(dialog);
             if (result is null)
@@ -2543,6 +2721,16 @@ public sealed partial class MainWindow : Window
         }
 
         var sketches = _wiredViewModel.GetClosedSketchProfiles();
+        if (sketches.Count < 2)
+        {
+            await ShowCommandBlockedDialogAsync(
+                "Loft",
+                "Loft needs at least two closed sketch profiles.",
+                "Create or finish two valid sketch profiles first.",
+                "Then choose the source and target profiles in the loft dialog.");
+            return null;
+        }
+
         var dialog = new LoftFeatureDialog(sketches, Guid.Empty, Guid.Empty, 20d);
         return await ShowAnchoredDialogAsync<LoftFeatureDialogResult?>(dialog);
     }
@@ -2632,6 +2820,43 @@ public sealed partial class MainWindow : Window
         var dialog = new ToolDialogWindow(title, subtitle, body);
         var result = await ShowAnchoredDialogAsync<bool?>(dialog, returnFocus: false);
         return result == true;
+    }
+
+    private async Task ShowCommandBlockedDialogAsync(string commandName, string subtitle, params string[] steps)
+    {
+        var body = new StackPanel { Spacing = 10 };
+
+        if (steps.Length > 0)
+        {
+            body.Children.Add(new TextBlock
+            {
+                Text = "What to do next",
+                Classes = { "FeatureDialogFieldLabel" }
+            });
+
+            foreach (var step in steps.Where(step => !string.IsNullOrWhiteSpace(step)))
+            {
+                body.Children.Add(new Border
+                {
+                    Classes = { "FeatureDialogSectionCard" },
+                    Padding = new Thickness(10, 8),
+                    Child = new TextBlock
+                    {
+                        Text = "• " + step.Trim(),
+                        TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                        Classes = { "FeatureDialogHelpText" }
+                    }
+                });
+            }
+        }
+
+        var dialog = new ToolDialogWindow(commandName, subtitle, body)
+        {
+            ConfirmButtonText = "OK",
+            ShowCancelButton = false
+        };
+
+        await ShowAnchoredDialogAsync(dialog);
     }
 
     private async Task<TResult> ShowAnchoredDialogAsync<TResult>(Window dialog, bool returnFocus = true)
@@ -2871,7 +3096,7 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        _wiredViewModel.SelectMakerTemplate(templateId);
+        _wiredViewModel.OpenFeaturedTemplate(templateId);
         e.Handled = true;
     }
 
@@ -2987,6 +3212,112 @@ public sealed partial class MainWindow : Window
     private void OnDismissStartupPageClick(object? sender, RoutedEventArgs e)
     {
         _wiredViewModel?.DismissStartupPage();
+        e.Handled = true;
+    }
+
+    private void OnStartupTemplateClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not Avalonia.Controls.Button button || button.Tag is not string templateId)
+        {
+            return;
+        }
+
+        _wiredViewModel.OpenFeaturedTemplate(templateId);
+        e.Handled = true;
+    }
+
+    private void OnAssistantSuggestionClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null || sender is not Avalonia.Controls.Button button || button.Tag is not string prompt)
+        {
+            return;
+        }
+
+        _wiredViewModel.PrimeAssistantPrompt(prompt);
+        AssistantInputBox?.Focus();
+        e.Handled = true;
+    }
+
+    private async void OnRestoreAutosaveClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null || !AutosaveService.HasAutosave)
+        {
+            return;
+        }
+
+        if (!await EnsureSafeToReplaceCurrentProjectAsync("Restore autosave",
+                "You have unsaved changes. Save the current document before restoring the autosave?"))
+        {
+            return;
+        }
+
+        try
+        {
+            if (_wiredViewModel.OpenProject(AutosaveService.AutosavePath))
+            {
+                _wiredViewModel.UpdateRecoveryStatus(false, null);
+                _wiredViewModel.ShowNotification("Autosave restored into the current studio.", NotificationSeverity.Info);
+            }
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnRestoreAutosaveClick), ex);
+        }
+
+        e.Handled = true;
+    }
+
+    private async void OnApplyTemplateAndPrepareClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _wiredViewModel.ApplySelectedTemplateAndOpenPrepareAsync();
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnApplyTemplateAndPrepareClick), ex);
+        }
+
+        e.Handled = true;
+    }
+
+    private void OnTemplateCopilotClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        _wiredViewModel.PrimeSelectedTemplateForAssistant();
+        AssistantInputBox?.Focus();
+        e.Handled = true;
+    }
+
+    private void OnPrepareCopilotClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        _wiredViewModel.PrimePrepareForAssistant();
+        AssistantInputBox?.Focus();
+        e.Handled = true;
+    }
+
+    private void OnDiscardAutosaveClick(object? sender, RoutedEventArgs e)
+    {
+        AutosaveService.DeleteAutosave();
+        if (_wiredViewModel is not null)
+        {
+            _wiredViewModel.UpdateRecoveryStatus(false, null);
+            _wiredViewModel.ShowNotification("Autosave discarded.", NotificationSeverity.Info);
+        }
         e.Handled = true;
     }
 
@@ -3109,30 +3440,35 @@ public sealed partial class MainWindow : Window
         {
             ItemsSource = _wiredViewModel.AssistantProviders,
             SelectedItem = _wiredViewModel.SelectedAssistantProvider,
-            MinWidth = 180
+            MinWidth = 180,
+            Classes = { "FeatureDialogInput" }
         };
         var modelBox = new ATextBox
         {
             Text = _wiredViewModel.SelectedAssistantModel,
             Watermark = "Model name, for example deepseek-chat",
-            MinWidth = 240
+            MinWidth = 240,
+            Classes = { "FeatureDialogInput" }
         };
         var baseUrlBox = new ATextBox
         {
             Text = _wiredViewModel.SelectedAssistantBaseUrl,
             Watermark = "Optional base URL (blank uses provider default)",
-            MinWidth = 380
+            MinWidth = 380,
+            Classes = { "FeatureDialogInput" }
         };
         var keyBox = new ATextBox
         {
             Text = _wiredViewModel.AssistantKeyInput,
             PasswordChar = '*',
             Watermark = "Session API key (not saved)",
-            MinWidth = 380
+            MinWidth = 380,
+            Classes = { "FeatureDialogInput" }
         };
         var statusText = new Avalonia.Controls.TextBlock
         {
-            TextWrapping = Avalonia.Media.TextWrapping.Wrap
+            TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+            Classes = { "FeatureDialogHelpText" }
         };
 
         void RefreshPreview()
@@ -3165,13 +3501,13 @@ public sealed partial class MainWindow : Window
         var saveButton = new Avalonia.Controls.Button
         {
             Content = "Apply",
-            Classes = { "AssistantApplyButton" },
+            Classes = { "FeatureDialogButtonPrimary" },
             MinWidth = 90
         };
         var cancelButton = new Avalonia.Controls.Button
         {
             Content = "Close",
-            Classes = { "AssistantSecondaryButton" },
+            Classes = { "FeatureDialogButtonSecondary" },
             MinWidth = 90
         };
 
@@ -3179,61 +3515,81 @@ public sealed partial class MainWindow : Window
         {
             Title = "AI Settings",
             Width = 520,
-            Height = 430,
+            Height = 470,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             CanResize = false,
-            Content = new Avalonia.Controls.StackPanel
+            ShowInTaskbar = false,
+            Classes = { "FeatureDialogWindow" },
+            Content = new Border
             {
-                Margin = new Avalonia.Thickness(18),
-                Spacing = 12,
-                Children =
+                Classes = { "FeatureDialogPanel" },
+                Child = new StackPanel
                 {
-                    new Avalonia.Controls.TextBlock
+                    Margin = new Avalonia.Thickness(18),
+                    Spacing = 12,
+                    Children =
                     {
-                        Text = "Configure real AI provider access",
-                        FontWeight = Avalonia.Media.FontWeight.SemiBold,
-                        FontSize = 15
-                    },
-                    new Avalonia.Controls.TextBlock
-                    {
-                        Text = "Environment variables are preferred for persistent setup: DEEPSEEK_API_KEY or OPENAI_API_KEY. A pasted key is session-only and is not saved.",
-                        TextWrapping = Avalonia.Media.TextWrapping.Wrap
-                    },
-                    new Avalonia.Controls.TextBlock
-                    {
-                        Text = "Provider",
-                        FontWeight = Avalonia.Media.FontWeight.SemiBold
-                    },
-                    new Avalonia.Controls.StackPanel
-                    {
-                        Orientation = Avalonia.Layout.Orientation.Horizontal,
-                        Spacing = 8,
-                        Children = { providerBox, modelBox }
-                    },
-                    new Avalonia.Controls.TextBlock
-                    {
-                        Text = "Optional base URL",
-                        FontWeight = Avalonia.Media.FontWeight.SemiBold
-                    },
-                    baseUrlBox,
-                    new Avalonia.Controls.TextBlock
-                    {
-                        Text = "API key status",
-                        FontWeight = Avalonia.Media.FontWeight.SemiBold
-                    },
-                    keyBox,
-                    statusText,
-                    new Avalonia.Controls.TextBlock
-                    {
-                        Text = "Provider, model, and base URL are stored locally. API keys are read from environment variables or this session field only.",
-                        TextWrapping = Avalonia.Media.TextWrapping.Wrap
-                    },
-                    new Avalonia.Controls.StackPanel
-                    {
-                        Orientation = Avalonia.Layout.Orientation.Horizontal,
-                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
-                        Spacing = 8,
-                        Children = { cancelButton, saveButton }
+                        new Avalonia.Controls.TextBlock
+                        {
+                            Text = "AI Settings",
+                            Classes = { "FeatureDialogTitle" }
+                        },
+                        new Avalonia.Controls.TextBlock
+                        {
+                            Text = "Configure a real assistant provider for design help, ACL drafting, and feature explanations. API keys remain local.",
+                            Classes = { "FeatureDialogSubtitle" },
+                            TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                            Margin = new Avalonia.Thickness(0, 6, 0, 0)
+                        },
+                        new Border
+                        {
+                            Classes = { "FeatureDialogSectionCard" },
+                            Padding = new Avalonia.Thickness(12),
+                            Child = new StackPanel
+                            {
+                                Spacing = 10,
+                                Children =
+                                {
+                                    new Avalonia.Controls.TextBlock
+                                    {
+                                        Text = "Provider and model",
+                                        Classes = { "FeatureDialogFieldLabel" }
+                                    },
+                                    new Avalonia.Controls.StackPanel
+                                    {
+                                        Orientation = Avalonia.Layout.Orientation.Horizontal,
+                                        Spacing = 8,
+                                        Children = { providerBox, modelBox }
+                                    },
+                                    new Avalonia.Controls.TextBlock
+                                    {
+                                        Text = "Optional base URL",
+                                        Classes = { "FeatureDialogFieldLabel" }
+                                    },
+                                    baseUrlBox,
+                                    new Avalonia.Controls.TextBlock
+                                    {
+                                        Text = "Session API key",
+                                        Classes = { "FeatureDialogFieldLabel" }
+                                    },
+                                    keyBox,
+                                    statusText,
+                                    new Avalonia.Controls.TextBlock
+                                    {
+                                        Text = "Provider, model, and base URL are stored locally. Environment variables are preferred for long-term setup; pasted keys are session-only.",
+                                        TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                                        Classes = { "FeatureDialogHelpText" }
+                                    }
+                                }
+                            }
+                        },
+                        new Avalonia.Controls.StackPanel
+                        {
+                            Orientation = Avalonia.Layout.Orientation.Horizontal,
+                            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                            Spacing = 8,
+                            Children = { cancelButton, saveButton }
+                        }
                     }
                 }
             }
@@ -3259,12 +3615,20 @@ public sealed partial class MainWindow : Window
         cancelButton.Click += (_, _) => dialog.Close();
 
         RefreshPreview();
-        await dialog.ShowDialog(this);
+        await ShowAnchoredDialogAsync(dialog, returnFocus: false);
     }
 
     private void OnPrepareExportClick(object? sender, RoutedEventArgs e)
     {
         OnExportClick(sender, e);
+    }
+
+    private void OnExportAllFormatsClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+            return;
+
+        _wiredViewModel.ExportAllFormats();
     }
 
     private void OnAssistantRecipeClick(object? sender, RoutedEventArgs e)
@@ -3408,7 +3772,7 @@ public sealed partial class MainWindow : Window
             if (holeParams is not null)
             {
                 var dialog = new HoleFeatureDialog(holeParams.Value.Diameter, holeParams.Value.DepthKind, holeParams.Value.DepthValue, holeParams.Value.CenterOffsetX, holeParams.Value.CenterOffsetY);
-                var result = await dialog.ShowDialog<HoleFeatureDialogResult?>(this);
+                var result = await ShowAnchoredDialogAsync<HoleFeatureDialogResult?>(dialog);
                 if (result is not null)
                 {
                     await _wiredViewModel.UpdateHoleAsync(selectedNode.EntityId, result.Diameter, result.DepthKind, result.DepthValue, result.CenterOffsetX, result.CenterOffsetY);
@@ -3421,7 +3785,7 @@ public sealed partial class MainWindow : Window
             if (lpParams is not null)
             {
                 var lpDialog = new LinearPatternDialog(lpParams.Value.Count, lpParams.Value.Spacing, lpParams.Value.Axis);
-                var lpResult = await lpDialog.ShowDialog<LinearPatternDialogResult?>(this);
+                var lpResult = await ShowAnchoredDialogAsync<LinearPatternDialogResult?>(lpDialog);
                 if (lpResult is not null)
                 {
                     await _wiredViewModel.UpdateLinearPatternAsync(selectedNode.EntityId, lpResult.Count, lpResult.Spacing, lpResult.Axis);
@@ -3434,7 +3798,7 @@ public sealed partial class MainWindow : Window
             if (cpParams is not null)
             {
                 var cpDialog = new CircularPatternDialog(cpParams.Value.Count, cpParams.Value.TotalAngle, cpParams.Value.Axis);
-                var cpResult = await cpDialog.ShowDialog<CircularPatternDialogResult?>(this);
+                var cpResult = await ShowAnchoredDialogAsync<CircularPatternDialogResult?>(cpDialog);
                 if (cpResult is not null)
                 {
                     await _wiredViewModel.UpdateCircularPatternAsync(selectedNode.EntityId, cpResult.Count, cpResult.TotalAngle, cpResult.Axis);
@@ -3447,7 +3811,7 @@ public sealed partial class MainWindow : Window
             if (filletRadius is not null)
             {
                 var dialog = new FilletFeatureDialog(_wiredViewModel.AssistantSelectionSummary, filletRadius.Value);
-                var result = await dialog.ShowDialog<FilletFeatureDialogResult?>(this);
+                var result = await ShowAnchoredDialogAsync<FilletFeatureDialogResult?>(dialog);
                 if (result is not null)
                 {
                     await _wiredViewModel.UpdateFilletAsync(selectedNode.EntityId, result.Radius);

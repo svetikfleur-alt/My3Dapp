@@ -234,6 +234,7 @@
 
   <Style Selector="Border.StartupHeroCard">
     <Setter Property="Background" Value="#101924" />
+    <Setter Property="BoxShadow" Value="0 18 42 0 #60000000" />
   </Style>
 
   <Style Selector="Border.StartupChip">
@@ -599,6 +600,35 @@
     <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
   </Style>
 
+  <Style Selector="Border.NavigatorSectionSwitcher">
+    <Setter Property="Background" Value="#121a24" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="Padding" Value="4" />
+    <Setter Property="Margin" Value="0,0,0,4" />
+  </Style>
+
+  <Style Selector="ToggleButton.NavigatorSectionTab">
+    <Setter Property="Height" Value="28" />
+    <Setter Property="Padding" Value="12,0" />
+    <Setter Property="FontSize" Value="11.5" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+    <Setter Property="CornerRadius" Value="9" />
+  </Style>
+  <Style Selector="ToggleButton.NavigatorSectionTab:checked">
+    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="#2b4764" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+  <Style Selector="ToggleButton.NavigatorSectionTab:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#1b2634" />
+  </Style>
+
   <Style Selector="Border.FeatureDialogSelectionField">
     <Setter Property="Background" Value="#162133" />
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
@@ -613,28 +643,30 @@
   </Style>
 
   <Style Selector="Border.PartStudioTabBar">
-    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="MinHeight" Value="36" />
   </Style>
 
   <Style Selector="Button.PartStudioTab">
-    <Setter Property="Height" Value="26" />
-    <Setter Property="MinWidth" Value="80" />
+    <Setter Property="Height" Value="30" />
+    <Setter Property="MinWidth" Value="92" />
     <Setter Property="Padding" Value="14,0" />
     <Setter Property="Background" Value="Transparent" />
-    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
-    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="1" />
     <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
     <Setter Property="FontSize" Value="11.5" />
-    <Setter Property="CornerRadius" Value="6,6,0,0" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="CornerRadius" Value="8,8,0,0" />
     <Setter Property="VerticalAlignment" Value="Bottom" />
   </Style>
   <Style Selector="Button.PartStudioTab:pointerover /template/ ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="Background" Value="#192433" />
   </Style>
   <Style Selector="Button.PartStudioTab.active">
     <Setter Property="Background" Value="{DynamicResource Studio.PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
     <Setter Property="BorderThickness" Value="1,1,1,0" />
-    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
     <Setter Property="FontWeight" Value="SemiBold" />
   </Style>
 
@@ -1119,9 +1151,10 @@
     <Setter Property="Background" Value="#16212de8" />
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="Padding" Value="10,9" />
+    <Setter Property="Padding" Value="12,11" />
     <Setter Property="MaxWidth" Value="300" />
-    <Setter Property="CornerRadius" Value="14" />
+    <Setter Property="CornerRadius" Value="16" />
+    <Setter Property="BoxShadow" Value="0 14 34 0 #70000000" />
   </Style>
 
   <Style Selector="Border.ViewportPlanePickCard">
@@ -1258,8 +1291,9 @@
     <Setter Property="Background" Value="#19222d" />
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="Padding" Value="10,9" />
-    <Setter Property="CornerRadius" Value="14" />
+    <Setter Property="Padding" Value="12,11" />
+    <Setter Property="CornerRadius" Value="16" />
+    <Setter Property="BoxShadow" Value="0 10 24 0 #38000000" />
   </Style>
 
   <Style Selector="TextBlock.AssistantContextPrimary">
@@ -1426,8 +1460,9 @@
     <Setter Property="Background" Value="{DynamicResource Studio.PanelInsetBrush}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="Padding" Value="10,8" />
+    <Setter Property="Padding" Value="12,10" />
     <Setter Property="Margin" Value="0,6,0,0" />
+    <Setter Property="CornerRadius" Value="16" />
   </Style>
 
   <Style Selector="TextBlock.SketchSidePanelHeader">
@@ -1568,6 +1603,174 @@
 
   <Style Selector="TextBox.AssistantKeyInput:focus /template/ Border#PART_BorderElement">
     <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <!-- Keyframe animations -->
+  <Style Selector="Border.PulseIndicator">
+    <Setter Property="Opacity" Value="0.6" />
+  </Style>
+
+  <!-- Scrollbar styling -->
+  <Style Selector="ScrollBar">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <Style Selector="ScrollBar /template/ Border#PART_Background">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <Style Selector="ScrollBar /template/ RepeatButton#PART_LineUpButton,
+                 ScrollBar /template/ RepeatButton#PART_LineDownButton">
+    <Setter Property="Width" Value="0" />
+    <Setter Property="Height" Value="0" />
+  </Style>
+
+  <Style Selector="ScrollBar /template/ Thumb#PART_Thumb">
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Margin" Value="2" />
+  </Style>
+
+  <Style Selector="ScrollBar /template/ Thumb#PART_Thumb /template/ Border#PART_ThumbBorder">
+    <Setter Property="Background" Value="#2d3748" />
+    <Setter Property="BorderBrush" Value="#3d4f68" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+
+  <Style Selector="ScrollBar:vertical">
+    <Setter Property="Width" Value="8" />
+  </Style>
+
+  <Style Selector="ScrollBar:horizontal">
+    <Setter Property="Height" Value="8" />
+  </Style>
+
+  <!-- Toolbar button hover states -->
+  <Style Selector="Button.ToolbarActionButton:pointerover">
+    <Setter Property="Background" Value="#2a384d" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="Button.ToolbarActionButton:pressed">
+    <Setter Property="Background" Value="#1f2c3d" />
+  </Style>
+
+  <Style Selector="Button.ToolbarMenuButton:pointerover">
+    <Setter Property="Background" Value="#1e2a3b" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <!-- Tab item hover states -->
+  <Style Selector="TabItem:pointerover /template/ Border#PART_HeaderBorder">
+    <Setter Property="Background" Value="#1e2a3b" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+  </Style>
+
+  <!-- TreeView item hover states -->
+  <Style Selector="TreeViewItem:pointerover /template/ Border#PART_HeaderBorder">
+    <Setter Property="Background" Value="#1e2a3b" />
+  </Style>
+
+  <!-- Toast notification styles -->
+  <Style Selector="Border.ToastNotificationHost">
+    <Setter Property="Background" Value="#162030" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="14" />
+    <Setter Property="Padding" Value="14,10" />
+    <Setter Property="BoxShadow" Value="0 12 32 0 #aa000000" />
+  </Style>
+
+  <Style Selector="Border.ToastNotificationHost.Success">
+    <Setter Property="BorderBrush" Value="#34d399" />
+  </Style>
+
+  <Style Selector="Border.ToastNotificationHost.Warning">
+    <Setter Property="BorderBrush" Value="#fbbf24" />
+  </Style>
+
+  <Style Selector="Border.ToastNotificationHost.Error">
+    <Setter Property="BorderBrush" Value="#f87171" />
+  </Style>
+
+  <Style Selector="TextBlock.ToastTitle">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.ToastBody">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+  </Style>
+
+  <!-- Featured template card (for startup carousel) -->
+  <Style Selector="Button.FeaturedTemplateCard">
+    <Setter Property="MinWidth" Value="160" />
+    <Setter Property="MinHeight" Value="110" />
+    <Setter Property="Padding" Value="14" />
+    <Setter Property="Background" Value="#18212d" />
+    <Setter Property="BorderBrush" Value="#314055" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="16" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="VerticalContentAlignment" Value="Stretch" />
+  </Style>
+
+  <Style Selector="Button.FeaturedTemplateCard:pointerover">
+    <Setter Property="Background" Value="#1d2c3d" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.FeaturedTemplateName">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.FeaturedTemplateDesc">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextMutedBrush}" />
+  </Style>
+
+  <Style Selector="Border.FeaturedTemplateChip">
+    <Setter Property="Background" Value="#102a42" />
+    <Setter Property="BorderBrush" Value="#325376" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="999" />
+    <Setter Property="Padding" Value="8,3" />
+  </Style>
+
+  <Style Selector="TextBlock.FeaturedTemplateChipText">
+    <Setter Property="FontSize" Value="9" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.AccentBrush}" />
+  </Style>
+
+  <!-- Get Started checklist styles -->
+  <Style Selector="Border.GetStartedCard">
+    <Setter Property="Background" Value="#141e2b" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Studio.BorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="14" />
+    <Setter Property="Padding" Value="14" />
+  </Style>
+
+  <Style Selector="TextBlock.GetStartedTitle">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextPrimaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.GetStartedItem">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource Studio.TextSecondaryBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.GetStartedItemChecked">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="#34d399" />
+    <Setter Property="FontWeight" Value="SemiBold" />
   </Style>
 
 </Styles>

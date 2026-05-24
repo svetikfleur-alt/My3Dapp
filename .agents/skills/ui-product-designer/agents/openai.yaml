@@ -1,0 +1,7 @@
+interface:
+  display_name: "UI Product Designer"
+  short_description: "Design polished CAD product UI"
+  default_prompt: "Use $ui-product-designer to improve My3DApp dialogs, shell layout, toolbar flows, and interaction quality so the app feels like a real CAD product."
+
+policy:
+  allow_implicit_invocation: true

@@ -13,6 +13,15 @@ namespace My3DApp.AvaloniaApp.ViewModels;
 public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 {
     private const string IconBase = "avares://My3DApp/Assets/Icons/";
+    private static readonly string[] StartupFeaturedTemplateIds =
+    [
+        "mounting-plate",
+        "fan-adapter",
+        "simple-box",
+        "lid",
+        "cable-clip",
+        "spacer"
+    ];
     private static readonly PrimitiveToolItemViewModel[] PrimitiveCatalog =
     [
         new("box", "Box", IconBase + "box.svg"),
@@ -213,32 +222,38 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             _appSettings.ShowStartupPageOnLaunch = value;
             _appSettings.Save();
             RaisePropertyChanged(nameof(ShowStartupPageOnLaunch));
+            RaisePropertyChanged(nameof(StartupLaunchPreferenceSummary));
         }
     }
 
-    public string StartupPageTitle => "My3DApp Home";
+    public string StartupLaunchPreferenceSummary => ShowStartupPageOnLaunch
+        ? "Home opens on launch so recent projects, recovery, templates, and Copilot entry stay one click away."
+        : "Home is hidden on launch. You can still reopen it later from the workspace flow when you need templates, recovery, or project actions.";
+
+    public string StartupPageTitle => "My3DApp Maker CAD";
 
     public string StartupPageSummary =>
-        "Create a local CAD project, reopen recent work, or jump into a part studio with project and document state saved on this machine.";
+        "Start a real local CAD project, reopen saved work, launch a starter template, or hand the first part brief to Copilot. Projects, templates, autosaves, and exports stay local until you choose where to save them.";
 
-    public string StartupPageAssistantTitle => "Local product shell";
+    public string StartupPageAssistantTitle => "Design Copilot";
 
     public string StartupPageAssistantSummary =>
-        $"{ProductProjectTypeLabel} ready. Projects are persisted locally under AppData until you choose Save As.";
+        IsAssistantLocalOnlyMode
+            ? "Copilot is ready in local mode for ACL, templates, and recipe-driven part generation. Connect a provider later when you want remote design help."
+            : IsAssistantConfigured
+                ? $"{SelectedAssistantProvider} is connected. Use Copilot to explain features, draft ACL, and turn part ideas into structured modeling steps."
+                : $"Copilot is available right away for local workflows. Connect {SelectedAssistantProvider} when you want remote reasoning and generation on top of templates and ACL.";
 
-    public string ModelingLanguageName => "M3 Script";
+    public string ModelingLanguageName => "ACL";
 
     public string ModelingLanguageSummary =>
-        "A built-in 3D command language for primitives, sketches, features, templates, and recipe-driven modeling steps.";
+        "ACL is My3DApp's custom feature and generation language for scripted parts, reusable macros, and AI-assisted modeling flows.";
 
     public string ModelingLanguageSample =>
-        "create box 120x80x30;\n" +
-        "shell 2;\n" +
-        "select plane top;\n" +
-        "start sketch;\n" +
-        "circle 60 40 radius 18;\n" +
-        "finish sketch;\n" +
-        "extrude cut 12";
+        "let boxWidth = 120\n" +
+        "let boxDepth = 80\n" +
+        "template simple-box width=$boxWidth depth=$boxDepth height=46 wallThickness=3 openTop=1 cornerRadius=4\n" +
+        "template lid width=$boxWidth depth=$boxDepth thickness=3 lipHeight=6 tolerance=0.4";
 
     public string ProductProjectId => _productProjectId;
 
@@ -278,14 +293,26 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         !IsSketchMode &&
         !HasBodies;
 
-    public string LocalCadStatusText => "Local CAD mode available";
+    public string LocalCadStatusText => "Local CAD + templates ready";
 
     public string AiConfigurationStatusText =>
         IsAssistantLocalOnlyMode
-            ? "Local CAD only mode"
+            ? "Copilot in local-only mode"
             : IsAssistantConfigured
             ? $"AI configured: {SelectedAssistantProvider} / {SelectedAssistantModel}"
             : $"AI provider not configured ({SelectedAssistantProvider})";
+
+    public IReadOnlyList<MakerTemplateDefinition> StartupFeaturedTemplates =>
+        StartupFeaturedTemplateIds
+            .Select(id => TemplateCatalog.FirstOrDefault(template => string.Equals(template.Id, id, StringComparison.OrdinalIgnoreCase)))
+            .OfType<MakerTemplateDefinition>()
+            .ToArray();
+
+    public bool HasRecoveryAvailable => !string.Equals(RecoveryStatusLabel, "No recovery file", StringComparison.Ordinal);
+
+    public string StartupRecoverySummary => HasRecoveryAvailable
+        ? $"{RecoveryStatusLabel}. Restore the last autosave or discard it before starting something new."
+        : "No recovery file is waiting. New projects are autosaved automatically while you work.";
 
     public CadRecipeRunViewModel? ActiveRecipe
     {
@@ -423,8 +450,13 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 RaisePropertyChanged(nameof(SelectedMakerTemplatePresets));
                 RaisePropertyChanged(nameof(HasSelectedMakerTemplatePresets));
                 RaisePropertyChanged(nameof(SelectedTemplateValidationSummary));
+                RaisePropertyChanged(nameof(SelectedTemplateWorkflowHint));
+                RaisePropertyChanged(nameof(SelectedTemplateCopilotPrompt));
                 RaisePropertyChanged(nameof(PrepareWorkspaceTemplateSnapshot));
                 RaisePropertyChanged(nameof(PrepareWorkspaceManufacturingNotes));
+                RaisePropertyChanged(nameof(PrepareWorkspaceExportTarget));
+                RaisePropertyChanged(nameof(PrepareWorkspaceActionHint));
+                RaisePropertyChanged(nameof(PrepareWorkspaceCopilotPrompt));
                 RaisePropertyChanged(nameof(PrepareWorkspaceChecks));
                 RaisePropertyChanged(nameof(HasPrepareWorkspaceChecks));
                 RaisePropertyChanged(nameof(CanApplySelectedTemplate));
@@ -462,6 +494,44 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             }
 
             return $"{invalid.Length.ToString(CultureInfo.InvariantCulture)} parameter(s) need attention before generation.";
+        }
+    }
+
+    public string SelectedTemplateWorkflowHint
+    {
+        get
+        {
+            if (SelectedMakerTemplate is null)
+            {
+                return "Choose a starter template to inspect parameters, generate the part, and continue in Prepare or Copilot.";
+            }
+
+            return CanApplySelectedTemplate
+                ? $"{SelectedMakerTemplate.DisplayName} is ready. Generate it into the active part studio, then switch to Prepare for export checks."
+                : $"Finish the invalid {SelectedMakerTemplate.DisplayName} parameters before generation or ask Copilot to suggest safer values.";
+        }
+    }
+
+    public string SelectedTemplateCopilotPrompt
+    {
+        get
+        {
+            if (SelectedMakerTemplate is null)
+            {
+                return "Suggest a starter template for the current maker part idea and explain why.";
+            }
+
+            var values = GetCurrentTemplateValues();
+            var snapshot = SelectedMakerTemplate.Parameters
+                .Take(5)
+                .Select(parameter =>
+                {
+                    values.TryGetValue(parameter.Key, out var value);
+                    var unit = string.IsNullOrWhiteSpace(parameter.Unit) ? string.Empty : $" {parameter.Unit}";
+                    return $"{parameter.DisplayName}={FormatNumber(value)}{unit}";
+                });
+
+            return $"Review the {SelectedMakerTemplate.DisplayName} template with {string.Join(", ", snapshot)}. Suggest safer printable values, explain tradeoffs, and draft ACL if helpful.";
         }
     }
 
@@ -614,6 +684,31 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         }
     }
 
+    public string PrepareWorkspaceExportTarget
+    {
+        get
+        {
+            var baseName = string.IsNullOrWhiteSpace(DocumentName)
+                ? "my3dapp-part"
+                : SanitizeFileName(DocumentName).ToLowerInvariant();
+            var templateSuffix = SelectedMakerTemplate?.Id ?? "custom";
+            return $"{baseName}-{templateSuffix}.stl";
+        }
+    }
+
+    public string PrepareWorkspaceActionHint => CanExportCurrentPart
+        ? "Export the current body to STL or OBJ, or ask Copilot to review printability before you commit to a longer print."
+        : "Generate a template part or finish the active sketch/feature first, then come back here for export and print checks.";
+
+    public string PrepareWorkspaceCopilotPrompt
+    {
+        get
+        {
+            var templateName = SelectedMakerTemplate?.DisplayName ?? "current part";
+            return $"Review the {templateName} in Prepare, summarize the export risks, and suggest any safer printable parameter changes before STL export.";
+        }
+    }
+
     public IReadOnlyList<PrepareChecklistItem> PrepareWorkspaceChecks => BuildPrepareWorkspaceChecks();
 
     public bool HasPrepareWorkspaceChecks => PrepareWorkspaceChecks.Count > 0;
@@ -659,6 +754,39 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         RebuildFeatureTree(state.Project, state.CompileResult);
     }
 
+    public void OpenFeaturedTemplate(string templateId)
+    {
+        SelectWorkspace("Templates");
+        SelectMakerTemplate(templateId);
+        TemplateStatus = $"{SelectedMakerTemplateName} selected. Adjust the parameters, then generate it into the active part studio.";
+        ShowPropertiesPanel();
+    }
+
+    public void PrimeAssistantPrompt(string prompt)
+    {
+        if (string.IsNullOrWhiteSpace(prompt))
+        {
+            return;
+        }
+
+        DismissStartupPage();
+        SelectWorkspace("Assistant");
+        AssistantInput = prompt.Trim();
+        ShowAssistantPanel();
+        AssistantStatus = BuildIdleStatusText();
+        SetAssistantRequestStatus("Prompt prepared. Review it or send it in Copilot.");
+    }
+
+    public void PrimeSelectedTemplateForAssistant()
+    {
+        PrimeAssistantPrompt(SelectedTemplateCopilotPrompt);
+    }
+
+    public void PrimePrepareForAssistant()
+    {
+        PrimeAssistantPrompt(PrepareWorkspaceCopilotPrompt);
+    }
+
     public void ApplyTemplatePreset(string presetName)
     {
         if (SelectedMakerTemplate is null)
@@ -691,7 +819,12 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         RaisePropertyChanged(nameof(SelectedTemplateCommandPreview));
         RaisePropertyChanged(nameof(CanApplySelectedTemplate));
         RaisePropertyChanged(nameof(SelectedTemplateValidationSummary));
+        RaisePropertyChanged(nameof(SelectedTemplateWorkflowHint));
+        RaisePropertyChanged(nameof(SelectedTemplateCopilotPrompt));
         RaisePropertyChanged(nameof(PrepareWorkspaceTemplateSnapshot));
+        RaisePropertyChanged(nameof(PrepareWorkspaceExportTarget));
+        RaisePropertyChanged(nameof(PrepareWorkspaceActionHint));
+        RaisePropertyChanged(nameof(PrepareWorkspaceCopilotPrompt));
         RaisePropertyChanged(nameof(PrepareWorkspaceChecks));
         RaisePropertyChanged(nameof(HasPrepareWorkspaceChecks));
         RaisePropertyChanged(nameof(StatusBarText));
@@ -779,6 +912,17 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         return result;
     }
 
+    public async Task<string> ApplySelectedTemplateAndOpenPrepareAsync(CancellationToken cancellationToken = default)
+    {
+        var result = await ApplySelectedTemplateAsync(cancellationToken);
+        if (CanExportCurrentPart)
+        {
+            SelectWorkspace("Prepare");
+        }
+
+        return result;
+    }
+
     private void RebuildTemplateParameters()
     {
         TemplateParameters.Clear();
@@ -804,6 +948,8 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         RaisePropertyChanged(nameof(SelectedTemplateValidationSummary));
         RaisePropertyChanged(nameof(CanApplySelectedTemplate));
         RaisePropertyChanged(nameof(SelectedTemplateCommandPreview));
+        RaisePropertyChanged(nameof(SelectedTemplateWorkflowHint));
+        RaisePropertyChanged(nameof(SelectedTemplateCopilotPrompt));
     }
 
     public string SelectedTemplateCommandPreview
@@ -1067,7 +1213,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     {
         "Templates" => "Template Library",
         "Prepare" => "Prepare for export",
-        "Assistant" => "AI copilot workspace",
+        "Assistant" => "Design copilot workspace",
         "Sketch" when IsSketchMode => "Sketch workspace",
         _ => "CAD Workspace"
     };
@@ -1076,7 +1222,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     {
         "Templates" => SelectedMakerTemplate?.Description ?? "Choose a maker template, edit parameters, and generate a printable starter part.",
         "Prepare" => PrepareWorkspaceSummary,
-        "Assistant" => "Use the copilot to explain features, suggest templates, or generate local M3 Script sequences.",
+        "Assistant" => "Use the copilot to explain features, suggest templates, or generate local ACL sequences.",
         "Sketch" when IsSelectingSketchPlane => "Select a reference plane or planar face to begin sketching.",
         "Sketch" when IsSketchMode => ViewportSketchSessionSummary,
         _ => AssistantWorkspaceSummary
@@ -1151,7 +1297,14 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public string RecoveryStatusLabel
     {
         get => _recoveryStatusLabel;
-        private set => SetProperty(ref _recoveryStatusLabel, value);
+        private set
+        {
+            if (SetProperty(ref _recoveryStatusLabel, value))
+            {
+                RaisePropertyChanged(nameof(HasRecoveryAvailable));
+                RaisePropertyChanged(nameof(StartupRecoverySummary));
+            }
+        }
     }
 
     public string StatusBarText
@@ -1609,11 +1762,11 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public string AssistantInactiveSummary =>
         IsAssistantLocalOnlyMode
-            ? "Remote AI is disabled. You can still run local M3 Script, prepare built-in recipes, or use parametric templates."
+            ? "Remote AI is disabled. You can still run local ACL, prepare built-in recipes, or use parametric templates."
             : !string.IsNullOrWhiteSpace(_assistantConfiguration.ValidationError) &&
               !_assistantConfiguration.IsConfigured
-                ? $"{SelectedAssistantProvider} is not connected yet. {_assistantConfiguration.MissingKeyHint} Use templates, local recipes, or M3 Script without remote AI."
-                : "Choose a provider and model, then connect a provider key when you are ready. Templates, local recipes, and M3 Script remain available.";
+                ? $"{SelectedAssistantProvider} is not connected yet. {_assistantConfiguration.MissingKeyHint} Use templates, local recipes, or ACL without remote AI."
+                : "Choose a provider and model, then connect a provider key when you are ready. Templates, local recipes, and ACL remain available.";
 
     public string AssistantApiKeyStatus => _assistantConfiguration.ApiKeyStatus;
 
@@ -1669,7 +1822,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         IsAssistantConfigured
             ? "Enter sends. Shift+Enter for a newline."
             : IsAssistantLocalOnlyMode
-                ? "Local M3 Script and recipes are available. Remote AI is disabled."
+                ? "Local ACL and recipes are available. Remote AI is disabled."
             : "Local CAD commands still work. Remote AI activates when a provider key is available.";
 
     public string WorkspaceModeBadge => IsSketchMode ? "SKETCH" : "3D";
@@ -2596,7 +2749,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
         if (string.IsNullOrWhiteSpace(recipeName) || !PrepareRecipeFromLibrary(recipeName, "Local prompt"))
         {
-            message = "I could not map that prompt to a supported local recipe. Use a template, M3 Script command, or configure AI for free-form generation.";
+            message = "I could not map that prompt to a supported local recipe. Use a template, an ACL command, or configure AI for free-form generation.";
             return false;
         }
 
@@ -2863,6 +3016,9 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         UpdateDocumentUiStateInController();
         RaisePropertyChanged(nameof(HasExportJobs));
         RaisePropertyChanged(nameof(PrepareWorkspaceSummary));
+        RaisePropertyChanged(nameof(PrepareWorkspaceExportTarget));
+        RaisePropertyChanged(nameof(PrepareWorkspaceActionHint));
+        RaisePropertyChanged(nameof(PrepareWorkspaceCopilotPrompt));
         RaisePropertyChanged(nameof(PrepareWorkspaceChecks));
         RaisePropertyChanged(nameof(HasPrepareWorkspaceChecks));
         RaisePropertyChanged(nameof(CanExportCurrentPart));
@@ -2966,6 +3122,8 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             ShowNotification(TemplateStatus, NotificationSeverity.Warning);
             RaisePropertyChanged(nameof(CanApplySelectedTemplate));
             RaisePropertyChanged(nameof(SelectedTemplateValidationSummary));
+            RaisePropertyChanged(nameof(SelectedTemplateWorkflowHint));
+            RaisePropertyChanged(nameof(SelectedTemplateCopilotPrompt));
             return;
         }
 
@@ -2981,7 +3139,12 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         RaisePropertyChanged(nameof(StatusBarText));
         RaisePropertyChanged(nameof(CanApplySelectedTemplate));
         RaisePropertyChanged(nameof(SelectedTemplateValidationSummary));
+        RaisePropertyChanged(nameof(SelectedTemplateWorkflowHint));
+        RaisePropertyChanged(nameof(SelectedTemplateCopilotPrompt));
         RaisePropertyChanged(nameof(PrepareWorkspaceTemplateSnapshot));
+        RaisePropertyChanged(nameof(PrepareWorkspaceExportTarget));
+        RaisePropertyChanged(nameof(PrepareWorkspaceActionHint));
+        RaisePropertyChanged(nameof(PrepareWorkspaceCopilotPrompt));
         RaisePropertyChanged(nameof(PrepareWorkspaceChecks));
         RaisePropertyChanged(nameof(HasPrepareWorkspaceChecks));
         await Task.CompletedTask;
@@ -3783,7 +3946,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         {
             AddMessage(
                 "system",
-                "AI provider ready. Describe a CAD part to request a validated ACL or CAD Recipe JSON candidate, or type local M3 Script directly.");
+                "AI provider ready. Describe a CAD part to request a validated ACL or CAD Recipe JSON candidate, or type local ACL directly.");
         }
     }
 
@@ -4224,6 +4387,9 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         RaisePropertyChanged(nameof(PrepareWorkspaceWarnings));
         RaisePropertyChanged(nameof(PrepareWorkspaceTemplateSnapshot));
         RaisePropertyChanged(nameof(PrepareWorkspaceManufacturingNotes));
+        RaisePropertyChanged(nameof(PrepareWorkspaceExportTarget));
+        RaisePropertyChanged(nameof(PrepareWorkspaceActionHint));
+        RaisePropertyChanged(nameof(PrepareWorkspaceCopilotPrompt));
         RaisePropertyChanged(nameof(PrepareWorkspaceChecks));
         RaisePropertyChanged(nameof(HasPrepareWorkspaceChecks));
         RaisePropertyChanged(nameof(CanExportCurrentPart));
@@ -4911,7 +5077,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     {
         if (configuration.IsLocalOnly)
         {
-            return "Local CAD Only selected. Remote AI requests are disabled; templates, recipes, and M3 Script remain available.";
+            return "Local CAD Only selected. Remote AI requests are disabled; templates, recipes, and ACL remain available.";
         }
 
         if (configuration.IsConfigured)
@@ -5097,6 +5263,88 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         return $"{constraint.Kind}:{string.Join(",", ids)}";
     }
 
+    public bool CanQuickExport =>
+        !IsStartupPageVisible &&
+        _workspaceController.CurrentState.CompileResult.Bodies.Count > 0;
+
+    public void QuickExport()
+    {
+        if (!CanQuickExport) return;
+
+        try
+        {
+            var desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HHmmss", CultureInfo.InvariantCulture);
+            var safeName = DocumentName.Replace(" ", "_");
+            var fileName = $"{safeName}_{timestamp}.stl";
+            var fullPath = Path.Combine(desktopPath, fileName);
+            _workspaceController.ExportStl(fullPath);
+            RegisterExportJob("STL", "Quick export", fullPath);
+            ShowNotification($"Quick export saved: {fileName}", NotificationSeverity.Success);
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Quick export failed: {ex.Message}", NotificationSeverity.Error);
+        }
+    }
+
+    public void ExportAllFormats()
+    {
+        if (!CanExportCurrentPart) return;
+
+        try
+        {
+            var desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HHmmss", CultureInfo.InvariantCulture);
+            var baseName = DocumentName.Replace(" ", "_");
+
+            var stlPath = Path.Combine(desktopPath, $"{baseName}_{timestamp}.stl");
+            var objPath = Path.Combine(desktopPath, $"{baseName}_{timestamp}.obj");
+
+            _workspaceController.ExportStl(stlPath);
+            RegisterExportJob("STL", "All visible bodies", stlPath);
+
+            _workspaceController.ExportObj(objPath);
+            RegisterExportJob("OBJ", "All visible bodies", objPath);
+
+            ShowNotification($"Exported STL + OBJ to Desktop", NotificationSeverity.Success);
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Multi-format export failed: {ex.Message}", NotificationSeverity.Error);
+        }
+    }
+
+    public void GenerateAndViewTemplate(string templateId)
+    {
+        if (string.IsNullOrWhiteSpace(templateId)) return;
+
+        var template = MakerTemplateLibrary.Find(templateId);
+        if (template is null) return;
+
+        SelectedMakerTemplate = template;
+        DismissStartupPage();
+        SelectedWorkspaceKind = "PartStudio";
+
+        try
+        {
+            _ = ApplySelectedTemplateAsync();
+            ShowNotification($"Generated: {template.DisplayName}", NotificationSeverity.Success);
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Part generation failed: {ex.Message}", NotificationSeverity.Error);
+        }
+    }
+
+    public IReadOnlyList<GetStartedItem> GetStartedItems { get; } = new List<GetStartedItem>
+    {
+        new("1. Choose a starter template", "Pick from 18+ parametric templates in the Templates tab or Launchpad carousel."),
+        new("2. Adjust part parameters", "Tune dimensions, thickness, and features with real-time sliders."),
+        new("3. Generate and review", "Generate the part and inspect it in the 3D viewport."),
+        new("4. Export for printing", "Export as STL or OBJ for your slicer.")
+    };
+
     public void Dispose()
     {
         if (_isDisposed)
@@ -5139,3 +5387,5 @@ public sealed record StudioWorkspaceTabItem(string Title, string Kind, bool IsAc
 public sealed record RecentDocumentItemViewModel(string DisplayName, string FullPath, string Summary);
 
 public sealed record PrepareChecklistItem(string Level, string Title, string Detail);
+
+public sealed record GetStartedItem(string Title, string Description);

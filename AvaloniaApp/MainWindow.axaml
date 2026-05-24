@@ -106,7 +106,7 @@
                 Classes="ToolbarCommandStrip"
                 Margin="0,12,0,0">
           <Grid>
-          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" IsVisible="False">
             <Button Content="File" Classes="ToolbarMenuButton">
               <Button.Flyout>
                 <MenuFlyout>
@@ -221,7 +221,7 @@
           </StackPanel>
           <ScrollViewer HorizontalScrollBarVisibility="Auto"
                         VerticalScrollBarVisibility="Disabled"
-                        IsVisible="False">
+                        IsVisible="True">
           <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
             <TextBlock Text="Workflow" Classes="ToolbarGroupLabel" />
             <Border Classes="ToolSplitGroup" Padding="4" IsVisible="{Binding IsThreeDMode}">
@@ -311,6 +311,13 @@
               <Button Classes="ToolbarActionButton"
                       ToolTip.Tip="Export model (Ctrl+E)"
                       Click="OnExportClick">
+                <svg:Svg Path="avares://My3DApp/Assets/Icons/export.svg" Width="16" Height="16" />
+              </Button>
+
+              <Button Classes="ToolbarActionButton"
+                      ToolTip.Tip="Quick Export STL to Desktop"
+                      IsEnabled="{Binding CanQuickExport}"
+                      Click="OnQuickExportClick">
                 <svg:Svg Path="avares://My3DApp/Assets/Icons/export.svg" Width="16" Height="16" />
               </Button>
 
@@ -993,21 +1000,24 @@
               BorderBrush="{DynamicResource Studio.BorderBrush}"
               BorderThickness="1">
         <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Margin="12">
-          <StackPanel Orientation="Horizontal"
-                      Spacing="6">
+          <Border Classes="NavigatorSectionSwitcher"
+                  HorizontalAlignment="Left">
+            <StackPanel Orientation="Horizontal"
+                        Spacing="4">
             <ToggleButton Content="Tree"
-                          Classes="FeatureDialogOperationTab"
+                          Classes="NavigatorSectionTab"
                           IsChecked="{Binding IsProjectPaneSelected}"
                           Click="OnProjectPaneClick" />
             <ToggleButton Content="Templates"
-                          Classes="FeatureDialogOperationTab"
+                          Classes="NavigatorSectionTab"
                           IsChecked="{Binding IsTemplatesPaneSelected}"
                           Click="OnTemplatesPaneClick" />
             <ToggleButton Content="Library"
-                          Classes="FeatureDialogOperationTab"
+                          Classes="NavigatorSectionTab"
                           IsChecked="{Binding IsLibraryPaneSelected}"
                           Click="OnLibraryPaneClick" />
-          </StackPanel>
+            </StackPanel>
+          </Border>
           <Grid Grid.Row="1"
                 ColumnDefinitions="34,*"
                 VerticalAlignment="Center"
@@ -1267,6 +1277,33 @@
                   Classes="SketchSidePanel"
                   IsVisible="{Binding IsTemplatesPaneVisible}">
             <StackPanel Spacing="8">
+              <Border Classes="AssistantContextCard">
+                <StackPanel Spacing="8">
+                  <TextBlock Text="Active template workbench"
+                             Classes="AssistantContextPrimary" />
+                  <TextBlock Text="{Binding SelectedMakerTemplateName}"
+                             Foreground="{DynamicResource Studio.TextPrimaryBrush}" />
+                  <TextBlock Text="{Binding SelectedTemplateWorkflowHint}"
+                             TextWrapping="Wrap"
+                             Classes="AssistantContextSecondary" />
+                  <TextBlock Text="{Binding SelectedTemplateValidationSummary}"
+                             TextWrapping="Wrap"
+                             Classes="ToolbarSubtleText" />
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="Generate"
+                            Classes="AssistantApplyButton"
+                            IsEnabled="{Binding CanApplySelectedTemplate}"
+                            Click="OnApplyTemplateClick" />
+                    <Button Content="Generate + Prepare"
+                            Classes="AssistantSecondaryButton"
+                            IsEnabled="{Binding CanApplySelectedTemplate}"
+                            Click="OnApplyTemplateAndPrepareClick" />
+                    <Button Content="Ask Copilot"
+                            Classes="AssistantSecondaryButton"
+                            Click="OnTemplateCopilotClick" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
               <TextBlock Text="Starter templates"
                          Classes="SketchSidePanelHeader" />
               <TextBlock Text="Maker-friendly parametric starting points. Pick one, edit the parameters, then generate the part into the active part studio."
@@ -1276,14 +1313,26 @@
                 <ItemsControl ItemsSource="{Binding TemplateCatalog}">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="services:MakerTemplateDefinition">
-                      <Button Content="{Binding DisplayName}"
-                              Tag="{Binding Id}"
-                              Margin="0,0,0,6"
-                              HorizontalAlignment="Stretch"
-                              HorizontalContentAlignment="Left"
-                              Classes="AssistantSecondaryButton"
-                              ToolTip.Tip="{Binding Description}"
-                              Click="OnTemplateCatalogClick" />
+                      <Border Classes="AssistantContextCard" Margin="0,0,0,6">
+                        <StackPanel Spacing="6">
+                          <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Spacing="2">
+                              <TextBlock Text="{Binding DisplayName}"
+                                         Classes="AssistantContextPrimary" />
+                              <TextBlock Text="{Binding Category}"
+                                         Classes="ToolbarMetaLabel" />
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    Tag="{Binding Id}"
+                                    Classes="AssistantSecondaryButton"
+                                    Click="OnTemplateCatalogClick"
+                                    Content="Select" />
+                          </Grid>
+                          <TextBlock Text="{Binding Description}"
+                                     TextWrapping="Wrap"
+                                     Classes="AssistantContextSecondary" />
+                        </StackPanel>
+                      </Border>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -1296,6 +1345,24 @@
                   IsVisible="{Binding IsLibraryPaneVisible}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
               <StackPanel Spacing="10">
+                <Border Classes="AssistantContextCard"
+                        IsVisible="{Binding HasRecoveryAvailable}">
+                  <StackPanel Spacing="6">
+                    <TextBlock Text="Recovery center"
+                               Classes="AssistantContextPrimary" />
+                    <TextBlock Text="{Binding StartupRecoverySummary}"
+                               TextWrapping="Wrap"
+                               Classes="AssistantContextSecondary" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Button Content="Restore autosave"
+                              Classes="AssistantApplyButton"
+                              Click="OnRestoreAutosaveClick" />
+                      <Button Content="Discard"
+                              Classes="AssistantSecondaryButton"
+                              Click="OnDiscardAutosaveClick" />
+                    </StackPanel>
+                  </StackPanel>
+                </Border>
                 <Border Classes="AssistantContextCard">
                   <StackPanel Spacing="6">
                     <TextBlock Text="Recent projects"
@@ -1355,6 +1422,31 @@
                         </DataTemplate>
                       </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                  </StackPanel>
+                </Border>
+                <Border Classes="AssistantContextCard">
+                  <StackPanel Spacing="6">
+                    <TextBlock Text="Studio launch"
+                               Classes="AssistantContextPrimary" />
+                    <CheckBox Content="Show home screen on launch"
+                              IsChecked="{Binding ShowStartupPageOnLaunch, Mode=TwoWay}"
+                              Classes="FeatureDialogCheckBox" />
+                    <TextBlock Text="{Binding StartupLaunchPreferenceSummary}"
+                               TextWrapping="Wrap"
+                               Classes="AssistantContextSecondary" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="AssistantContextCard"
+                        IsVisible="{Binding HasExportJobs}">
+                  <StackPanel Spacing="6">
+                    <TextBlock Text="Recent exports"
+                               Classes="AssistantContextPrimary" />
+                    <TextBlock Text="{Binding LastExportSummary}"
+                               TextWrapping="Wrap"
+                               Classes="AssistantContextSecondary" />
+                    <Button Content="Open Prepare workspace"
+                            Classes="AssistantSecondaryButton"
+                            Click="OnPrepareWorkspaceMenuClick" />
                   </StackPanel>
                 </Border>
               </StackPanel>
@@ -1551,13 +1643,18 @@
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
                   <Border Classes="AssistantContextCard">
+                    <TextBlock Text="{Binding SelectedTemplateWorkflowHint}"
+                               TextWrapping="Wrap"
+                               Classes="AssistantContextSecondary" />
+                  </Border>
+                  <Border Classes="AssistantContextCard">
                     <TextBlock Text="{Binding TemplateStatus}"
                                TextWrapping="Wrap"
                                Classes="AssistantContextSecondary" />
                   </Border>
                   <Border Classes="AssistantContextCard">
                     <StackPanel Spacing="6">
-                      <TextBlock Text="M3 Script preview"
+                      <TextBlock Text="ACL preview"
                                  Classes="AssistantContextPrimary" />
                       <TextBox Text="{Binding SelectedTemplateCommandPreview}"
                                IsReadOnly="True"
@@ -1573,7 +1670,14 @@
                             Classes="AssistantApplyButton"
                             IsEnabled="{Binding CanApplySelectedTemplate}"
                             Click="OnApplyTemplateClick" />
-                    <Button Content="Open AI Chat"
+                    <Button Content="Generate + Prepare"
+                            Classes="AssistantSecondaryButton"
+                            IsEnabled="{Binding CanApplySelectedTemplate}"
+                            Click="OnApplyTemplateAndPrepareClick" />
+                    <Button Content="Ask Copilot"
+                            Classes="AssistantSecondaryButton"
+                            Click="OnTemplateCopilotClick" />
+                    <Button Content="Open Copilot"
                             Classes="AssistantSecondaryButton"
                             Click="OnOpenAssistantWorkspaceClick" />
                   </StackPanel>
@@ -1615,11 +1719,32 @@
                                  Classes="AssistantContextSecondary" />
                     </StackPanel>
                   </Border>
+                  <Border Classes="AssistantContextCard">
+                    <StackPanel Spacing="6">
+                      <TextBlock Text="Export target"
+                                 Classes="AssistantContextPrimary" />
+                      <TextBlock Text="{Binding PrepareWorkspaceExportTarget}"
+                                 Foreground="{DynamicResource Studio.TextPrimaryBrush}" />
+                      <TextBlock Text="{Binding PrepareWorkspaceActionHint}"
+                                 TextWrapping="Wrap"
+                                 Classes="AssistantContextSecondary" />
+                    </StackPanel>
+                  </Border>
                   <StackPanel Orientation="Horizontal" Spacing="8">
                     <Button Content="Export STL / OBJ"
                             Classes="AssistantApplyButton"
                             IsEnabled="{Binding CanExportCurrentPart}"
                             Click="OnPrepareExportClick" />
+                    <Button Content="Export All (STL + OBJ)"
+                            Classes="AssistantApplyButton"
+                            IsEnabled="{Binding CanExportCurrentPart}"
+                            Click="OnExportAllFormatsClick" />
+                    <Button Content="Ask Copilot"
+                            Classes="AssistantSecondaryButton"
+                            Click="OnPrepareCopilotClick" />
+                    <Button Content="Templates"
+                            Classes="AssistantSecondaryButton"
+                            Click="OnOpenTemplatesWorkspaceClick" />
                     <Button Content="Back to Part Studio"
                             Classes="AssistantSecondaryButton"
                             Click="OnOpenPartStudioWorkspaceClick" />
@@ -1894,18 +2019,42 @@
                       </Border>
                       <Border Classes="AssistantContextCard">
                         <StackPanel Spacing="6">
-                          <TextBlock Text="Local persistence"
+                          <TextBlock Text="Copilot status"
                                      Classes="AssistantContextPrimary" />
-                          <TextBlock Text="New projects are saved immediately as `.umxproj` files and added to Recent Projects. Save As lets you move them anywhere."
+                          <TextBlock Text="{Binding AiConfigurationStatusText}"
+                                     TextWrapping="Wrap"
+                                     Classes="AssistantContextSecondary" />
+                          <TextBlock Text="Use Copilot for template suggestions, printable design checks, or ACL drafting. Local workflows still work even when no provider is connected."
                                      TextWrapping="Wrap"
                                      Classes="AssistantContextSecondary" />
                         </StackPanel>
                       </Border>
                       <WrapPanel>
+                        <Button Content="Mounting plate prompt"
+                                Tag="Help me create a printable mounting plate with four holes and safe wall thickness."
+                                Margin="0,0,6,6"
+                                Classes="AssistantSecondaryButton"
+                                Click="OnAssistantSuggestionClick" />
+                        <Button Content="Box + lid prompt"
+                                Tag="Design a simple electronics box with a matching lid and starter dimensions for FDM printing."
+                                Margin="0,0,6,6"
+                                Classes="AssistantSecondaryButton"
+                                Click="OnAssistantSuggestionClick" />
+                        <Button Content="ACL starter"
+                                Tag="Write an ACL starter for a practical maker part and explain the parameter choices."
+                                Margin="0,0,6,6"
+                                Classes="AssistantSecondaryButton"
+                                Click="OnAssistantSuggestionClick" />
+                      </WrapPanel>
+                      <WrapPanel>
                         <Button Content="Create named project"
                                 Margin="0,0,6,6"
                                 Classes="AssistantApplyButton"
                                 Click="OnNewProjectDialogClick" />
+                        <Button Content="Open Copilot"
+                                Margin="0,0,6,6"
+                                Classes="AssistantSecondaryButton"
+                                Click="OnOpenAssistantWorkspaceClick" />
                         <Button Content="Open project"
                                 Margin="0,0,6,6"
                                 Classes="AssistantSecondaryButton"
@@ -1924,20 +2073,97 @@
                           Classes="StartupSideCard">
                     <StackPanel Spacing="10">
                       <StackPanel Spacing="4">
-                        <TextBlock Text="Quick Design use cases"
+                        <TextBlock Text="Featured starter templates"
                                    Classes="StartupSectionTitle" />
-                        <TextBlock Text="These create real quick projects and run a supported local recipe into the scene."
+                        <TextBlock Text="Open a parametric template directly in the Templates workspace, adjust its dimensions, then generate it into the active part studio."
                                    TextWrapping="Wrap"
                                    Classes="StartupBodyText" />
                       </StackPanel>
-                      <WrapPanel>
-                        <Button Content="Bracket" Tag="bracket" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
-                        <Button Content="Spacer" Tag="spacer" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
-                        <Button Content="Clip" Tag="clip" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
-                        <Button Content="Mount" Tag="mount" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
-                        <Button Content="Enclosure" Tag="enclosure" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
-                        <Button Content="Adapter" Tag="adapter" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
-                      </WrapPanel>
+                      <ItemsControl ItemsSource="{Binding StartupFeaturedTemplates}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate DataType="services:MakerTemplateDefinition">
+                            <Button Tag="{Binding Id}"
+                                    Margin="0,0,0,6"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Classes="AssistantSecondaryButton"
+                                    Click="OnStartupTemplateClick">
+                              <StackPanel Spacing="1">
+                                <TextBlock Text="{Binding DisplayName}" />
+                                <TextBlock Text="{Binding Description}"
+                                           TextWrapping="Wrap"
+                                           Classes="ToolbarMetaLabel" />
+                              </StackPanel>
+                            </Button>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                      <Border Classes="AssistantContextCard">
+                        <StackPanel Spacing="6">
+                          <TextBlock Text="Quick design recipes"
+                                     Classes="AssistantContextPrimary" />
+                          <WrapPanel>
+                            <Button Content="Bracket" Tag="bracket" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
+                            <Button Content="Spacer" Tag="spacer" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
+                            <Button Content="Clip" Tag="clip" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
+                            <Button Content="Mount" Tag="mount" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
+                            <Button Content="Enclosure" Tag="enclosure" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
+                            <Button Content="Adapter" Tag="adapter" Margin="0,0,6,6" Classes="AssistantSecondaryButton" Click="OnQuickDesignUseCaseClick" />
+                          </WrapPanel>
+                        </StackPanel>
+                      </Border>
+                      <Border Classes="AssistantContextCard">
+                        <StackPanel Spacing="6">
+                          <TextBlock Text="Recovery"
+                                     Classes="AssistantContextPrimary" />
+                          <TextBlock Text="{Binding StartupRecoverySummary}"
+                                     TextWrapping="Wrap"
+                                     Classes="AssistantContextSecondary" />
+                          <WrapPanel IsVisible="{Binding HasRecoveryAvailable}">
+                            <Button Content="Restore autosave"
+                                    Margin="0,0,6,6"
+                                    Classes="AssistantApplyButton"
+                                    Click="OnRestoreAutosaveClick" />
+                            <Button Content="Discard autosave"
+                                    Margin="0,0,6,6"
+                                    Classes="AssistantSecondaryButton"
+                                    Click="OnDiscardAutosaveClick" />
+                          </WrapPanel>
+                        </StackPanel>
+                      </Border>
+                      <Border Height="1" Background="{DynamicResource Studio.BorderBrush}" Opacity="0.7" />
+                      <Border Classes="AssistantContextCard">
+                        <StackPanel Spacing="6">
+                          <TextBlock Text="Launch behavior"
+                                     Classes="AssistantContextPrimary" />
+                          <CheckBox Content="Show this home screen on launch"
+                                    IsChecked="{Binding ShowStartupPageOnLaunch, Mode=TwoWay}"
+                                    Classes="FeatureDialogCheckBox" />
+                          <TextBlock Text="{Binding StartupLaunchPreferenceSummary}"
+                                     TextWrapping="Wrap"
+                                     Classes="AssistantContextSecondary" />
+                        </StackPanel>
+                      </Border>
+                      <Border Height="1" Background="{DynamicResource Studio.BorderBrush}" Opacity="0.7" />
+                      <StackPanel Spacing="4">
+                        <TextBlock Text="Getting Started"
+                                   Classes="StartupSectionTitle" />
+                        <TextBlock Text="Quick start guide for first-time makers."
+                                   TextWrapping="Wrap"
+                                   Classes="StartupBodyText" />
+                      </StackPanel>
+                      <ItemsControl ItemsSource="{Binding GetStartedItems}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate DataType="vm:GetStartedItem">
+                            <Border Classes="GetStartedCard" Margin="0,0,0,6">
+                              <StackPanel Spacing="2">
+                                <TextBlock Text="{Binding Title}" Classes="GetStartedItemChecked" />
+                                <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Classes="GetStartedItem" />
+                              </StackPanel>
+                            </Border>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
                       <Border Height="1" Background="{DynamicResource Studio.BorderBrush}" Opacity="0.7" />
                       <StackPanel Spacing="4">
                         <TextBlock Text="Recent projects"
@@ -2061,21 +2287,21 @@
             </Grid>
           </TabItem>
 
-          <TabItem ToolTip.Tip="Feature recipe">
+            <TabItem ToolTip.Tip="Feature recipe">
             <TabItem.Header>
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <svg:Svg Path="avares://My3DApp/Assets/Icons/line.svg"
                          Width="15"
                          Height="15" />
-                <TextBlock Text="M3 Script" />
+                <TextBlock Text="ACL" />
               </StackPanel>
             </TabItem.Header>
             <Grid RowDefinitions="Auto,Auto,*" Margin="10">
               <Border Classes="RecipeHeaderCard">
                 <StackPanel Spacing="4">
-                  <TextBlock Text="M3 Script"
+                  <TextBlock Text="ACL"
                              Classes="RecipeHeaderTitle" />
-                  <TextBlock Text="Command history for the current part studio. Sketches, features, and template output stay readable, ordered, and ready for editing."
+                  <TextBlock Text="Command history for the current part studio. Sketches, features, and template output stay readable, ordered, and ready for editing or reuse."
                              TextWrapping="Wrap"
                              Classes="RecipeHeaderSummary" />
                 </StackPanel>
@@ -2165,7 +2391,7 @@
 
               <!-- Header: title + Recipes toggle + Config toggle + Refresh + Clear -->
               <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
-                <TextBlock Text="AI Copilot"
+                <TextBlock Text="Design Copilot"
                            FontSize="12"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource Studio.TextMutedBrush}"
@@ -2231,6 +2457,36 @@
                              TextWrapping="Wrap"
                              Foreground="#C96B22"
                              IsVisible="{Binding HasAssistantLastError}" />
+                  <WrapPanel>
+                    <Button Content="Suggest template"
+                            Tag="Suggest the best starter template for the current task and explain why."
+                            Margin="0,0,4,4"
+                            Padding="9,4"
+                            FontSize="11"
+                            Classes="AssistantLinkButton"
+                            Click="OnAssistantSuggestionClick" />
+                    <Button Content="Make printable"
+                            Tag="Review the current part and tell me how to make it easier to 3D print."
+                            Margin="0,0,4,4"
+                            Padding="9,4"
+                            FontSize="11"
+                            Classes="AssistantLinkButton"
+                            Click="OnAssistantSuggestionClick" />
+                    <Button Content="Explain selection"
+                            Tag="Explain the current selection and suggest the next CAD step."
+                            Margin="0,0,4,4"
+                            Padding="9,4"
+                            FontSize="11"
+                            Classes="AssistantLinkButton"
+                            Click="OnAssistantSuggestionClick" />
+                    <Button Content="Draft ACL"
+                            Tag="Draft an ACL starting point for a useful maker part based on the current workspace."
+                            Margin="0,0,4,4"
+                            Padding="9,4"
+                            FontSize="11"
+                            Classes="AssistantLinkButton"
+                            Click="OnAssistantSuggestionClick" />
+                  </WrapPanel>
                   <StackPanel Spacing="6"
                               IsVisible="{Binding #ConfigToggle.IsChecked}">
                     <Grid ColumnDefinitions="*,*">

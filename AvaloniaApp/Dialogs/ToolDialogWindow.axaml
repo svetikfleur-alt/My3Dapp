@@ -30,11 +30,13 @@
                   Orientation="Horizontal"
                   HorizontalAlignment="Right"
                   Spacing="8">
-        <Button Content="Cancel"
+        <Button x:Name="CancelButton"
+                Content="Cancel"
                 Classes="FeatureDialogButtonSecondary"
                 IsCancel="True"
                 Click="OnCancelClick" />
-        <Button Content="OK"
+        <Button x:Name="ConfirmButton"
+                Content="OK"
                 Classes="FeatureDialogButtonPrimary"
                 IsDefault="True"
                 Click="OnConfirmClick" />

@@ -1,19 +1,21 @@
-<<<<<<< ours
-# AgentOps runtime artifacts
+# Build outputs and caches
 bin/
 obj/
 dist/
-.claude/
 node_modules/
+.venv/
+.claude/
 logs/
-*.dmp
+*.cache
 *.tmp
-*.pma
-*.log.old
+*.dmp
 *.db-shm
 *.db-wal
-*.cache
+*.log.old
+webview2-data/
+*.WebView2/
 
+# AgentOps runtime artifacts
 AgentOps/CURRENT_TASK.md
 AgentOps/CURRENT_*.md
 AgentOps/LAST_*.md
@@ -42,17 +44,18 @@ AgentOps/runner/build_*.log
 AgentOps/runner/build_*.log.err
 AgentOps/runner/runner.log
 
-# Local review artifacts
+# Local review and sync artifacts
 .auto-dev-loop-context.md
 desktop.ini
 testfile
 testfile_xyz
 temp_*/
 temp_github_export/
-cloud_sync_mirror/
+temp_main_clean_export/
+temp_sync_backup/
 temp_video_review/
-webview2-data/
-*.WebView2/
+temp_build_assistant/
+cloud_sync_mirror/
 Blueprint/behavior/*.mp4
 AgentOps/*.png
 
@@ -62,10 +65,3 @@ PicoGK-main.zip
 modeling-app-*.zip
 ThirdParty/
 References/_imports/
-=======
-node_modules/
-dist/
-logs/*.log
-!.gitkeep
-.DS_Store
->>>>>>> theirs

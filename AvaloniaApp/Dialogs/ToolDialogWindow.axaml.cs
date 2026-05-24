@@ -48,6 +48,24 @@ public sealed partial class ToolDialogWindow : AWindow
         set => SubtitleTextBlock.Text = value;
     }
 
+    public string ConfirmButtonText
+    {
+        get => ConfirmButton.Content?.ToString() ?? string.Empty;
+        set => ConfirmButton.Content = value;
+    }
+
+    public string CancelButtonText
+    {
+        get => CancelButton.Content?.ToString() ?? string.Empty;
+        set => CancelButton.Content = value;
+    }
+
+    public bool ShowCancelButton
+    {
+        get => CancelButton.IsVisible;
+        set => CancelButton.IsVisible = value;
+    }
+
     private void InitializeComponent()
     {
         AvaloniaXamlLoader.Load(this);

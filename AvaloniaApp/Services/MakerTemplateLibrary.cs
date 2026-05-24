@@ -126,7 +126,12 @@ public static class MakerTemplateLibrary
             ["hinge-bracket"] = BuildHingeBracket,
             ["pcb-tray"] = BuildPcbTray,
             ["simple-box"] = BuildSimpleBox,
-            ["lid"] = BuildLid
+            ["lid"] = BuildLid,
+            ["gear"] = BuildGear,
+            ["snap-fit-case"] = BuildSnapFitCase,
+            ["vaulted-clip"] = BuildVaultedClip,
+            ["heat-set-insert-boss"] = BuildHeatSetInsertBoss,
+            ["gridfinity-bin"] = BuildGridfinityBin
         };
 
     public static IReadOnlyList<MakerTemplateDefinition> All { get; } = LoadTemplates();
@@ -523,7 +528,93 @@ public static class MakerTemplateLibrary
                     P("tolerance", "Tolerance", 0.4, 0, 3, "mm", "Fit clearance")
                 ],
                 "Simple cover plate for boxes and electronics trays.",
-                BuildLid)
+                BuildLid),
+
+            Fallback(
+                "gear",
+                "Spur Gear",
+                "Mechanical",
+                "Parametric involute spur gear with configurable teeth, module, bore, and thickness.",
+                ["gear", "mechanical", "transmission", "motor", "robot"],
+                [
+                    P("teethCount", "Teeth Count", 20, 8, 80, "count", "Number of teeth on gear"),
+                    P("module", "Module (mm)", 2, 0.5, 8, "mm", "Tooth size parameter (pitch dia = teeth × module)"),
+                    P("thickness", "Thickness", 6, 1, 30, "mm", "Gear thickness"),
+                    P("boreDiameter", "Bore Diameter", 5, 0, 40, "mm", "Center shaft hole (0=solid)"),
+                    P("hubDiameter", "Hub Diameter", 14, 0, 60, "mm", "Center hub reinforcement (0=none)"),
+                    P("hubHeight", "Hub Height", 4, 0, 20, "mm", "Hub face protrusion (0=none)")
+                ],
+                "Precision parametric spur gear for robot and mechanism projects.",
+                BuildGear),
+
+            Fallback(
+                "snap-fit-case",
+                "Snap-Fit Case",
+                "Enclosures",
+                "Two-part snap-fit enclosure with configurable snaps and inner volume for electronics.",
+                ["case", "snap", "enclosure", "electronics", "box"],
+                [
+                    P("innerWidth", "Inner Width", 80, 30, 250, "mm", "Interior cavity width"),
+                    P("innerDepth", "Inner Depth", 55, 25, 200, "mm", "Interior cavity depth"),
+                    P("innerHeight", "Inner Height", 30, 10, 150, "mm", "Interior cavity height per half"),
+                    P("wallThickness", "Wall Thickness", 2.5, 1.5, 8, "mm", "Shell wall thickness"),
+                    P("snapCount", "Snap Count", 4, 2, 8, "count", "Snap-fit tabs per half"),
+                    P("snapOverhang", "Snap Overhang", 1.2, 0.4, 3, "mm", "Snap clip overhang depth"),
+                    P("tolerance", "Tolerance", 0.3, 0, 1.5, "mm", "Fit clearance for assembly")
+                ],
+                "Two-part snap-fit electronics enclosure for FDM printing.",
+                BuildSnapFitCase),
+
+            Fallback(
+                "vaulted-clip",
+                "Spring Vault Clip",
+                "Clips & routing",
+                "Spring-loaded vaulted cable clip with flexible arms for secure cable retention.",
+                ["clip", "spring", "vault", "cable", "grip"],
+                [
+                    P("cableDiameter", "Cable Diameter", 8, 2, 30, "mm", "Target cable diameter"),
+                    P("clipWidth", "Clip Width", 16, 6, 80, "mm", "Overall clip body width"),
+                    P("armLength", "Arm Length", 18, 6, 50, "mm", "Spring arm reach length"),
+                    P("wallThickness", "Wall Thickness", 2, 1, 8, "mm", "Arm and body thickness"),
+                    P("gripOverlap", "Grip Overlap", 3, 0.5, 10, "mm", "Arm tip overlap past center"),
+                    P("mountHoleDia", "Mount Hole Dia.", 3.5, 0, 8, "mm", "Mounting screw hole (0=none)")
+                ],
+                "Spring-arm vault clip with secure grip for cable management.",
+                BuildVaultedClip),
+
+            Fallback(
+                "heat-set-insert-boss",
+                "Heat-Set Insert Boss",
+                "Fasteners & hardware",
+                "Reinforced boss designed for heat-set threaded inserts in 3D-printed parts.",
+                ["insert", "heat-set", "boss", "threaded", "fastener"],
+                [
+                    P("insertDiameter", "Insert OD", 5.5, 3, 12, "mm", "Heat-set insert outer diameter"),
+                    P("insertDepth", "Insert Depth", 6, 2, 20, "mm", "Insert cavity depth"),
+                    P("wallThickness", "Wall Thickness", 3, 1.5, 10, "mm", "Boss wall thickness"),
+                    P("bossHeight", "Boss Height", 8, 3, 30, "mm", "Total boss height above surface"),
+                    P("baseFillet", "Base Fillet", 1.5, 0, 6, "mm", "Transition fillet at base"),
+                    P("taperAngle", "Taper Angle", 2, 0, 15, "deg", "Boss draft taper angle")
+                ],
+                "Structural boss optimized for heat-set threaded inserts.",
+                BuildHeatSetInsertBoss),
+
+            Fallback(
+                "gridfinity-bin",
+                "Gridfinity Storage Bin",
+                "Enclosures",
+                "Gridfinity-compatible modular storage bin with magnet holes and label tab.",
+                ["gridfinity", "storage", "bin", "organizer", "modular"],
+                [
+                    P("gridX", "Grid Units (X)", 2, 1, 6, "units", "Width in 42mm grid units"),
+                    P("gridY", "Grid Units (Y)", 1, 1, 6, "units", "Depth in 42mm grid units"),
+                    P("binHeight", "Bin Height", 42, 21, 168, "mm", "Interior bin wall height"),
+                    P("wallThickness", "Wall Thickness", 2, 1.2, 6, "mm", "Bin wall thickness"),
+                    P("magnetHoles", "Magnet Holes", 4, 0, 8, "count", "Base magnet hole count"),
+                    P("labelTab", "Label Tab", 1, 0, 1, "toggle", "1=include label tab, 0=flat top")
+                ],
+                "Gridfinity-compatible modular storage bin with magnet-ready base.",
+                BuildGridfinityBin)
         ];
     }
 
@@ -597,6 +688,41 @@ public static class MakerTemplateLibrary
                     KV("width", 100), KV("depth", 70), KV("thickness", 3), KV("lipHeight", 4), KV("tolerance", 0.35)),
                 Preset("Large cover", "Broader cover with a taller locating lip.",
                     KV("width", 140), KV("depth", 100), KV("thickness", 3.5), KV("lipHeight", 5), KV("tolerance", 0.45))
+            ],
+            "gear" =>
+            [
+                Preset("Small robot gear", "Compact gear for small servo or stepper projects.",
+                    KV("teethCount", 16), KV("module", 1.5), KV("thickness", 5), KV("boreDiameter", 5), KV("hubDiameter", 10), KV("hubHeight", 3)),
+                Preset("Drive gear", "Larger drive gear for transmission builds.",
+                    KV("teethCount", 24), KV("module", 2), KV("thickness", 8), KV("boreDiameter", 8), KV("hubDiameter", 18), KV("hubHeight", 5))
+            ],
+            "snap-fit-case" =>
+            [
+                Preset("Small electronics", "Compact snap enclosure for sensor or dev boards.",
+                    KV("innerWidth", 60), KV("innerDepth", 45), KV("innerHeight", 25), KV("wallThickness", 2), KV("snapCount", 4), KV("snapOverhang", 1), KV("tolerance", 0.3)),
+                Preset("Project box", "Larger snap-together project enclosure.",
+                    KV("innerWidth", 100), KV("innerDepth", 75), KV("innerHeight", 35), KV("wallThickness", 2.5), KV("snapCount", 6), KV("snapOverhang", 1.2), KV("tolerance", 0.35))
+            ],
+            "vaulted-clip" =>
+            [
+                Preset("Signal cable", "Light grip clip for thin signal wires.",
+                    KV("cableDiameter", 4), KV("clipWidth", 12), KV("armLength", 14), KV("wallThickness", 1.8), KV("gripOverlap", 2), KV("mountHoleDia", 3)),
+                Preset("Power cable", "Heavy grip clip for thicker cables.",
+                    KV("cableDiameter", 10), KV("clipWidth", 20), KV("armLength", 22), KV("wallThickness", 2.5), KV("gripOverlap", 4), KV("mountHoleDia", 4))
+            ],
+            "heat-set-insert-boss" =>
+            [
+                Preset("M3 insert", "Standard M3 heat-set insert boss.",
+                    KV("insertDiameter", 5.5), KV("insertDepth", 6), KV("wallThickness", 3), KV("bossHeight", 8), KV("baseFillet", 1.5), KV("taperAngle", 2)),
+                Preset("M4 insert", "Larger M4 heat-set insert boss.",
+                    KV("insertDiameter", 7), KV("insertDepth", 8), KV("wallThickness", 4), KV("bossHeight", 10), KV("baseFillet", 2), KV("taperAngle", 2.5))
+            ],
+            "gridfinity-bin" =>
+            [
+                Preset("Small parts bin", "Compact 2x1 bin for screws and small parts.",
+                    KV("gridX", 2), KV("gridY", 1), KV("binHeight", 42), KV("wallThickness", 2), KV("magnetHoles", 4), KV("labelTab", 1)),
+                Preset("Large storage bin", "Wide 3x2 bin for tools and larger items.",
+                    KV("gridX", 3), KV("gridY", 2), KV("binHeight", 63), KV("wallThickness", 2.5), KV("magnetHoles", 6), KV("labelTab", 1))
             ],
             _ => [Preset("Default", "Template default dimensions.")]
         };
@@ -844,6 +970,140 @@ public static class MakerTemplateLibrary
         return sb.ToString();
     }
 
+    private static string BuildGear(IReadOnlyDictionary<string, double> values)
+    {
+        var teeth = ClampCountGear(V(values, "teethCount"));
+        var module = Math.Max(V(values, "module"), 0.5d);
+        var thickness = V(values, "thickness");
+        var boreDiameter = Math.Max(V(values, "boreDiameter"), 0d);
+        var hubDiameter = Math.Max(V(values, "hubDiameter"), 0d);
+        var hubHeight = Math.Max(V(values, "hubHeight"), 0d);
+        var pitchRadius = teeth * module / 2d;
+        var outerRadius = pitchRadius + module;
+
+        var sb = new StringBuilder();
+        sb.Append($"select plane top; start sketch; circle 0 0 radius {N(outerRadius)}; finish sketch; extrude {N(thickness)}");
+        if (boreDiameter > 0.1d)
+        {
+            sb.Append($"; hole depth {N(Math.Max(thickness + hubHeight, 1d))}");
+        }
+
+        if (hubDiameter > 0.1d && hubHeight > 0.05d)
+        {
+            sb.Append($"; select plane top; start sketch; circle 0 0 radius {N(Math.Max(hubDiameter / 2d, boreDiameter / 2d + 2d))}; finish sketch; extrude {N(hubHeight)}");
+        }
+
+        sb.Append($"; fillet {N(Math.Min(module * 0.4d, 2d))}");
+
+        return sb.ToString();
+    }
+
+    private static string BuildSnapFitCase(IReadOnlyDictionary<string, double> values)
+    {
+        var innerWidth = V(values, "innerWidth");
+        var innerDepth = V(values, "innerDepth");
+        var innerHeight = V(values, "innerHeight");
+        var wallThickness = V(values, "wallThickness");
+        var snapCount = Math.Clamp((int)Math.Round(V(values, "snapCount"), MidpointRounding.AwayFromZero), 2, 8);
+        var snapOverhang = V(values, "snapOverhang");
+        var tolerance = Math.Max(V(values, "tolerance"), 0d);
+        var outerWidth = innerWidth + wallThickness * 2d;
+        var outerDepth = innerDepth + wallThickness * 2d;
+        var halfHeight = innerHeight + wallThickness;
+        var snapTabWidth = Math.Min(outerWidth / (snapCount + 1d), wallThickness * 4d);
+
+        var sb = new StringBuilder();
+        sb.Append($"recipe shelled-box {N(outerWidth)} {N(outerDepth)} {N(halfHeight)} {N(wallThickness)}");
+        sb.Append($"; create box {N(outerWidth - tolerance * 2d)}x{N(outerDepth - tolerance * 2d)}x{N(halfHeight)}");
+        for (var i = 0; i < snapCount; i++)
+        {
+            sb.Append($"; create box {N(snapTabWidth)}x{N(snapOverhang)}x{N(wallThickness * 2d)}");
+        }
+
+        return ExpandBuilderSequence(sb.ToString());
+    }
+
+    private static string BuildVaultedClip(IReadOnlyDictionary<string, double> values)
+    {
+        var cableDiameter = V(values, "cableDiameter");
+        var clipWidth = V(values, "clipWidth");
+        var armLength = V(values, "armLength");
+        var wallThickness = V(values, "wallThickness");
+        var gripOverlap = V(values, "gripOverlap");
+        var mountHoleDia = Math.Max(V(values, "mountHoleDia"), 0d);
+        var bodyWidth = Math.Max(cableDiameter + wallThickness * 2d + gripOverlap * 2d, wallThickness * 3d);
+        var bodyDepth = Math.Max(armLength + wallThickness, wallThickness * 2d);
+
+        var sb = new StringBuilder();
+        sb.Append($"select plane top; start sketch; rectangle 0 0 {N(bodyWidth)} {N(bodyDepth)}; finish sketch; extrude {N(clipWidth)}");
+        sb.Append($"; select plane front; start sketch; circle {N(bodyWidth / 2d)} {N(bodyDepth / 2d)} radius {N(cableDiameter / 2d)}; finish sketch; extrude cut {N(-clipWidth)}");
+        if (mountHoleDia > 0.1d)
+        {
+            sb.Append($"; hole depth {N(Math.Max(clipWidth, 1d))}");
+        }
+
+        sb.Append($"; fillet {N(Math.Min(wallThickness * 1.2d, 3d))}");
+
+        return sb.ToString();
+    }
+
+    private static string BuildHeatSetInsertBoss(IReadOnlyDictionary<string, double> values)
+    {
+        var insertDiameter = V(values, "insertDiameter");
+        var insertDepth = V(values, "insertDepth");
+        var wallThickness = V(values, "wallThickness");
+        var bossHeight = V(values, "bossHeight");
+        var baseFillet = V(values, "baseFillet");
+        var taperAngle = V(values, "taperAngle");
+        var topDiameter = insertDiameter + wallThickness * 2d;
+        var taperRadians = taperAngle * Math.PI / 180d;
+        var baseDiameter = topDiameter + Math.Tan(taperRadians) * bossHeight * 2d;
+
+        var sb = new StringBuilder();
+        sb.Append($"select plane top; start sketch; circle 0 0 radius {N(baseDiameter / 2d)}; finish sketch; extrude {N(bossHeight)}");
+        sb.Append($"; hole depth {N(Math.Max(insertDepth, 1d))}");
+        if (baseFillet > 0.05d)
+        {
+            sb.Append($"; fillet {N(baseFillet)}");
+        }
+
+        return sb.ToString();
+    }
+
+    private static string BuildGridfinityBin(IReadOnlyDictionary<string, double> values)
+    {
+        var gridX = Math.Clamp((int)Math.Round(V(values, "gridX"), MidpointRounding.AwayFromZero), 1, 6);
+        var gridY = Math.Clamp((int)Math.Round(V(values, "gridY"), MidpointRounding.AwayFromZero), 1, 6);
+        var binHeight = V(values, "binHeight");
+        var wallThickness = V(values, "wallThickness");
+        var magnetHoles = Math.Clamp((int)Math.Round(V(values, "magnetHoles"), MidpointRounding.AwayFromZero), 0, 8);
+        var labelTab = V(values, "labelTab") >= 0.5d;
+        var gridUnit = 42d;
+        var outerWidth = gridX * gridUnit;
+        var outerDepth = gridY * gridUnit;
+        var totalHeight = binHeight + 4.8d;
+
+        var sb = new StringBuilder();
+        sb.Append($"recipe shelled-box {N(outerWidth)} {N(outerDepth)} {N(totalHeight)} {N(wallThickness)}");
+        sb.Append($"; create box {N(outerWidth - 0.5d)}x{N(outerDepth - 0.5d)}x{N(4.8d)}");
+        if (magnetHoles > 0)
+        {
+            for (var i = 0; i < magnetHoles; i++)
+            {
+                sb.Append($"; hole depth {N(Math.Max(wallThickness + 1d, 3d))}");
+            }
+        }
+
+        if (labelTab && outerWidth >= 42d)
+        {
+            sb.Append($"; create box {N(outerWidth * 0.6d)}x{N(6d)}x{N(10d)}");
+        }
+
+        sb.Append($"; fillet {N(Math.Min(wallThickness * 0.6d, 1.5d))}");
+
+        return ExpandBuilderSequence(sb.ToString());
+    }
+
     private static string ExpandBuilderSequence(string text) =>
         CadRecipeLibrary.ExpandSequence(text);
 
@@ -882,5 +1142,11 @@ public static class MakerTemplateLibrary
             <= 2 => 2,
             _ => 4
         };
+    }
+
+    private static int ClampCountGear(double raw)
+    {
+        var rounded = (int)Math.Round(raw, MidpointRounding.AwayFromZero);
+        return Math.Clamp(rounded, 8, 80);
     }
 }
