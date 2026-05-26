@@ -853,13 +853,16 @@ public sealed class StudioWorkspaceController
                 return null;
 
             var mesh = _mesher.Tessellate(solid);
+            var translation = GetSelectedSketchBodyTranslation(_store.Project);
             return new ViewportRenderBody
             {
                 BodyId = Guid.Parse("00000000-0000-0000-0000-000000000001"),
                 Name = "Preview",
                 Kind = "Preview",
-                X = 0, Y = 0, Z = 0,
-                Positions = BuildLocalPositions(mesh, new Vector3D(0, 0, 0)),
+                X = translation.X,
+                Y = translation.Y,
+                Z = translation.Z,
+                Positions = BuildLocalPositions(mesh, translation),
                 Indices = BuildIndices(mesh),
                 FeatureIds = []
             };
@@ -2287,6 +2290,41 @@ public sealed class StudioWorkspaceController
         }
 
         return new Vector3D(x, y, z);
+    }
+
+    private static Vector3D GetSelectedSketchBodyTranslation(CadProject project)
+    {
+        var selection = project.Selection;
+        if (selection.Kind == CadEntityKind.Body)
+        {
+            var body = project.Scene.Bodies.FirstOrDefault(item => item.Id == selection.EntityId);
+            if (body is not null)
+            {
+                return GetBodyTranslation(body);
+            }
+        }
+
+        if (selection.Kind == CadEntityKind.Sketch)
+        {
+            var body = project.Scene.Bodies.FirstOrDefault(item =>
+                item.Features.OfType<SketchFeature>().Any(feature => feature.Id == selection.EntityId));
+            if (body is not null)
+            {
+                return GetBodyTranslation(body);
+            }
+        }
+
+        if (selection.Kind == CadEntityKind.SketchEntity)
+        {
+            var body = project.Scene.Bodies.FirstOrDefault(item =>
+                item.Features.OfType<SketchFeature>().Any(sketch => sketch.Entities.Any(entity => entity.Id == selection.EntityId)));
+            if (body is not null)
+            {
+                return GetBodyTranslation(body);
+            }
+        }
+
+        return new Vector3D(0, 0, 0);
     }
 
     private static void SetBodyTranslation(CadBody body, double targetX, double targetY, double targetZ)

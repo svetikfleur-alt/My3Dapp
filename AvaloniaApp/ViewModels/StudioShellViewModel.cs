@@ -2945,6 +2945,94 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public IReadOnlyList<string> RecentFiles => _appSettings.RecentFiles;
     public bool HasRecentFiles => _appSettings.RecentFiles.Count > 0;
 
+    public void OpenAclPanel()
+    {
+        DismissStartupPage();
+        SelectedInspectorTabIndex = 2;
+    }
+
+    public IReadOnlyList<StudioCommandState> GetCommandInventory() =>
+        StudioCommandCatalog.All.Select(cmd => GetCommandState(cmd.Id)).ToArray();
+
+    public StudioCommandState GetCommandState(string commandId)
+    {
+        var definition = StudioCommandCatalog.GetRequired(commandId);
+        var visibleBodyCount = _workspaceController.CurrentState.CompileResult.Bodies.Count;
+        var selectedBodyId = CurrentSelectedBodyId;
+
+        return commandId switch
+        {
+            "file.new" => BuildCommandState(definition, true, "Create a new local CAD project."),
+            "file.open" => BuildCommandState(definition, true, "Open a saved local CAD project."),
+            "file.recent" => BuildCommandState(
+                definition,
+                HasRecentFiles,
+                "Open a recently used project.",
+                "No recent projects have been recorded yet."),
+            "file.save" => BuildCommandState(definition, true, "Save the current project."),
+            "file.saveAs" => BuildCommandState(definition, true, "Save the current project to a new path."),
+            "edit.undo" => BuildCommandState(definition, CanUndo, "Undo the last modeling change.", "Nothing to undo yet."),
+            "edit.redo" => BuildCommandState(definition, CanRedo, "Redo the last undone modeling change.", "Nothing to redo yet."),
+            "create.box" => BuildCommandState(definition, CanPrimitiveTools, "Create a new box primitive body.", PrimitiveCommandsBlockedReason()),
+            "create.cylinder" => BuildCommandState(definition, CanPrimitiveTools, "Create a new cylinder primitive body.", PrimitiveCommandsBlockedReason()),
+            "create.sphere" => BuildCommandState(definition, CanPrimitiveTools, "Create a new sphere primitive body.", PrimitiveCommandsBlockedReason()),
+            "create.templates" => BuildCommandState(definition, true, "Open the template workspace for starter parts."),
+            "sketch.start" => BuildCommandState(
+                definition,
+                !CanFinishSketch && CanStartSketch,
+                "Start a sketch on a plane or planar face.",
+                StartSketchBlockedReason()),
+            "sketch.finish" => BuildCommandState(
+                definition,
+                CanFinishSketch,
+                "Finish the active sketch and commit it to the feature tree.",
+                "No active sketch is open."),
+            "sketch.cancel" => BuildCommandState(
+                definition,
+                CanCancelSketch,
+                "Cancel the active sketch without keeping draft geometry.",
+                "No active sketch is open."),
+            "sketch.line" => BuildCommandState(definition, CanSketchTools, "Sketch a line segment.", SketchToolBlockedReason()),
+            "sketch.rectangle" => BuildCommandState(definition, CanSketchTools, "Sketch a rectangle.", SketchToolBlockedReason()),
+            "sketch.circle" => BuildCommandState(definition, CanSketchTools, "Sketch a circle.", SketchToolBlockedReason()),
+            "sketch.arc" => BuildCommandState(definition, CanSketchTools, "Sketch an arc.", SketchToolBlockedReason()),
+            "sketch.point" => BuildCommandState(definition, CanSketchTools, "Sketch a reference point.", SketchToolBlockedReason()),
+            "solid.extrude" => BuildCommandState(definition, CanProfileTools, "Extrude the selected closed sketch profile.", ProfileCommandBlockedReason()),
+            "solid.revolve" => BuildCommandState(definition, CanProfileTools, "Experimental: revolve the selected closed sketch profile.", ProfileCommandBlockedReason()),
+            "solid.sweep" => BuildCommandState(definition, CanProfileTools, "Experimental: sweep the selected closed sketch profile.", ProfileCommandBlockedReason()),
+            "solid.loft" => BuildCommandState(
+                definition,
+                CanLoftTools,
+                "Experimental: loft between two closed sketch profiles.",
+                LoftCommandBlockedReason()),
+            "transform.move" => BuildCommandState(definition, IsThreeDMode && selectedBodyId != Guid.Empty, "Move the selected body in 3D.", MoveCommandBlockedReason()),
+            "transform.datumPlane" => BuildCommandState(definition, IsThreeDMode, "Experimental: create an offset datum plane.", "Datum planes are only available in 3D mode."),
+            "view.fit" => BuildCommandState(definition, visibleBodyCount > 0, "Fit the visible model in the viewport.", "Nothing is visible in the viewport yet."),
+            "view.measure" => BuildCommandState(definition, IsThreeDMode && visibleBodyCount > 0, "Experimental: measure point-to-point distance in 3D.", ViewCommandBlockedReason()),
+            "view.section" => BuildCommandState(definition, IsThreeDMode && visibleBodyCount > 0, "Experimental: toggle a section plane through the model.", ViewCommandBlockedReason()),
+            "view.commandPalette" => BuildCommandState(definition, true, "Open the local command palette."),
+            "ai.openCopilot" => BuildCommandState(definition, true, "Open the Copilot workspace."),
+            "ai.configure" => BuildCommandState(definition, true, "Configure the AI provider, model, and base URL."),
+            "recipe.openAcl" => BuildCommandState(definition, true, "Open the ACL panel for recipe and command history."),
+            "recipe.openSample" => BuildCommandState(definition, true, "Load the sample recipe into the ACL panel."),
+            "recipe.runActive" => BuildCommandState(definition, CanRunActiveRecipe, "Run the prepared recipe into the current part studio.", "Prepare or validate a recipe first."),
+            "export.prepare" => BuildCommandState(definition, true, "Open the Prepare workspace and review export readiness."),
+            "export.export" => BuildCommandState(definition, CanExportCurrentPart, "Export the current part as STL or OBJ.", ExportCommandBlockedReason()),
+            "export.quick" => BuildCommandState(definition, CanQuickExport, "Experimental: write an STL directly to Desktop.", "Create a body before using quick export."),
+            "experimental.fillet" => BuildCommandState(definition, CanEdgeTools, "Experimental: round the selected body with a fillet.", EdgeCommandBlockedReason()),
+            "experimental.chamfer" => BuildCommandState(definition, CanEdgeTools, "Experimental: bevel the selected body with a chamfer.", EdgeCommandBlockedReason()),
+            "experimental.hole" => BuildCommandState(definition, CanEdgeTools, "Experimental: drill a hole feature into the selected body.", EdgeCommandBlockedReason()),
+            "experimental.shell" => BuildCommandState(definition, CanEdgeTools, "Experimental: hollow the selected body with a shell.", EdgeCommandBlockedReason()),
+            "experimental.linearPattern" => BuildCommandState(definition, CanEdgeTools, "Experimental: create a linear body pattern.", EdgeCommandBlockedReason()),
+            "experimental.circularPattern" => BuildCommandState(definition, CanEdgeTools, "Experimental: create a circular body pattern.", EdgeCommandBlockedReason()),
+            "experimental.mirror" => BuildCommandState(definition, CanEdgeTools, "Experimental: mirror the selected body across an axis.", EdgeCommandBlockedReason()),
+            "experimental.booleanUnion" => BuildCommandState(definition, CanBooleanTools, "Experimental: union two visible bodies.", BooleanCommandBlockedReason()),
+            "experimental.booleanSubtract" => BuildCommandState(definition, CanBooleanTools, "Experimental: subtract one visible body from another.", BooleanCommandBlockedReason()),
+            "experimental.booleanIntersect" => BuildCommandState(definition, CanBooleanTools, "Experimental: keep only the overlapping volume of two bodies.", BooleanCommandBlockedReason()),
+            _ => BuildCommandState(definition, true, definition.Label)
+        };
+    }
+
     public void ExportStl(string path)
     {
         try
@@ -5357,6 +5445,102 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         _autoDismissCts?.Cancel();
         _isDisposed = true;
     }
+
+    private static StudioCommandState BuildCommandState(
+        StudioCommandDefinition definition,
+        bool isEnabled,
+        string enabledTooltip,
+        string? disabledReason = null,
+        bool? isVisible = null)
+    {
+        var visible = isVisible ?? true;
+        var tooltip = !visible
+            ? $"{definition.Label} is hidden in this workspace."
+            : isEnabled
+                ? enabledTooltip
+                : $"{definition.Label} unavailable: {disabledReason ?? "Not available right now."}";
+        return new StudioCommandState(definition, visible, isEnabled, tooltip, disabledReason);
+    }
+
+    private string PrimitiveCommandsBlockedReason() =>
+        IsSketchMode
+            ? "Finish or cancel the active sketch before creating a new primitive body."
+            : "Primitive creation is not available in the current workspace.";
+
+    private string StartSketchBlockedReason()
+    {
+        if (CanFinishSketch)
+        {
+            return "Finish or cancel the active sketch first.";
+        }
+
+        if (IsStartupPageVisible)
+        {
+            return "Enter the part studio before starting a sketch.";
+        }
+
+        return "Select a part workspace and then choose a plane or planar face.";
+    }
+
+    private string SketchToolBlockedReason() =>
+        IsSelectingSketchPlane
+            ? "Choose a sketch plane first."
+            : "Start a sketch before using sketch tools.";
+
+    private string ProfileCommandBlockedReason()
+    {
+        if (IsSketchMode)
+        {
+            return "Finish the current sketch and select a closed normal profile first.";
+        }
+
+        return "Select a closed sketch profile first.";
+    }
+
+    private string LoftCommandBlockedReason() =>
+        IsSketchMode
+            ? "Finish the active sketch first."
+            : "Loft needs at least two closed sketch profiles.";
+
+    private string MoveCommandBlockedReason()
+    {
+        if (!IsThreeDMode)
+        {
+            return "Move is only available in the 3D workspace.";
+        }
+
+        return "Select a body before activating Move.";
+    }
+
+    private string ViewCommandBlockedReason() =>
+        !IsThreeDMode
+            ? "This view command is only available in 3D mode."
+            : "Create or open a visible body first.";
+
+    private string EdgeCommandBlockedReason()
+    {
+        if (IsSketchMode)
+        {
+            return "Finish the active sketch before editing a body feature.";
+        }
+
+        return "Select a visible solid body first.";
+    }
+
+    private string BooleanCommandBlockedReason()
+    {
+        if (IsSketchMode)
+        {
+            return "Finish the active sketch before using boolean operations.";
+        }
+
+        return "Boolean operations need at least two visible bodies.";
+    }
+
+    private string ExportCommandBlockedReason() =>
+        IsSketchMode
+            ? "Finish the active sketch before exporting."
+            : "Create a visible body before exporting.";
 }
 
 public enum NotificationSeverity { Success, Info, Warning, Error }

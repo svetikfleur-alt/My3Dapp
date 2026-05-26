@@ -454,6 +454,7 @@ internal sealed class SoftwareViewportControl : Control
 
         var triangles = new List<BodyTriangle>();
         var lightDirection = Vector3.Normalize(new Vector3(-0.42f, -0.58f, 0.69f));
+        var cameraPosition = CameraToWorldPoint(new Vector3(0f, -_distance, 0f));
 
         foreach (var body in SceneState.Bodies)
         {
@@ -496,6 +497,12 @@ internal sealed class SoftwareViewportControl : Control
                 }
 
                 normal = Vector3.Normalize(normal);
+                var viewDirection = Vector3.Normalize(cameraPosition - a);
+                if (Vector3.Dot(normal, viewDirection) <= 0f)
+                {
+                    continue;
+                }
+
                 var diffuse = MathF.Max(0f, Vector3.Dot(normal, lightDirection));
                 var shade = 0.34f + diffuse * 0.66f;
                 var shadedColor = Color.FromArgb(
@@ -514,10 +521,18 @@ internal sealed class SoftwareViewportControl : Control
             }
         }
 
+        var edgeColor = _themeMode == StudioThemeMode.Dark
+            ? Color.FromArgb(88, 178, 205, 230)
+            : Color.FromArgb(96, 64, 70, 84);
+
+        using var edgePen = new Pen(edgeColor, 1f) { LineJoin = LineJoin.Round };
+
         foreach (var triangle in triangles.OrderByDescending(item => item.Depth))
         {
             using var brush = new SolidBrush(triangle.Color);
-            graphics.FillPolygon(brush, [triangle.A, triangle.B, triangle.C]);
+            var polygon = new[] { triangle.A, triangle.B, triangle.C };
+            graphics.FillPolygon(brush, polygon);
+            graphics.DrawPolygon(edgePen, polygon);
             AddHitTriangle(CadEntityKind.Body, triangle.BodyId, triangle.A, triangle.B, triangle.C, triangle.Depth);
         }
     }

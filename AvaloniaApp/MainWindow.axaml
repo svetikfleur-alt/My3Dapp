@@ -106,18 +106,18 @@
                 Classes="ToolbarCommandStrip"
                 Margin="0,12,0,0">
           <Grid>
-          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" IsVisible="False">
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" IsVisible="True">
             <Button Content="File" Classes="ToolbarMenuButton">
               <Button.Flyout>
                 <MenuFlyout>
-                  <MenuItem Header="New Project..." Click="OnNewProjectDialogClick" />
+                  <MenuItem x:Name="FileNewMenuItem" Header="New Project..." Click="OnNewProjectDialogClick" />
                   <MenuItem Header="New Large Project" Click="OnNewLargeProjectClick" />
                   <MenuItem Header="New Standard Project" Click="OnNewStandardProjectClick" />
                   <MenuItem Header="New Quick Design" Click="OnNewQuickDesignClick" />
-                  <MenuItem Header="Open Existing Project..." Click="OnOpenProjectClick" />
-                  <MenuItem Header="Recent Projects" IsEnabled="{Binding HasRecentFiles}" Click="OnRecentFilesClick" />
-                  <MenuItem Header="Save" Click="OnSaveProjectClick" />
-                  <MenuItem Header="Save As..." Click="OnSaveAsProjectClick" />
+                  <MenuItem x:Name="FileOpenMenuItem" Header="Open Existing Project..." Click="OnOpenProjectClick" />
+                  <MenuItem x:Name="FileRecentMenuItem" Header="Recent Projects" Click="OnRecentFilesClick" />
+                  <MenuItem x:Name="FileSaveMenuItem" Header="Save" Click="OnSaveProjectClick" />
+                  <MenuItem x:Name="FileSaveAsMenuItem" Header="Save As..." Click="OnSaveAsProjectClick" />
                 </MenuFlyout>
               </Button.Flyout>
             </Button>
@@ -140,14 +140,14 @@
             <Button Content="Sketch" Classes="ToolbarMenuButton">
               <Button.Flyout>
                 <MenuFlyout>
-                  <MenuItem Header="Start / Finish Sketch" IsEnabled="{Binding CanSketchPrimaryAction}" Click="OnSketchPrimaryClick" />
-                  <MenuItem Header="Cancel Sketch" IsEnabled="{Binding CanCancelSketch}" Click="OnSketchCancelClick" />
-                  <MenuItem Header="Line" Tag="Line" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick" />
-                  <MenuItem Header="Rectangle" Tag="Rectangle" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick" />
-                  <MenuItem Header="Circle" Tag="Circle" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick" />
-                  <MenuItem Header="Arc" Tag="Arc" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick" />
-                  <MenuItem Header="Point" Tag="Point" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick" />
-                  <MenuItem Header="Linear Dimension" Tag="LinearDimension" IsEnabled="{Binding CanSketchTools}" Click="OnSketchToolClick" />
+                  <MenuItem x:Name="SketchStartMenuItem" Header="Start Sketch" Click="OnSketchPrimaryClick" />
+                  <MenuItem x:Name="SketchFinishMenuItem" Header="Finish Sketch" Click="OnSketchPrimaryClick" />
+                  <MenuItem x:Name="SketchCancelMenuItem" Header="Cancel Sketch" Click="OnSketchCancelClick" />
+                  <MenuItem x:Name="SketchLineMenuItem" Header="Line" Tag="Line" Click="OnSketchToolClick" />
+                  <MenuItem x:Name="SketchRectangleMenuItem" Header="Rectangle" Tag="Rectangle" Click="OnSketchToolClick" />
+                  <MenuItem x:Name="SketchCircleMenuItem" Header="Circle" Tag="Circle" Click="OnSketchToolClick" />
+                  <MenuItem x:Name="SketchArcMenuItem" Header="Arc" Tag="Arc" Click="OnSketchToolClick" />
+                  <MenuItem x:Name="SketchPointMenuItem" Header="Point" Tag="Point" Click="OnSketchToolClick" />
                 </MenuFlyout>
               </Button.Flyout>
             </Button>
@@ -155,13 +155,7 @@
             <Button Content="Solid" Classes="ToolbarMenuButton">
               <Button.Flyout>
                 <MenuFlyout>
-                  <MenuItem Header="Extrude" IsEnabled="{Binding CanProfileTools}" Click="OnExtrudeClick" />
-                  <MenuItem Header="Revolve" IsEnabled="{Binding CanProfileTools}" Click="OnRevolveClick" />
-                  <MenuItem Header="Sweep" IsEnabled="{Binding CanProfileTools}" Click="OnSweepClick" />
-                  <MenuItem Header="Loft" IsEnabled="{Binding CanLoftTools}" Click="OnLoftClick" />
-                  <MenuItem Header="Boolean Union" IsEnabled="{Binding CanBooleanTools}" Click="OnBooleanUnionClick" />
-                  <MenuItem Header="Boolean Subtract" IsEnabled="{Binding CanBooleanTools}" Click="OnBooleanSubtractClick" />
-                  <MenuItem Header="Boolean Intersect" IsEnabled="{Binding CanBooleanTools}" Click="OnBooleanIntersectClick" />
+                  <MenuItem x:Name="SolidExtrudeMenuItem" Header="Extrude" Click="OnExtrudeClick" />
                 </MenuFlyout>
               </Button.Flyout>
             </Button>
@@ -169,22 +163,8 @@
             <Button Content="Transform" Classes="ToolbarMenuButton">
               <Button.Flyout>
                 <MenuFlyout>
-                  <MenuItem Header="Move Tool" IsEnabled="{Binding IsThreeDMode}" Click="OnMoveToolClick" />
-                  <MenuItem Header="Mirror Body" IsEnabled="{Binding CanEdgeTools}" Click="OnMirrorMenuItemClick" />
-                  <MenuItem Header="Create Datum Plane" IsEnabled="{Binding IsThreeDMode}" Click="OnCreateDatumPlaneClick" />
-                </MenuFlyout>
-              </Button.Flyout>
-            </Button>
-
-            <Button Content="Modify" Classes="ToolbarMenuButton">
-              <Button.Flyout>
-                <MenuFlyout>
-                  <MenuItem Header="Fillet" IsEnabled="{Binding CanEdgeTools}" Click="OnFilletClick" />
-                  <MenuItem Header="Chamfer" IsEnabled="{Binding CanEdgeTools}" Click="OnChamferClick" />
-                  <MenuItem Header="Shell" IsEnabled="{Binding CanEdgeTools}" Click="OnShellClick" />
-                  <MenuItem Header="Hole" IsEnabled="{Binding CanEdgeTools}" Click="OnHoleClick" />
-                  <MenuItem Header="Linear Pattern" IsEnabled="{Binding CanEdgeTools}" Click="OnLinearPatternClick" />
-                  <MenuItem Header="Circular Pattern" IsEnabled="{Binding CanEdgeTools}" Click="OnCircularPatternClick" />
+                  <MenuItem x:Name="TransformMoveMenuItem" Header="Move Tool" Click="OnMoveToolClick" />
+                  <MenuItem x:Name="TransformDatumMenuItem" Header="Create Datum Plane" Click="OnCreateDatumPlaneClick" />
                 </MenuFlyout>
               </Button.Flyout>
             </Button>
@@ -192,8 +172,27 @@
             <Button Content="View" Classes="ToolbarMenuButton">
               <Button.Flyout>
                 <MenuFlyout>
-                  <MenuItem Header="Focus / Fit View" Click="OnFocusSelectionClick" />
-                  <MenuItem Header="Command Palette" Click="OnCommandPaletteClick" />
+                  <MenuItem x:Name="ViewFitMenuItem" Header="Focus / Fit View" Click="OnFocusSelectionClick" />
+                  <MenuItem x:Name="ViewCommandPaletteMenuItem" Header="Command Palette" Click="OnCommandPaletteClick" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+
+            <Button Content="AI" Classes="ToolbarMenuButton">
+              <Button.Flyout>
+                <MenuFlyout>
+                  <MenuItem x:Name="AiOpenMenuItem" Header="Open Copilot" Click="OnOpenAssistantWorkspaceClick" />
+                  <MenuItem x:Name="AiConfigureMenuItem" Header="Configure AI..." Click="OnAiSettingsClick" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+
+            <Button Content="Recipe" Classes="ToolbarMenuButton">
+              <Button.Flyout>
+                <MenuFlyout>
+                  <MenuItem x:Name="RecipeOpenAclMenuItem" Header="Open ACL Panel" Click="OnOpenAclPanelClick" />
+                  <MenuItem x:Name="RecipeOpenSampleMenuItem" Header="Open Sample Recipe" Click="OnOpenSampleRecipeClick" />
+                  <MenuItem x:Name="RecipeRunMenuItem" Header="Run Active Recipe" Click="OnRunActiveRecipeClick" />
                 </MenuFlyout>
               </Button.Flyout>
             </Button>
@@ -201,19 +200,29 @@
             <Button Content="Export" Classes="ToolbarMenuButton">
               <Button.Flyout>
                 <MenuFlyout>
-                  <MenuItem Header="Prepare Workspace" Click="OnPrepareWorkspaceMenuClick" />
-                  <MenuItem Header="Export STL / OBJ..." IsEnabled="{Binding CanExportCurrentPart}" Click="OnExportClick" />
+                  <MenuItem x:Name="ExportPrepareMenuItem" Header="Prepare Workspace" Click="OnPrepareWorkspaceMenuClick" />
+                  <MenuItem x:Name="ExportDialogMenuItem" Header="Export STL / OBJ..." Click="OnExportClick" />
                 </MenuFlyout>
               </Button.Flyout>
             </Button>
 
-            <Button Content="AI / Recipe" Classes="ToolbarMenuButton">
+            <Button Content="Experimental" Classes="ToolbarMenuButton">
               <Button.Flyout>
                 <MenuFlyout>
-                  <MenuItem Header="Configure AI..." Click="OnAiSettingsClick" />
-                  <MenuItem Header="Open Copilot" Click="OnOpenAssistantWorkspaceClick" />
-                  <MenuItem Header="Open Sample Recipe" Click="OnOpenSampleRecipeClick" />
-                  <MenuItem Header="Run Active Recipe" IsEnabled="{Binding CanRunActiveRecipe}" Click="OnRunActiveRecipeClick" />
+                  <MenuItem x:Name="ExperimentalRevolveMenuItem" Header="Revolve" Click="OnRevolveClick" />
+                  <MenuItem x:Name="ExperimentalSweepMenuItem" Header="Sweep" Click="OnSweepClick" />
+                  <MenuItem x:Name="ExperimentalLoftMenuItem" Header="Loft" Click="OnLoftClick" />
+                  <MenuItem x:Name="ExperimentalQuickExportMenuItem" Header="Quick Export STL" Click="OnQuickExportClick" />
+                  <MenuItem x:Name="ExperimentalFilletMenuItem" Header="Fillet" Click="OnFilletClick" />
+                  <MenuItem x:Name="ExperimentalChamferMenuItem" Header="Chamfer" Click="OnChamferClick" />
+                  <MenuItem x:Name="ExperimentalHoleMenuItem" Header="Hole" Click="OnHoleClick" />
+                  <MenuItem x:Name="ExperimentalShellMenuItem" Header="Shell" Click="OnShellClick" />
+                  <MenuItem x:Name="ExperimentalLinearPatternMenuItem" Header="Linear Pattern" Click="OnLinearPatternClick" />
+                  <MenuItem x:Name="ExperimentalCircularPatternMenuItem" Header="Circular Pattern" Click="OnCircularPatternClick" />
+                  <MenuItem x:Name="ExperimentalMirrorMenuItem" Header="Mirror Body" Click="OnMirrorMenuItemClick" />
+                  <MenuItem x:Name="ExperimentalBooleanUnionMenuItem" Header="Boolean Union" Click="OnBooleanUnionClick" />
+                  <MenuItem x:Name="ExperimentalBooleanSubtractMenuItem" Header="Boolean Subtract" Click="OnBooleanSubtractClick" />
+                  <MenuItem x:Name="ExperimentalBooleanIntersectMenuItem" Header="Boolean Intersect" Click="OnBooleanIntersectClick" />
                 </MenuFlyout>
               </Button.Flyout>
             </Button>
@@ -225,9 +234,9 @@
           <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
             <TextBlock Text="Workflow" Classes="ToolbarGroupLabel" />
             <Border Classes="ToolSplitGroup" Padding="4" IsVisible="{Binding IsThreeDMode}">
-              <Button Classes="ToolbarActionButton"
+              <Button x:Name="ToolbarSketchStartButton"
+                      Classes="ToolbarActionButton"
                       IsEnabled="{Binding CanSketchPrimaryAction}"
-                      ToolTip.Tip="Start Sketch (S)"
                       Click="OnSketchPrimaryClick">
                 <svg:Svg Path="avares://My3DApp/Assets/Icons/pencil.svg"
                          Width="15"
@@ -237,17 +246,17 @@
 
             <Border Classes="ToolSplitGroup" Padding="4" IsVisible="{Binding IsSketchMode}">
               <StackPanel Orientation="Horizontal" Spacing="3">
-                <Button Classes="ToolbarActionButton"
+                <Button x:Name="ToolbarSketchFinishButton"
+                        Classes="ToolbarActionButton"
                         IsEnabled="{Binding CanFinishSketch}"
-                        ToolTip.Tip="Finish Sketch (S)"
                         Click="OnSketchPrimaryClick">
                   <svg:Svg Path="avares://My3DApp/Assets/Icons/check.svg"
                            Width="15"
                            Height="15" />
                 </Button>
-                <Button Classes="ToolbarActionButton"
+                <Button x:Name="ToolbarSketchCancelButton"
+                        Classes="ToolbarActionButton"
                         IsEnabled="{Binding CanCancelSketch}"
-                        ToolTip.Tip="Cancel Sketch"
                         Click="OnSketchCancelClick">
                   <svg:Svg Path="avares://My3DApp/Assets/Icons/delete.svg"
                            Width="15"
@@ -260,13 +269,13 @@
               <Border Classes="ToolbarDivider" />
               <Border Classes="ToolSplitGroup" Padding="4">
                 <StackPanel Orientation="Horizontal" Spacing="3">
-                  <Button Classes="ToolbarActionButton"
-                          ToolTip.Tip="New document (Ctrl+N)"
+                  <Button x:Name="ToolbarNewButton"
+                          Classes="ToolbarActionButton"
                           Click="OnNewProjectClick">
                     <svg:Svg Path="avares://My3DApp/Assets/Icons/plus.svg" Width="16" Height="16" />
                   </Button>
-                  <Button Classes="ToolbarActionButton"
-                          ToolTip.Tip="Open project (Ctrl+O)"
+                  <Button x:Name="ToolbarOpenButton"
+                          Classes="ToolbarActionButton"
                           Click="OnOpenProjectClick">
                     <svg:Svg Path="avares://My3DApp/Assets/Icons/open.svg" Width="16" Height="16" />
                   </Button>
@@ -277,13 +286,13 @@
                           Click="OnRecentFilesClick">
                     <svg:Svg Path="avares://My3DApp/Assets/Icons/chevron-down.svg" Width="12" Height="12" />
                   </Button>
-                  <Button Classes="ToolbarActionButton"
-                          ToolTip.Tip="Save project (Ctrl+S)"
+                  <Button x:Name="ToolbarSaveButton"
+                          Classes="ToolbarActionButton"
                           Click="OnSaveProjectClick">
                     <svg:Svg Path="avares://My3DApp/Assets/Icons/save.svg" Width="16" Height="16" />
                   </Button>
-                  <Button Classes="ToolbarActionButton"
-                          ToolTip.Tip="Save project as"
+                  <Button x:Name="ToolbarSaveAsButton"
+                          Classes="ToolbarActionButton"
                           Click="OnSaveAsProjectClick">
                     <TextBlock Text="As"
                                Classes="ToolbarMetaLabel" />
@@ -293,31 +302,24 @@
 
               <Border Classes="ToolSplitGroup" Padding="4">
                 <StackPanel Orientation="Horizontal" Spacing="3">
-                  <Button Classes="ToolbarActionButton"
+                  <Button x:Name="ToolbarUndoButton"
+                          Classes="ToolbarActionButton"
                           IsEnabled="{Binding CanUndo}"
-                          ToolTip.Tip="Undo (Ctrl+Z)"
                           Click="OnUndoClick">
                     <svg:Svg Path="avares://My3DApp/Assets/Icons/undo.svg" Width="16" Height="16" />
                   </Button>
-                  <Button Classes="ToolbarActionButton"
+                  <Button x:Name="ToolbarRedoButton"
+                          Classes="ToolbarActionButton"
                           IsEnabled="{Binding CanRedo}"
-                          ToolTip.Tip="Redo (Ctrl+Y)"
                           Click="OnRedoClick">
                     <svg:Svg Path="avares://My3DApp/Assets/Icons/redo.svg" Width="16" Height="16" />
                   </Button>
                 </StackPanel>
               </Border>
 
-              <Button Classes="ToolbarActionButton"
-                      ToolTip.Tip="Export model (Ctrl+E)"
+              <Button x:Name="ToolbarExportButton"
+                      Classes="ToolbarActionButton"
                       Click="OnExportClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/export.svg" Width="16" Height="16" />
-              </Button>
-
-              <Button Classes="ToolbarActionButton"
-                      ToolTip.Tip="Quick Export STL to Desktop"
-                      IsEnabled="{Binding CanQuickExport}"
-                      Click="OnQuickExportClick">
                 <svg:Svg Path="avares://My3DApp/Assets/Icons/export.svg" Width="16" Height="16" />
               </Button>
 
@@ -489,166 +491,52 @@
               <TextBlock Text="Features" Classes="ToolbarGroupLabel" />
               <Border Classes="ToolSplitGroup" Padding="4">
                 <StackPanel Orientation="Horizontal" Spacing="3">
-                  <Button Classes="ToolbarActionButton"
-                          IsEnabled="{Binding CanProfileTools}"
-                          ToolTip.Tip="Extrude selected profile"
+                  <Button x:Name="ToolbarExtrudeButton"
+                          Classes="ToolbarActionButton"
                           Click="OnExtrudeClick">
                     <svg:Svg Path="avares://My3DApp/Assets/Icons/extrude.svg" Width="16" Height="16" />
-                  </Button>
-                  <Button Classes="ToolbarActionButton"
-                          IsEnabled="{Binding CanProfileTools}"
-                          ToolTip.Tip="Revolve selected profile"
-                          Click="OnRevolveClick">
-                    <svg:Svg Path="avares://My3DApp/Assets/Icons/revolve.svg" Width="16" Height="16" />
-                  </Button>
-                  <Button Classes="ToolbarActionButton"
-                          IsEnabled="{Binding CanProfileTools}"
-                          ToolTip.Tip="Sweep selected profile"
-                          Click="OnSweepClick">
-                    <svg:Svg Path="avares://My3DApp/Assets/Icons/extrude.svg" Width="16" Height="16" />
-                  </Button>
-                  <Button Classes="ToolbarActionButton"
-                          IsEnabled="{Binding CanLoftTools}"
-                          ToolTip.Tip="Loft between two closed profiles"
-                          Click="OnLoftClick">
-                    <svg:Svg Path="avares://My3DApp/Assets/Icons/revolve.svg" Width="16" Height="16" />
                   </Button>
                 </StackPanel>
               </Border>
 
               <Border Classes="ToolbarDivider" />
               <TextBlock Text="View" Classes="ToolbarGroupLabel" />
-              <Button Classes="ToolbarActionButton"
-                      ToolTip.Tip="Zoom to fit (F)"
+              <Button x:Name="ToolbarFitViewButton"
+                      Classes="ToolbarActionButton"
                       Click="OnFocusSelectionClick">
                 <svg:Svg Path="avares://My3DApp/Assets/Icons/focus.svg" Width="16" Height="16" />
               </Button>
-              <ToggleButton x:Name="MeasureToolToggle"
-                            Classes="ToolbarIconToggle"
-                            ToolTip.Tip="Measure point-to-point distance"
-                            IsEnabled="{Binding IsThreeDMode}"
-                            Click="OnMeasureToolToggleClick">
-                <TextBlock Text="⇿" FontSize="14" FontWeight="Bold" />
-              </ToggleButton>
-
-              <ToggleButton x:Name="SectionViewToggle"
-                            Classes="ToolbarIconToggle"
-                            ToolTip.Tip="Section view — toggle cross-section clipping plane"
-                            IsEnabled="{Binding IsThreeDMode}"
-                            Click="OnSectionViewToggleClick">
-                <TextBlock Text="§" FontSize="14" FontWeight="Bold" />
-              </ToggleButton>
-              <ComboBox x:Name="SectionAxisCombo"
-                        Width="42"
-                        FontSize="11"
-                        IsEnabled="{Binding IsThreeDMode}"
-                        IsVisible="{Binding ElementName=SectionViewToggle, Path=IsChecked}"
-                        SelectedIndex="2"
-                        ToolTip.Tip="Section plane axis">
-                <ComboBoxItem Content="X" />
-                <ComboBoxItem Content="Y" />
-                <ComboBoxItem Content="Z" />
-              </ComboBox>
-              <NumericUpDown x:Name="SectionOffsetSpin"
-                             Width="68"
-                             FontSize="11"
-                             Minimum="-500"
-                             Maximum="500"
-                             Increment="1"
-                             Value="0"
-                             FormatString="0.#"
-                             IsEnabled="{Binding IsThreeDMode}"
-                             IsVisible="{Binding ElementName=SectionViewToggle, Path=IsChecked}"
-                             ValueChanged="OnSectionOffsetChanged"
-                             ToolTip.Tip="Section plane offset" />
 
               <Border Classes="ToolbarDivider" />
               <TextBlock Text="Transform" Classes="ToolbarGroupLabel" />
               <ToggleButton x:Name="MoveToolButton"
                             Classes="ToolbarIconToggle"
-                            ToolTip.Tip="Move · M"
                             Click="OnMoveToolClick">
                 <svg:Svg Path="avares://My3DApp/Assets/Icons/move.svg" Width="16" Height="16" />
               </ToggleButton>
 
               <Border Classes="ToolbarDivider" />
-              <TextBlock Text="Modify" Classes="ToolbarGroupLabel" />
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Fillet (round edges)"
-                      Click="OnFilletClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/fillet.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Chamfer (bevel edges)"
-                      Click="OnChamferClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/chamfer.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Hole (H)"
-                      Click="OnHoleClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/hole.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Shell"
-                      Click="OnShellClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/shell.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Linear Pattern"
-                      Click="OnLinearPatternClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/linear-pattern.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Circular Pattern"
-                      Click="OnCircularPatternClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/circular-pattern.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanEdgeTools}"
-                      ToolTip.Tip="Mirror selected body"
-                      Click="OnMirrorMenuItemClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/mirror.svg" Width="16" Height="16" />
-              </Button>
-
-              <Border Classes="ToolbarDivider" IsVisible="{Binding CanBooleanTools}" />
-              <TextBlock Text="Boolean" Classes="ToolbarGroupLabel" IsVisible="{Binding CanBooleanTools}" />
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanBooleanTools}"
-                      IsVisible="{Binding CanBooleanTools}"
-                      ToolTip.Tip="Union — merge two bodies"
-                      Click="OnBooleanUnionClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/boolean-union.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanBooleanTools}"
-                      IsVisible="{Binding CanBooleanTools}"
-                      ToolTip.Tip="Subtract — cut Body B from Body A"
-                      Click="OnBooleanSubtractClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/boolean-subtract.svg" Width="16" Height="16" />
-              </Button>
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding CanBooleanTools}"
-                      IsVisible="{Binding CanBooleanTools}"
-                      ToolTip.Tip="Intersect — keep only overlapping volume"
-                      Click="OnBooleanIntersectClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/boolean-intersect.svg" Width="16" Height="16" />
-              </Button>
-
-              <Border Classes="ToolbarDivider" IsVisible="{Binding IsThreeDMode}" />
-              <TextBlock Text="Datum" Classes="ToolbarGroupLabel" IsVisible="{Binding IsThreeDMode}" />
-              <Button Classes="ToolbarActionButton"
-                      IsEnabled="{Binding IsThreeDMode}"
-                      IsVisible="{Binding IsThreeDMode}"
-                      ToolTip.Tip="Create datum plane (offset from reference plane)"
-                      Click="OnCreateDatumPlaneClick">
-                <svg:Svg Path="avares://My3DApp/Assets/Icons/sketch-plane.svg" Width="16" Height="16" />
-              </Button>
+              <TextBlock Text="Workflow" Classes="ToolbarGroupLabel" />
+              <Button x:Name="ToolbarTemplatesButton"
+                      Classes="ToolbarActionButton"
+                      Content="Templates"
+                      Click="OnOpenTemplatesWorkspaceClick" />
+              <Button x:Name="ToolbarAclButton"
+                      Classes="ToolbarActionButton"
+                      Content="ACL"
+                      Click="OnOpenAclPanelClick" />
+              <Button x:Name="ToolbarRecipeButton"
+                      Classes="ToolbarActionButton"
+                      Content="Recipe"
+                      Click="OnOpenSampleRecipeClick" />
+              <Button x:Name="ToolbarCopilotButton"
+                      Classes="ToolbarActionButton"
+                      Content="Copilot"
+                      Click="OnOpenAssistantWorkspaceClick" />
+              <Button x:Name="ToolbarPrepareButton"
+                      Classes="ToolbarActionButton"
+                      Content="Prepare"
+                      Click="OnPrepareWorkspaceMenuClick" />
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsSketchMode}">

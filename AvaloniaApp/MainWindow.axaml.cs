@@ -1,4 +1,5 @@
 using System.Collections.Specialized;
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
@@ -40,6 +41,7 @@ public sealed partial class MainWindow : Window
     private ANumericUpDown? _sectionOffsetSpin;
     private Avalonia.Controls.TreeView? _featureTree;
     private bool _allowImmediateClose;
+    private readonly List<CommandUiBinding> _commandUiBindings = [];
     private static readonly Dictionary<string, string> SketchToolHints = new(StringComparer.OrdinalIgnoreCase)
     {
         ["Line"]             = "Line — click to place segment endpoints  ·  Esc to finish",
@@ -66,6 +68,8 @@ public sealed partial class MainWindow : Window
         Patterns = ["*.umxproj", "*.my3dapp", "*.json"],
         MimeTypes = ["application/json"]
     };
+
+    private sealed record CommandUiBinding(string CommandId, Avalonia.Controls.Control Control);
 
     public MainWindow()
     {
@@ -243,6 +247,7 @@ public sealed partial class MainWindow : Window
 
     private void ResolveNamedControls()
     {
+        _commandUiBindings.Clear();
         _viewportHost = this.FindControl<WebViewportHost>("ViewportHost");
         _lightThemeButton = this.FindControl<ToggleButton>("LightThemeButton");
         _darkThemeButton = this.FindControl<ToggleButton>("DarkThemeButton");
@@ -261,6 +266,8 @@ public sealed partial class MainWindow : Window
         {
             RuntimeLog.Write("MainWindow", "ViewportHost control was not found in XAML.");
         }
+
+        RegisterCommandBindings();
     }
 
     private void AttachViewportEvents()
@@ -337,7 +344,9 @@ public sealed partial class MainWindow : Window
         _wiredViewModel.ViewportStateChanged += OnViewportStateChanged;
         _wiredViewModel.FocusSelectionRequested += OnFocusSelectionRequested;
         _wiredViewModel.FeatureNodes.CollectionChanged += OnFeatureNodesChanged;
+        _wiredViewModel.PropertyChanged += OnViewModelPropertyChanged;
         RequestFeatureTreeExpansion();
+        RefreshCommandPresentation();
         _ = ApplyViewportStateAsync(_wiredViewModel.CurrentViewportState);
     }
 
@@ -351,7 +360,13 @@ public sealed partial class MainWindow : Window
         _wiredViewModel.ViewportStateChanged -= OnViewportStateChanged;
         _wiredViewModel.FocusSelectionRequested -= OnFocusSelectionRequested;
         _wiredViewModel.FeatureNodes.CollectionChanged -= OnFeatureNodesChanged;
+        _wiredViewModel.PropertyChanged -= OnViewModelPropertyChanged;
         _wiredViewModel = null;
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        RefreshCommandPresentation();
     }
 
     private void OnFeatureNodesChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -4064,6 +4079,12 @@ public sealed partial class MainWindow : Window
         SetTheme(StudioThemeMode.Dark);
     }
 
+    private void OnOpenAclPanelClick(object? sender, RoutedEventArgs e)
+    {
+        _wiredViewModel?.OpenAclPanel();
+        e.Handled = true;
+    }
+
     private void SetTheme(StudioThemeMode mode)
     {
         if (AApplication.Current is App app)
@@ -4093,6 +4114,93 @@ public sealed partial class MainWindow : Window
         if (AApplication.Current is App app)
         {
             UpdateThemeToggleButtons(app.CurrentStudioTheme);
+        }
+    }
+
+    private void RegisterCommandBindings()
+    {
+        BindCommand("FileNewMenuItem", "file.new");
+        BindCommand("FileOpenMenuItem", "file.open");
+        BindCommand("FileRecentMenuItem", "file.recent");
+        BindCommand("FileSaveMenuItem", "file.save");
+        BindCommand("FileSaveAsMenuItem", "file.saveAs");
+        BindCommand("SketchStartMenuItem", "sketch.start");
+        BindCommand("SketchFinishMenuItem", "sketch.finish");
+        BindCommand("SketchCancelMenuItem", "sketch.cancel");
+        BindCommand("SketchLineMenuItem", "sketch.line");
+        BindCommand("SketchRectangleMenuItem", "sketch.rectangle");
+        BindCommand("SketchCircleMenuItem", "sketch.circle");
+        BindCommand("SketchArcMenuItem", "sketch.arc");
+        BindCommand("SketchPointMenuItem", "sketch.point");
+        BindCommand("SolidExtrudeMenuItem", "solid.extrude");
+        BindCommand("TransformMoveMenuItem", "transform.move");
+        BindCommand("TransformDatumMenuItem", "transform.datumPlane");
+        BindCommand("ViewFitMenuItem", "view.fit");
+        BindCommand("ViewCommandPaletteMenuItem", "view.commandPalette");
+        BindCommand("AiOpenMenuItem", "ai.openCopilot");
+        BindCommand("AiConfigureMenuItem", "ai.configure");
+        BindCommand("RecipeOpenAclMenuItem", "recipe.openAcl");
+        BindCommand("RecipeOpenSampleMenuItem", "recipe.openSample");
+        BindCommand("RecipeRunMenuItem", "recipe.runActive");
+        BindCommand("ExportPrepareMenuItem", "export.prepare");
+        BindCommand("ExportDialogMenuItem", "export.export");
+        BindCommand("ExperimentalRevolveMenuItem", "solid.revolve");
+        BindCommand("ExperimentalSweepMenuItem", "solid.sweep");
+        BindCommand("ExperimentalLoftMenuItem", "solid.loft");
+        BindCommand("ExperimentalQuickExportMenuItem", "export.quick");
+        BindCommand("ExperimentalFilletMenuItem", "experimental.fillet");
+        BindCommand("ExperimentalChamferMenuItem", "experimental.chamfer");
+        BindCommand("ExperimentalHoleMenuItem", "experimental.hole");
+        BindCommand("ExperimentalShellMenuItem", "experimental.shell");
+        BindCommand("ExperimentalLinearPatternMenuItem", "experimental.linearPattern");
+        BindCommand("ExperimentalCircularPatternMenuItem", "experimental.circularPattern");
+        BindCommand("ExperimentalMirrorMenuItem", "experimental.mirror");
+        BindCommand("ExperimentalBooleanUnionMenuItem", "experimental.booleanUnion");
+        BindCommand("ExperimentalBooleanSubtractMenuItem", "experimental.booleanSubtract");
+        BindCommand("ExperimentalBooleanIntersectMenuItem", "experimental.booleanIntersect");
+        BindCommand("ToolbarSketchStartButton", "sketch.start");
+        BindCommand("ToolbarSketchFinishButton", "sketch.finish");
+        BindCommand("ToolbarSketchCancelButton", "sketch.cancel");
+        BindCommand("ToolbarNewButton", "file.new");
+        BindCommand("ToolbarOpenButton", "file.open");
+        BindCommand("RecentFilesButton", "file.recent");
+        BindCommand("ToolbarSaveButton", "file.save");
+        BindCommand("ToolbarSaveAsButton", "file.saveAs");
+        BindCommand("ToolbarUndoButton", "edit.undo");
+        BindCommand("ToolbarRedoButton", "edit.redo");
+        BindCommand("ToolbarExportButton", "export.export");
+        BindCommand("ToolbarExtrudeButton", "solid.extrude");
+        BindCommand("ToolbarFitViewButton", "view.fit");
+        BindCommand("MoveToolButton", "transform.move");
+        BindCommand("ToolbarTemplatesButton", "create.templates");
+        BindCommand("ToolbarAclButton", "recipe.openAcl");
+        BindCommand("ToolbarRecipeButton", "recipe.openSample");
+        BindCommand("ToolbarCopilotButton", "ai.openCopilot");
+        BindCommand("ToolbarPrepareButton", "export.prepare");
+    }
+
+    private void BindCommand(string controlName, string commandId)
+    {
+        var control = this.FindControl<Avalonia.Controls.Control>(controlName);
+        if (control is not null)
+        {
+            _commandUiBindings.Add(new CommandUiBinding(commandId, control));
+        }
+    }
+
+    private void RefreshCommandPresentation()
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        foreach (var binding in _commandUiBindings)
+        {
+            var state = _wiredViewModel.GetCommandState(binding.CommandId);
+            binding.Control.IsVisible = state.IsVisible;
+            binding.Control.IsEnabled = state.IsEnabled;
+            Avalonia.Controls.ToolTip.SetTip(binding.Control, state.Tooltip);
         }
     }
 }

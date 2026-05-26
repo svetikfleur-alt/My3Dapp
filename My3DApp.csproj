@@ -30,6 +30,7 @@
     <Compile Remove="ThirdParty\**\*.cs" />
     <Compile Remove="Tools\AclSmokeRunner\**\*.cs" />
     <Compile Remove="Tools\PicoGKBringup\**\*.cs" />
+    <Compile Remove="tests\**\*.cs" />
     <EmbeddedResource Remove="temp_*\**\*" />
     <EmbeddedResource Remove="cloud_sync_mirror\**\*" />
     <EmbeddedResource Remove="ThirdParty\**\*" />

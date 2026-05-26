@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <NuGetAudit>false</NuGetAudit>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+    <PackageReference Include="xunit" Version="2.*" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.*" />
+  </ItemGroup>
+
+  <!-- Include Engine/Core/Export source files from the main project by link -->
+  <ItemGroup>
+    <Compile Include="..\..\Core\**\*.cs" LinkBase="Core" />
+    <Compile Include="..\..\Engine\MeshBuilder.cs" Link="Engine\MeshBuilder.cs" />
+    <Compile Include="..\..\Engine\SolidMesher.cs" Link="Engine\SolidMesher.cs" />
+    <Compile Include="..\..\Engine\ProfileBuilder.cs" Link="Engine\ProfileBuilder.cs" />
+    <Compile Include="..\..\Engine\CadModel.cs" Link="Engine\CadModel.cs" />
+    <Compile Include="..\..\Export\*.cs" LinkBase="Export" />
+  </ItemGroup>
+
+</Project>
