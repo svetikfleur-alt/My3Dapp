@@ -42,6 +42,26 @@ Archive (non-active, outside repo): `D:\My3DApp\archive-2026-07-07\`.
 
 `bin/`, `obj/`, `dist/` (publish + WebView2 cache, ~48K files), `logs/`, `.venv/`.
 
+## Graph evidence (graphify, 2026-07-07 — 2,085 nodes / 5,566 edges / 99 communities, AST-only)
+
+- **No import cycles** across the active source — layering (UI -> Engine -> Core) holds.
+- **God nodes** (edge count): `StudioShellViewModel` 248, `MainWindow` 195,
+  `CadProjectStore` 154, `StudioWorkspaceController` 146, `CadSketchEntity` 77,
+  `Mesh` 75, `WebViewportHost` 55. These four hubs are the OCCT/ACL migration hotspots:
+  every pipeline replacement (kernel, viewport, persistence) routes through them.
+- **UI reaches into meshing directly**: `StudioWorkspaceController` (UI layer) references
+  both `CadProjectStore` and `SolidMesher` — the UI-side controller is doing engine work;
+  boundary to restore during OCCT integration.
+- Mesh types (`Mesh`, `Vector2D`, `SolidMesher`) are deeply woven into Engine + UI —
+  confirms the mesh-in-the-model violation; replacement surface is well-localized to
+  `Core/`, `Engine/SolidMesher`, `Engine/MeshBuilder`, viewport controls.
+- Dead/parallel subsystem confirmed: `SoftwareViewportControl` (53 edges) is a second
+  full viewport implementation beside `WebViewportHost`.
+- Graph health: 218 dangling-endpoint edges (external/BCL refs), 376 collapsed duplicate
+  edges — normal for AST extraction; graph usable, noted for honesty.
+- Query the graph: `graphify query "<question>"` from repo root (`graphify-out/`, git-ignored).
+  Refresh only after a major migration (`/graphify --update`).
+
 ## Reuse candidates (from git branches, not working tree)
 
 - `feature/constraint-solver-lite` (8e50aa4) — solver prototype + xUnit tests
