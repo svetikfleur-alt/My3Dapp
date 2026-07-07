@@ -20,7 +20,7 @@ public sealed class StudioWorkspaceController
     };
 
     private CadProjectStore _store = new();
-    private readonly SolidMesher _mesher = new();
+    private readonly TessellationService _tessellation = new();
     private readonly List<string> _actionLog = [];
     private readonly Stack<string> _undoStack = new();
     private readonly Stack<string> _redoStack = new();
@@ -37,7 +37,11 @@ public sealed class StudioWorkspaceController
     public bool CanUndo => _undoStack.Count > 0;
     public bool CanRedo => _redoStack.Count > 0;
 
-    public bool UsePicoGkKernel { get; set; } = false;
+    public bool UsePicoGkKernel
+    {
+        get => _tessellation.UsePicoGkKernel;
+        set => _tessellation.UsePicoGkKernel = value;
+    }
 
     public bool HasUnsavedChanges => _mutationCount != _savedMutationCount;
     public StudioDocumentUiState CurrentDocumentUiState => CloneUiState(_documentUiState);
@@ -2710,34 +2714,7 @@ public sealed class StudioWorkspaceController
         return combined;
     }
 
-    private Mesh TessellateSolid(Solid solid)
-    {
-        if (UsePicoGkKernel)
-        {
-            Mesh? result = null;
-            try
-            {
-                PicoGkExperimentalGeometryKernelAdapter.RunInSession(0.5f, adapter =>
-                {
-                    var compiler = new KernelCompiler(adapter, _mesher);
-                    var kernelBody = compiler.Compile(solid);
-                    result = adapter.Tessellate(kernelBody);
-                });
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Trace.WriteLine($"PicoGK Kernel failure: {ex.Message}");
-            }
-            
-            if (result != null)
-            {
-                return result;
-            }
-        }
-
-        // Fallback to standard SolidMesher
-        return _mesher.Tessellate(solid);
-    }
+    private Mesh TessellateSolid(Solid solid) => _tessellation.Tessellate(solid);
 
     private static ProductProjectState? CloneProductProjectState(ProductProjectState? state)
     {
