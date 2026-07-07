@@ -109,4 +109,24 @@
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-xrw6-gwf8-vvr9" />
   </ItemGroup>
 
+  <!-- Exact CAD spine: OCCT C++/CLI bridge + native runtime DLLs (LGPL 2.1 + exception).
+       Build the bridge first: MSBuild My3DApp.Occt/My3DApp.Occt.vcxproj -p:Configuration=Release -p:Platform=x64 -->
+  <PropertyGroup>
+    <OcctRoot Condition="'$(OcctRoot)' == ''">D:\My3DApp\sdk\occt-7.9.0\occt-vc144-64</OcctRoot>
+    <Occt3rdParty Condition="'$(Occt3rdParty)' == ''">D:\My3DApp\sdk\occt-7.9.0\3rdparty-vc14-64</Occt3rdParty>
+    <OcctBridgeDir>$(MSBuildThisFileDirectory)My3DApp.Occt\bin\Release\</OcctBridgeDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="My3DApp.Occt">
+      <HintPath>$(OcctBridgeDir)My3DApp.Occt.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Content Include="$(OcctBridgeDir)Ijwhost.dll" Link="Ijwhost.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(OcctRoot)\win64\vc14\bin\TK*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(Occt3rdParty)\freetype-2.13.3-x64\bin\freetype.dll" Link="freetype.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(Occt3rdParty)\jemalloc-vc14-64\bin\jemalloc.dll" Link="jemalloc.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(Occt3rdParty)\tbb-2021.13.0-x64\bin\tbb12.dll" Link="tbb12.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(Occt3rdParty)\tbb-2021.13.0-x64\bin\tbbmalloc.dll" Link="tbbmalloc.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

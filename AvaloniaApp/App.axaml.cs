@@ -41,10 +41,10 @@ public sealed class App : Avalonia.Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = new StudioShellViewModel()
-            };
+            // P1 exact spine: the native OCCT viewport window is the primary runtime path.
+            // The legacy MainWindow (WebView2/Three.js mesh pipeline) is out of the runtime
+            // path and returns only as the rebuilt Part Studio shell in P6.
+            desktop.MainWindow = new ExactSpineWindow();
         }
 
         base.OnFrameworkInitializationCompleted();

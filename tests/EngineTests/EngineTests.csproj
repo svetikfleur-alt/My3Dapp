@@ -22,7 +22,29 @@
     <Compile Include="..\..\Engine\SolidMesher.cs" Link="Engine\SolidMesher.cs" />
     <Compile Include="..\..\Engine\ProfileBuilder.cs" Link="Engine\ProfileBuilder.cs" />
     <Compile Include="..\..\Engine\CadModel.cs" Link="Engine\CadModel.cs" />
+    <Compile Include="..\..\Engine\Exact\*.cs" LinkBase="Engine\Exact" />
+    <Compile Remove="..\..\Engine\Exact\OcctExactKernel.cs" />
+    <Compile Include="..\..\Engine\Exact\OcctExactKernel.cs" Link="Engine\Exact\OcctExactKernel.cs" />
     <Compile Include="..\..\Export\*.cs" LinkBase="Export" />
+  </ItemGroup>
+
+  <!-- OCCT bridge + native runtime for exact-kernel tests -->
+  <PropertyGroup>
+    <OcctRoot Condition="'$(OcctRoot)' == ''">D:\My3DApp\sdk\occt-7.9.0\occt-vc144-64</OcctRoot>
+    <Occt3rdParty Condition="'$(Occt3rdParty)' == ''">D:\My3DApp\sdk\occt-7.9.0\3rdparty-vc14-64</Occt3rdParty>
+    <OcctBridgeDir>$(MSBuildThisFileDirectory)..\..\My3DApp.Occt\bin\Release\</OcctBridgeDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="My3DApp.Occt">
+      <HintPath>$(OcctBridgeDir)My3DApp.Occt.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Content Include="$(OcctBridgeDir)Ijwhost.dll" Link="Ijwhost.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(OcctRoot)\win64\vc14\bin\TK*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(Occt3rdParty)\freetype-2.13.3-x64\bin\freetype.dll" Link="freetype.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(Occt3rdParty)\jemalloc-vc14-64\bin\jemalloc.dll" Link="jemalloc.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(Occt3rdParty)\tbb-2021.13.0-x64\bin\tbb12.dll" Link="tbb12.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(Occt3rdParty)\tbb-2021.13.0-x64\bin\tbbmalloc.dll" Link="tbbmalloc.dll" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
