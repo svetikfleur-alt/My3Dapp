@@ -5,7 +5,8 @@ namespace EngineTests;
 
 public class OcctExactKernelTests
 {
-    private const double Tol = 1e-7;
+    // Bnd_Box enlarges bounds by its gap (~1e-7); geometry itself is exact.
+    private const double Tol = 1e-5;
 
     [Fact]
     public void KernelLifecycle_CreateDispose_IsAliveReflectsState()
@@ -38,8 +39,8 @@ public class OcctExactKernelTests
         using var kernel = new OcctExactKernel();
         using var body = kernel.CreateCylinder(12, 30);
         var b = ((OcctBodyHandle)body).GetBounds();
-        Assert.Equal(-12, b.XMin, 1e-6);
-        Assert.Equal(12, b.XMax, 1e-6);
+        Assert.Equal(-12, b.XMin, Tol);
+        Assert.Equal(12, b.XMax, Tol);
         Assert.Equal(30, b.ZMax, Tol);
     }
 
@@ -61,9 +62,9 @@ public class OcctExactKernelTests
 
         Assert.True(result.IsValid);
         var b = ((OcctBodyHandle)result).GetBounds();
-        Assert.Equal(80, b.XMax, 1e-6);
-        Assert.Equal(60, b.YMax, 1e-6);
-        Assert.Equal(30, b.ZMax, 1e-6);
+        Assert.Equal(80, b.XMax, Tol);
+        Assert.Equal(60, b.YMax, Tol);
+        Assert.Equal(30, b.ZMax, Tol);
     }
 
     [Fact]

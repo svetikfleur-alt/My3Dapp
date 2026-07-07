@@ -126,7 +126,14 @@
     <Content Include="$(Occt3rdParty)\freetype-2.13.3-x64\bin\freetype.dll" Link="freetype.dll" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(Occt3rdParty)\jemalloc-vc14-64\bin\jemalloc.dll" Link="jemalloc.dll" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(Occt3rdParty)\tbb-2021.13.0-x64\bin\tbb12.dll" Link="tbb12.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(Occt3rdParty)\tbb-2021.13.0-x64\bin\tbb12_debug.dll" Link="tbb12_debug.dll" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(Occt3rdParty)\tbb-2021.13.0-x64\bin\tbbmalloc.dll" Link="tbbmalloc.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(Occt3rdParty)\freeimage-3.18.0-x64\bin\FreeImage.dll" Link="FreeImage.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(Occt3rdParty)\openvr-1.14.15-64\bin\win64\openvr_api.dll" Link="openvr_api.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(Occt3rdParty)\ffmpeg-3.3.4-64\bin\avcodec-57.dll" Link="avcodec-57.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(Occt3rdParty)\ffmpeg-3.3.4-64\bin\avformat-57.dll" Link="avformat-57.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(Occt3rdParty)\ffmpeg-3.3.4-64\bin\avutil-55.dll" Link="avutil-55.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(Occt3rdParty)\ffmpeg-3.3.4-64\bin\swscale-4.dll" Link="swscale-4.dll" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

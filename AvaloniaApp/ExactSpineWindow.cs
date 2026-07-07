@@ -4,6 +4,8 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using Button = Avalonia.Controls.Button;
+using Orientation = Avalonia.Layout.Orientation;
 using FormaCore.Engine.Exact;
 using My3DApp.AvaloniaApp.Controls;
 using My3DApp.AvaloniaApp.Services;
@@ -76,7 +78,7 @@ public sealed class ExactSpineWindow : Window
         _host.FitAll();
     }
 
-    private Control BuildToolbar()
+    private Avalonia.Controls.Control BuildToolbar()
     {
         var bar = new StackPanel
         {
