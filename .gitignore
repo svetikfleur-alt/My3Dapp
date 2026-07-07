@@ -59,6 +59,10 @@ cloud_sync_mirror/
 Blueprint/behavior/*.mp4
 AgentOps/*.png
 
+# Agent worktrees and knowledge-graph output
+.agent-worktrees/
+graphify-out/
+
 # Raw third-party reference drops and local archives
 LEAP71_ShapeKernel-main.zip
 PicoGK-main.zip
