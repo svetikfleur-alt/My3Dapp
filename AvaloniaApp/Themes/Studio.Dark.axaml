@@ -4,21 +4,21 @@
     <CornerRadius x:Key="ControlCornerRadius">10</CornerRadius>
     <CornerRadius x:Key="OverlayCornerRadius">18</CornerRadius>
 
-    <SolidColorBrush x:Key="Studio.WindowBackgroundBrush" Color="#11161d" />
-    <SolidColorBrush x:Key="Studio.ToolbarBackgroundBrush" Color="#18202b" />
-    <SolidColorBrush x:Key="Studio.PanelBackgroundBrush" Color="#202936" />
-    <SolidColorBrush x:Key="Studio.PanelInsetBrush" Color="#19222d" />
-    <SolidColorBrush x:Key="Studio.ViewportBackgroundBrush" Color="#0f1721" />
-    <SolidColorBrush x:Key="Studio.BorderBrush" Color="#3d4a5f" />
-    <SolidColorBrush x:Key="Studio.AccentBrush" Color="#59b0ff" />
-    <SolidColorBrush x:Key="Studio.TextPrimaryBrush" Color="#eef4fb" />
-    <SolidColorBrush x:Key="Studio.TextSecondaryBrush" Color="#d3dceb" />
-    <SolidColorBrush x:Key="Studio.TextMutedBrush" Color="#95a3b8" />
+    <SolidColorBrush x:Key="Studio.WindowBackgroundBrush" Color="#0D1116" />
+    <SolidColorBrush x:Key="Studio.ToolbarBackgroundBrush" Color="#161B22" />
+    <SolidColorBrush x:Key="Studio.PanelBackgroundBrush" Color="#1E2732" />
+    <SolidColorBrush x:Key="Studio.PanelInsetBrush" Color="#121820" />
+    <SolidColorBrush x:Key="Studio.ViewportBackgroundBrush" Color="#080C11" />
+    <SolidColorBrush x:Key="Studio.BorderBrush" Color="#6E84A3" />
+    <SolidColorBrush x:Key="Studio.AccentBrush" Color="#4A9BFF" />
+    <SolidColorBrush x:Key="Studio.TextPrimaryBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="Studio.TextSecondaryBrush" Color="#F0F6FC" />
+    <SolidColorBrush x:Key="Studio.TextMutedBrush" Color="#B5C4D6" />
   </Styles.Resources>
 
   <Style Selector="Window">
     <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI, Inter, Arial" />
-    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontSize" Value="13" />
   </Style>
 
   <Style Selector="TextBlock">

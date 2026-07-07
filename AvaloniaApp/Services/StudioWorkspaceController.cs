@@ -36,6 +36,9 @@ public sealed class StudioWorkspaceController
 
     public bool CanUndo => _undoStack.Count > 0;
     public bool CanRedo => _redoStack.Count > 0;
+
+    public bool UsePicoGkKernel { get; set; } = false;
+
     public bool HasUnsavedChanges => _mutationCount != _savedMutationCount;
     public StudioDocumentUiState CurrentDocumentUiState => CloneUiState(_documentUiState);
 
@@ -852,7 +855,7 @@ public sealed class StudioWorkspaceController
             if (!_store.TryComputeExtrudePreviewSolid(distance, reverseDirection, out var solid, out _))
                 return null;
 
-            var mesh = _mesher.Tessellate(solid);
+            var mesh = TessellateSolid(solid);
             var translation = GetSelectedSketchBodyTranslation(_store.Project);
             return new ViewportRenderBody
             {
@@ -972,7 +975,7 @@ public sealed class StudioWorkspaceController
 
             try
             {
-                var mesh = _mesher.Tessellate(compiledBody.Solid);
+                var mesh = TessellateSolid(compiledBody.Solid);
                 var translation = GetBodyTranslation(sourceBody);
                 renderBodies.Add(new ViewportRenderBody
                 {
@@ -2682,7 +2685,7 @@ public sealed class StudioWorkspaceController
         foreach (var body in compile.Bodies)
         {
             if (body.BodyId == bodyId)
-                return _mesher.Tessellate(body.Solid);
+                return TessellateSolid(body.Solid);
         }
         throw new InvalidOperationException("Selected body not found in the current project.");
     }
@@ -2693,7 +2696,7 @@ public sealed class StudioWorkspaceController
         var combined = new Mesh();
         foreach (var body in compile.Bodies)
         {
-            var bodyMesh = _mesher.Tessellate(body.Solid);
+            var bodyMesh = TessellateSolid(body.Solid);
             var vertexOffset = combined.Vertices.Count;
             combined.Vertices.AddRange(bodyMesh.Vertices);
             foreach (var tri in bodyMesh.Triangles)
@@ -2705,6 +2708,35 @@ public sealed class StudioWorkspaceController
             }
         }
         return combined;
+    }
+
+    private Mesh TessellateSolid(Solid solid)
+    {
+        if (UsePicoGkKernel)
+        {
+            Mesh? result = null;
+            try
+            {
+                PicoGkExperimentalGeometryKernelAdapter.RunInSession(0.5f, adapter =>
+                {
+                    var compiler = new KernelCompiler(adapter, _mesher);
+                    var kernelBody = compiler.Compile(solid);
+                    result = adapter.Tessellate(kernelBody);
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.WriteLine($"PicoGK Kernel failure: {ex.Message}");
+            }
+            
+            if (result != null)
+            {
+                return result;
+            }
+        }
+
+        // Fallback to standard SolidMesher
+        return _mesher.Tessellate(solid);
     }
 
     private static ProductProjectState? CloneProductProjectState(ProductProjectState? state)

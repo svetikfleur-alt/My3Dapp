@@ -95,6 +95,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     private string _selectedProfilePlaneSummary = "Top plane";
     private string _featureTreeFilterText = string.Empty;
     private string _codeText = string.Empty;
+    private string _aclScriptText = string.Empty;
     private string _logText = string.Empty;
     private int _selectedInspectorTabIndex;
     private int _selectedBottomTabIndex;
@@ -1083,6 +1084,40 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         get => _codeText;
         private set => SetProperty(ref _codeText, value);
     }
+
+    public string AclScriptText
+    {
+        get => _aclScriptText;
+        set
+        {
+            if (SetProperty(ref _aclScriptText, value))
+            {
+                RaisePropertyChanged(nameof(CanRunAclScript));
+            }
+        }
+    }
+
+    public bool UseExperimentalGeometryKernel
+    {
+        get => _workspaceController.UsePicoGkKernel;
+        set
+        {
+            if (_workspaceController.UsePicoGkKernel != value)
+            {
+                _workspaceController.UsePicoGkKernel = value;
+                RaisePropertyChanged();
+                
+                // Recompile to show immediate effect
+                var state = _workspaceController.CurrentState;
+                if (state.Project is not null && state.CompileResult is not null)
+                {
+                    RebuildFeatureTree(state.Project, state.CompileResult);
+                }
+            }
+        }
+    }
+
+    public bool CanRunAclScript => !string.IsNullOrWhiteSpace(AclScriptText);
 
     public string LogText
     {
@@ -2833,6 +2868,92 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         RaisePropertyChanged(nameof(CanRunActiveRecipe));
     }
 
+    public async Task RunAclScriptAsync(CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(AclScriptText))
+        {
+            ShowNotification("Script is empty.", NotificationSeverity.Warning);
+            return;
+        }
+
+        try
+        {
+            // First expand sequence via CadScriptLibrary
+            if (!CadScriptLibrary.TryExpandSequence(AclScriptText, out var commandText, out var error))
+            {
+                ShowNotification($"Script error: {error}", NotificationSeverity.Error);
+                return;
+            }
+
+            ActiveRecipe = BuildRecipeRun("acl-script", "ACL Script", "Executing custom ACL script.", "", "", commandText);
+            ActiveRecipe.StatusSummary = "Running script...";
+            RaisePropertyChanged(nameof(CanRunActiveRecipe));
+
+            foreach (var step in ActiveRecipe.Steps)
+            {
+                if (step.Status == "completed") continue;
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    step.Status = "failed";
+                    step.Error = "Canceled.";
+                    break;
+                }
+
+                step.Status = "running";
+                step.Error = string.Empty;
+                var parsed = _commandParser.Parse(step.CommandText);
+                if (!parsed.IsSuccess || parsed.Commands.Count == 0)
+                {
+                    step.Status = "failed";
+                    step.Error = parsed.Message;
+                    break;
+                }
+
+                bool stepSuccess = true;
+                foreach (var command in parsed.Commands)
+                {
+                    var result = await ExecuteWorkspaceCommandAsync(command, cancellationToken);
+                    if (!result.Success)
+                    {
+                        step.Status = "failed";
+                        step.Error = result.Message;
+                        stepSuccess = false;
+                        break;
+                    }
+                }
+
+                if (stepSuccess)
+                {
+                    step.Status = "completed";
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if (ActiveRecipe.Steps.All(s => s.Status == "completed"))
+            {
+                ActiveRecipe.StatusSummary = "Script completed successfully.";
+                ShowNotification("Script completed successfully.", NotificationSeverity.Success);
+            }
+            else
+            {
+                ActiveRecipe.StatusSummary = "Script failed.";
+                ShowNotification("Script execution failed.", NotificationSeverity.Error);
+            }
+
+            RaisePropertyChanged(nameof(CanRunActiveRecipe));
+            SelectedWorkspaceKind = "PartStudio";
+            ShowPropertiesPanel();
+        }
+        catch (Exception ex)
+        {
+            ShowNotification($"Unexpected error running script: {ex.Message}", NotificationSeverity.Error);
+        }
+    }
+
     private CadRecipeRunViewModel BuildRecipeRun(
         string recipeId,
         string title,
@@ -2948,7 +3069,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public void OpenAclPanel()
     {
         DismissStartupPage();
-        SelectedInspectorTabIndex = 2;
+        SelectedInspectorTabIndex = 1;
     }
 
     public IReadOnlyList<StudioCommandState> GetCommandInventory() =>
@@ -2998,18 +3119,18 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             "sketch.arc" => BuildCommandState(definition, CanSketchTools, "Sketch an arc.", SketchToolBlockedReason()),
             "sketch.point" => BuildCommandState(definition, CanSketchTools, "Sketch a reference point.", SketchToolBlockedReason()),
             "solid.extrude" => BuildCommandState(definition, CanProfileTools, "Extrude the selected closed sketch profile.", ProfileCommandBlockedReason()),
-            "solid.revolve" => BuildCommandState(definition, CanProfileTools, "Experimental: revolve the selected closed sketch profile.", ProfileCommandBlockedReason()),
-            "solid.sweep" => BuildCommandState(definition, CanProfileTools, "Experimental: sweep the selected closed sketch profile.", ProfileCommandBlockedReason()),
+            "solid.revolve" => BuildCommandState(definition, CanProfileTools, "Revolve the selected closed sketch profile.", ProfileCommandBlockedReason()),
+            "solid.sweep" => BuildCommandState(definition, CanProfileTools, "Sweep the selected closed sketch profile.", ProfileCommandBlockedReason()),
             "solid.loft" => BuildCommandState(
                 definition,
                 CanLoftTools,
-                "Experimental: loft between two closed sketch profiles.",
+                "Loft between two closed sketch profiles.",
                 LoftCommandBlockedReason()),
             "transform.move" => BuildCommandState(definition, IsThreeDMode && selectedBodyId != Guid.Empty, "Move the selected body in 3D.", MoveCommandBlockedReason()),
-            "transform.datumPlane" => BuildCommandState(definition, IsThreeDMode, "Experimental: create an offset datum plane.", "Datum planes are only available in 3D mode."),
+            "transform.datumPlane" => BuildCommandState(definition, IsThreeDMode, "Create an offset datum plane.", "Datum planes are only available in 3D mode."),
             "view.fit" => BuildCommandState(definition, visibleBodyCount > 0, "Fit the visible model in the viewport.", "Nothing is visible in the viewport yet."),
-            "view.measure" => BuildCommandState(definition, IsThreeDMode && visibleBodyCount > 0, "Experimental: measure point-to-point distance in 3D.", ViewCommandBlockedReason()),
-            "view.section" => BuildCommandState(definition, IsThreeDMode && visibleBodyCount > 0, "Experimental: toggle a section plane through the model.", ViewCommandBlockedReason()),
+            "view.measure" => BuildCommandState(definition, IsThreeDMode && visibleBodyCount > 0, "Measure point-to-point distance in 3D.", ViewCommandBlockedReason()),
+            "view.section" => BuildCommandState(definition, IsThreeDMode && visibleBodyCount > 0, "Toggle a section plane through the model.", ViewCommandBlockedReason()),
             "view.commandPalette" => BuildCommandState(definition, true, "Open the local command palette."),
             "ai.openCopilot" => BuildCommandState(definition, true, "Open the Copilot workspace."),
             "ai.configure" => BuildCommandState(definition, true, "Configure the AI provider, model, and base URL."),
@@ -3018,17 +3139,17 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             "recipe.runActive" => BuildCommandState(definition, CanRunActiveRecipe, "Run the prepared recipe into the current part studio.", "Prepare or validate a recipe first."),
             "export.prepare" => BuildCommandState(definition, true, "Open the Prepare workspace and review export readiness."),
             "export.export" => BuildCommandState(definition, CanExportCurrentPart, "Export the current part as STL or OBJ.", ExportCommandBlockedReason()),
-            "export.quick" => BuildCommandState(definition, CanQuickExport, "Experimental: write an STL directly to Desktop.", "Create a body before using quick export."),
-            "experimental.fillet" => BuildCommandState(definition, CanEdgeTools, "Experimental: round the selected body with a fillet.", EdgeCommandBlockedReason()),
-            "experimental.chamfer" => BuildCommandState(definition, CanEdgeTools, "Experimental: bevel the selected body with a chamfer.", EdgeCommandBlockedReason()),
-            "experimental.hole" => BuildCommandState(definition, CanEdgeTools, "Experimental: drill a hole feature into the selected body.", EdgeCommandBlockedReason()),
-            "experimental.shell" => BuildCommandState(definition, CanEdgeTools, "Experimental: hollow the selected body with a shell.", EdgeCommandBlockedReason()),
-            "experimental.linearPattern" => BuildCommandState(definition, CanEdgeTools, "Experimental: create a linear body pattern.", EdgeCommandBlockedReason()),
-            "experimental.circularPattern" => BuildCommandState(definition, CanEdgeTools, "Experimental: create a circular body pattern.", EdgeCommandBlockedReason()),
-            "experimental.mirror" => BuildCommandState(definition, CanEdgeTools, "Experimental: mirror the selected body across an axis.", EdgeCommandBlockedReason()),
-            "experimental.booleanUnion" => BuildCommandState(definition, CanBooleanTools, "Experimental: union two visible bodies.", BooleanCommandBlockedReason()),
-            "experimental.booleanSubtract" => BuildCommandState(definition, CanBooleanTools, "Experimental: subtract one visible body from another.", BooleanCommandBlockedReason()),
-            "experimental.booleanIntersect" => BuildCommandState(definition, CanBooleanTools, "Experimental: keep only the overlapping volume of two bodies.", BooleanCommandBlockedReason()),
+            "export.quick" => BuildCommandState(definition, CanQuickExport, "Write an STL directly to Desktop.", "Create a body before using quick export."),
+            "solid.fillet" => BuildCommandState(definition, CanEdgeTools, "Round the selected body with a fillet.", EdgeCommandBlockedReason()),
+            "solid.chamfer" => BuildCommandState(definition, CanEdgeTools, "Bevel the selected body with a chamfer.", EdgeCommandBlockedReason()),
+            "solid.hole" => BuildCommandState(definition, CanEdgeTools, "Drill a hole feature into the selected body.", EdgeCommandBlockedReason()),
+            "solid.shell" => BuildCommandState(definition, CanEdgeTools, "Hollow the selected body with a shell.", EdgeCommandBlockedReason()),
+            "solid.linearPattern" => BuildCommandState(definition, CanEdgeTools, "Create a linear body pattern.", EdgeCommandBlockedReason()),
+            "solid.circularPattern" => BuildCommandState(definition, CanEdgeTools, "Create a circular body pattern.", EdgeCommandBlockedReason()),
+            "solid.mirror" => BuildCommandState(definition, CanEdgeTools, "Mirror the selected body across an axis.", EdgeCommandBlockedReason()),
+            "solid.booleanUnion" => BuildCommandState(definition, CanBooleanTools, "Union two visible bodies.", BooleanCommandBlockedReason()),
+            "solid.booleanSubtract" => BuildCommandState(definition, CanBooleanTools, "Subtract one visible body from another.", BooleanCommandBlockedReason()),
+            "solid.booleanIntersect" => BuildCommandState(definition, CanBooleanTools, "Keep only the overlapping volume of two bodies.", BooleanCommandBlockedReason()),
             _ => BuildCommandState(definition, true, definition.Label)
         };
     }

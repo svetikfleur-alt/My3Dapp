@@ -1,10 +1,11 @@
 @echo off
 setlocal
 title AgentOps Continuous Improvement
+for %%I in ("%~dp0..") do set "PROJECT_ROOT=%%~fI"
 
 echo ==========================================================
 echo AgentOps continuous improvement runner
-echo Project : C:\Users\Lena\My3DApp
+echo Project : %PROJECT_ROOT%
 echo Script  : %~dp0Start-Continuous-Improvement.ps1
 echo Status  : %~dp0HEARTBEAT.md
 echo Logs    : %~dp0HEARTBEAT.log

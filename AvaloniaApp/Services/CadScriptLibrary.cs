@@ -59,6 +59,10 @@ public static class CadScriptLibrary
         @"^(?<name>[A-Za-z_][A-Za-z0-9_]*)\s*\((?<args>.*)\)$",
         RegexOptions.Compiled);
 
+    private static readonly Regex IncludePattern = new(
+        @"^(?:include|import)\s+""(?<path>[^""]+)""$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     public static string ExpandSequence(string input)
     {
         if (string.IsNullOrWhiteSpace(input))
@@ -413,6 +417,24 @@ public static class CadScriptLibrary
                 BindMacroArguments(macro, args, macroScope, scope);
                 var macroIndex = 0;
                 output.AddRange(ExecuteBlock(macro.Body, macros, macroScope, ref macroIndex));
+                continue;
+            }
+
+            var includeMatch = IncludePattern.Match(token);
+            if (includeMatch.Success)
+            {
+                var path = includeMatch.Groups["path"].Value;
+                if (System.IO.File.Exists(path))
+                {
+                    var content = System.IO.File.ReadAllText(path);
+                    var subTokens = TokenizeScript(content);
+                    var subIndex = 0;
+                    output.AddRange(ExecuteBlock(subTokens, macros, scope, ref subIndex));
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Include file not found: {path}");
+                }
                 continue;
             }
 

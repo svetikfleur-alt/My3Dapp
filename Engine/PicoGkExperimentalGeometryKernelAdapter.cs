@@ -89,6 +89,12 @@ public sealed class PicoGkExperimentalGeometryKernelAdapter : IGeometryKernelAda
         return Wrap(new PkVoxels(mesh), $"PicoGK Cylinder(r={radius}, h={height})");
     }
 
+    public GeometryKernelBody CreateFromMesh(Mesh mesh)
+    {
+        var pkMesh = ConvertMesh(mesh);
+        return Wrap(new PkVoxels(pkMesh), "PicoGK Voxelized Mesh");
+    }
+
     public GeometryKernelBody Translate(GeometryKernelBody body, double x, double y, double z)
     {
         var source = Unwrap(body);

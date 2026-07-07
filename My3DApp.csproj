@@ -13,6 +13,7 @@
     <NuGetAudit>false</NuGetAudit>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <RollForward>LatestMajor</RollForward>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(StudioUiHost)' == 'WinForms'">

@@ -12,7 +12,7 @@
 #   Enabled          - $true to use, $false to skip
 
 $ErrorActionPreference = 'Stop'
-$root      = 'C:\Users\Lena\My3DApp'
+$root      = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $queueFile = Join-Path $root 'AgentOps\TASK_QUEUE.md'
 $doneFile  = Join-Path $root 'AgentOps\DONE.md'
 $stateFile = Join-Path $root 'AgentOps\spawner.state.json'

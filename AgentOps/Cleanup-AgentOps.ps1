@@ -3,7 +3,7 @@
 # Run after a reconciliation pass when worktree branches are already in main.
 
 $ErrorActionPreference = 'Continue'
-$root = 'C:\Users\Lena\My3DApp'
+$root = Split-Path -Parent $PSScriptRoot
 
 Write-Host ""
 Write-Host "=========================================="

@@ -5,6 +5,8 @@
 $taskName = 'AgentOps-BuildRunner'
 $vbs      = Join-Path $PSScriptRoot 'BuildRunner-Hidden.vbs'
 $ps1      = Join-Path $PSScriptRoot 'BuildRunner.ps1'
+$root     = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$reqFile  = Join-Path $root 'AgentOps\build_request.txt'
 
 if (-not (Test-Path $ps1)) {
   Write-Error "BuildRunner.ps1 not found next to this installer."
@@ -25,4 +27,4 @@ $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interac
 Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Description "AgentOps build runner: silent wscript wrapper around BuildRunner.ps1." | Out-Null
 
 Write-Host ("Installed: {0} (silent wscript wrapper, no console window)." -f $taskName)
-Write-Host "Test: drop a line into C:\Users\Lena\My3DApp\AgentOps\build_request.txt and within 1 minute build_result.json should appear."
+Write-Host ("Test: drop a line into {0} and within 1 minute build_result.json should appear." -f $reqFile)

@@ -2,12 +2,13 @@
 setlocal EnableDelayedExpansion
 title AgentOps Heartbeat Co-Pilot
 
+for %%I in ("%~dp0..") do set "PROJECT_ROOT=%%~fI"
 for %%I in ("%~f0") do set "BAT_STAMP=%%~tI"
 for %%I in ("%~dp0Heartbeat-AgentOps.ps1") do set "PS1_STAMP=%%~tI"
 
 echo ==========================================================
 echo AgentOps Heartbeat Co-Pilot
-echo Project: C:\Users\Lena\My3DApp
+echo Project: %PROJECT_ROOT%
 echo Launcher: %~f0
 echo Launcher modified: %BAT_STAMP%
 echo Script: %~dp0Heartbeat-AgentOps.ps1

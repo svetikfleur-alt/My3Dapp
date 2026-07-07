@@ -1,10 +1,11 @@
 @echo off
 setlocal
 title AgentOps Codex Runner
+for %%I in ("%~dp0..") do set "PROJECT_ROOT=%%~fI"
 
 echo ==========================================================
 echo AgentOps Codex sequential runner
-echo Project: C:\Users\Lena\My3DApp
+echo Project: %PROJECT_ROOT%
 echo Script : %~dp0Spawn-Codex.ps1
 echo Log    : %~dp0worker.log
 echo ==========================================================

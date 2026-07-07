@@ -25,6 +25,7 @@ public interface IGeometryKernelAdapter
 
     GeometryKernelBody CreateBox(double width, double depth, double height);
     GeometryKernelBody CreateCylinder(double radius, double height);
+    GeometryKernelBody CreateFromMesh(Mesh mesh);
     GeometryKernelBody Translate(GeometryKernelBody body, double x, double y, double z);
     GeometryKernelBody Union(GeometryKernelBody a, GeometryKernelBody b);
     GeometryKernelBody Subtract(GeometryKernelBody a, GeometryKernelBody b);

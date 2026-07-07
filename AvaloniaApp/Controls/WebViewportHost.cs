@@ -4018,7 +4018,7 @@ public sealed class WebViewportHost : NativeControlHost
       if (wfToggle) {
         wfToggle.addEventListener('click', (e) => {
           isWireframeMode = !isWireframeMode;
-          wfToggle.textContent = isWireframeMode ? 'Wire' : 'Shaded';
+          wfToggle.textContent = isWireframeMode ? 'Mesh Debug' : 'Shaded';
           wfToggle.style.borderColor = isWireframeMode ? '#7baee0' : '';
           bodyMap.forEach((mesh) => { mesh.material.wireframe = isWireframeMode; });
           edgeMap.forEach((lines) => { lines.visible = !isWireframeMode; });

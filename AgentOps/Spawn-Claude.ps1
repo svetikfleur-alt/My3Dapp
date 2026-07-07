@@ -4,7 +4,7 @@
 # on each, refreshes main build, moves to the next. Sequential, no parallelism.
 
 $ErrorActionPreference = 'Continue'
-$root      = 'C:\Users\Lena\My3DApp'
+$root      = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $queueFile = Join-Path $root 'AgentOps\TASK_QUEUE.md'
 $doneFile  = Join-Path $root 'AgentOps\DONE.md'
 $maxIter   = 30

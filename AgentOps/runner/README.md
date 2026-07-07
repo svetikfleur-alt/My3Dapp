@@ -22,4 +22,5 @@ Run `Uninstall-BuildRunner.ps1` from PowerShell.
 
 ## Troubleshooting
 - No `build_result.json` after 2 minutes → open Task Scheduler, find `AgentOps-BuildRunner`, check Last Run Result.
+- If the task points at an old repo path, rerun `Install-BuildRunner.bat` from the current checkout to refresh the scheduled task action.
 - "dotnet not found" → `winget install Microsoft.DotNet.SDK.10` (or whichever channel matches the project).

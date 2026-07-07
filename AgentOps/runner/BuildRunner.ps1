@@ -2,7 +2,7 @@
 # Runs every minute via Task Scheduler. Exits silently if no request.
 
 $ErrorActionPreference = 'Stop'
-$root        = 'C:\Users\Lena\My3DApp'
+$root        = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $agentOps    = Join-Path $root 'AgentOps'
 $runnerDir   = Join-Path $agentOps 'runner'
 $reqFile     = Join-Path $agentOps 'build_request.txt'

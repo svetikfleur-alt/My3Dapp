@@ -26,6 +26,13 @@ public sealed class CurrentGeometryKernelAdapter : IGeometryKernelAdapter
     public GeometryKernelBody CreateCylinder(double radius, double height)
         => new(KernelId, new CylinderSolid(radius, height), $"Cylinder(r={radius}, h={height})");
 
+    public GeometryKernelBody CreateFromMesh(Mesh mesh)
+    {
+        // For CurrentGeometryKernelAdapter we can't easily turn a mesh back to a primitive.
+        // It's mostly a stub adapter, so we just throw or wrap it in a dummy.
+        throw new NotSupportedException("CurrentGeometryKernelAdapter does not support CreateFromMesh.");
+    }
+
     public GeometryKernelBody Translate(GeometryKernelBody body, double x, double y, double z)
         => new(
             KernelId,

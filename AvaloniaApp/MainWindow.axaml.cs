@@ -3433,6 +3433,25 @@ public sealed partial class MainWindow : Window
         e.Handled = true;
     }
 
+    private async void OnRunAclScriptClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _wiredViewModel.RunAclScriptAsync();
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnRunAclScriptClick), ex);
+        }
+
+        e.Handled = true;
+    }
+
     private async void OnAiSettingsClick(object? sender, RoutedEventArgs e)
     {
         if (_wiredViewModel is null)
@@ -3484,6 +3503,12 @@ public sealed partial class MainWindow : Window
         {
             TextWrapping = Avalonia.Media.TextWrapping.Wrap,
             Classes = { "FeatureDialogHelpText" }
+        };
+        var kernelBox = new Avalonia.Controls.CheckBox
+        {
+            Content = "Use Experimental PicoGK Kernel (CSG)",
+            IsChecked = _wiredViewModel.UseExperimentalGeometryKernel,
+            Margin = new Avalonia.Thickness(0, 10, 0, 0)
         };
 
         void RefreshPreview()
@@ -3588,6 +3613,7 @@ public sealed partial class MainWindow : Window
                                         Classes = { "FeatureDialogFieldLabel" }
                                     },
                                     keyBox,
+                                    kernelBox,
                                     statusText,
                                     new Avalonia.Controls.TextBlock
                                     {
@@ -3625,6 +3651,7 @@ public sealed partial class MainWindow : Window
 
             _wiredViewModel.SelectedAssistantBaseUrl = (baseUrlBox.Text ?? string.Empty).Trim();
             _wiredViewModel.AssistantKeyInput = keyBox.Text ?? string.Empty;
+            _wiredViewModel.UseExperimentalGeometryKernel = kernelBox.IsChecked ?? false;
             dialog.Close();
         };
         cancelButton.Click += (_, _) => dialog.Close();
@@ -4144,20 +4171,20 @@ public sealed partial class MainWindow : Window
         BindCommand("RecipeRunMenuItem", "recipe.runActive");
         BindCommand("ExportPrepareMenuItem", "export.prepare");
         BindCommand("ExportDialogMenuItem", "export.export");
-        BindCommand("ExperimentalRevolveMenuItem", "solid.revolve");
-        BindCommand("ExperimentalSweepMenuItem", "solid.sweep");
-        BindCommand("ExperimentalLoftMenuItem", "solid.loft");
-        BindCommand("ExperimentalQuickExportMenuItem", "export.quick");
-        BindCommand("ExperimentalFilletMenuItem", "experimental.fillet");
-        BindCommand("ExperimentalChamferMenuItem", "experimental.chamfer");
-        BindCommand("ExperimentalHoleMenuItem", "experimental.hole");
-        BindCommand("ExperimentalShellMenuItem", "experimental.shell");
-        BindCommand("ExperimentalLinearPatternMenuItem", "experimental.linearPattern");
-        BindCommand("ExperimentalCircularPatternMenuItem", "experimental.circularPattern");
-        BindCommand("ExperimentalMirrorMenuItem", "experimental.mirror");
-        BindCommand("ExperimentalBooleanUnionMenuItem", "experimental.booleanUnion");
-        BindCommand("ExperimentalBooleanSubtractMenuItem", "experimental.booleanSubtract");
-        BindCommand("ExperimentalBooleanIntersectMenuItem", "experimental.booleanIntersect");
+        BindCommand("SolidRevolveMenuItem", "solid.revolve");
+        BindCommand("SolidSweepMenuItem", "solid.sweep");
+        BindCommand("SolidLoftMenuItem", "solid.loft");
+        BindCommand("ExportQuickExportMenuItem", "export.quick");
+        BindCommand("ModifyFilletMenuItem", "solid.fillet");
+        BindCommand("ModifyChamferMenuItem", "solid.chamfer");
+        BindCommand("ModifyHoleMenuItem", "solid.hole");
+        BindCommand("ModifyShellMenuItem", "solid.shell");
+        BindCommand("ModifyLinearPatternMenuItem", "solid.linearPattern");
+        BindCommand("ModifyCircularPatternMenuItem", "solid.circularPattern");
+        BindCommand("ModifyMirrorMenuItem", "solid.mirror");
+        BindCommand("ModifyBooleanUnionMenuItem", "solid.booleanUnion");
+        BindCommand("ModifyBooleanSubtractMenuItem", "solid.booleanSubtract");
+        BindCommand("ModifyBooleanIntersectMenuItem", "solid.booleanIntersect");
         BindCommand("ToolbarSketchStartButton", "sketch.start");
         BindCommand("ToolbarSketchFinishButton", "sketch.finish");
         BindCommand("ToolbarSketchCancelButton", "sketch.cancel");
