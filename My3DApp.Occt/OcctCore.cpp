@@ -14,6 +14,9 @@
 #include <BRepPrimAPI_MakeCylinder.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
+#include <BRepBuilderAPI_Transform.hxx>
+#include <gp_Trsf.hxx>
+#include <gp_Vec.hxx>
 #include <Bnd_Box.hxx>
 #include <BRepBndLib.hxx>
 #include <STEPControl_Writer.hxx>
@@ -105,6 +108,21 @@ static OcctShape* RunBoolean(OcctShape* a, OcctShape* b, bool cut)
 
 OcctShape* OcctCore_BooleanCut(OcctShape* target, OcctShape* tool) { return RunBoolean(target, tool, true); }
 OcctShape* OcctCore_BooleanFuse(OcctShape* a, OcctShape* b) { return RunBoolean(a, b, false); }
+
+OcctShape* OcctCore_Translate(OcctShape* shape, double dx, double dy, double dz)
+{
+    try
+    {
+        if (!OcctCore_ShapeIsValid(shape)) { SetError("translate: invalid shape"); return nullptr; }
+        gp_Trsf trsf;
+        trsf.SetTranslation(gp_Vec(dx, dy, dz));
+        BRepBuilderAPI_Transform op(shape->shape, trsf, true);
+        if (!op.IsDone()) { SetError("translate failed"); return nullptr; }
+        return new OcctShape{ op.Shape() };
+    }
+    catch (const Standard_Failure& f) { SetError(f.GetMessageString()); return nullptr; }
+    catch (...) { SetError("translate: unknown failure"); return nullptr; }
+}
 
 void OcctCore_FreeShape(OcctShape* shape) { delete shape; }
 

@@ -18,6 +18,9 @@ public sealed class OcctExactKernel : IExactCadKernel, IExactCadExporter
     public IExactBodyHandle CreateCylinder(double radius, double height)
         => new OcctBodyHandle(Kernel.CreateCylinder(radius, height));
 
+    public IExactBodyHandle Translated(IExactBodyHandle body, double dx, double dy, double dz)
+        => new OcctBodyHandle(Kernel.Translated(Unwrap(body), dx, dy, dz));
+
     public IExactBodyHandle BooleanSubtract(IExactBodyHandle target, IExactBodyHandle tool)
         => new OcctBodyHandle(Kernel.BooleanSubtract(Unwrap(target), Unwrap(tool)));
 

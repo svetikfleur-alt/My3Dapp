@@ -20,7 +20,15 @@ namespace My3DApp.AvaloniaApp;
 public sealed class ExactSpineWindow : Window
 {
     private readonly OcctViewportControl _viewport = new();
-    private readonly TextBlock _status = new() { Margin = new Thickness(8, 4) };
+    private readonly TextBlock _status = new()
+    {
+        Margin = new Thickness(8, 4),
+        Height = 22,
+        Foreground = Avalonia.Media.Brushes.Black,
+    };
+
+    private static readonly string EventLogPath =
+        Path.Combine(AppContext.BaseDirectory, "spine-events.log");
     private readonly OcctExactKernel _kernel = new();
 
     private ICadViewportHost? _host;
@@ -43,6 +51,13 @@ public sealed class ExactSpineWindow : Window
         Content = root;
 
         _viewport.ViewerReady += (_, _) => Dispatcher.UIThread.Post(OnViewerReady);
+        Opened += async (_, _) =>
+        {
+            // The native child is created at its pre-layout size; refit once layout settled.
+            await Task.Delay(250);
+            _host?.FitAll();
+            RunStartupExportIfRequested();
+        };
         Closed += (_, _) =>
         {
             _demoBody?.Dispose();
@@ -68,10 +83,11 @@ public sealed class ExactSpineWindow : Window
 
     private void CreateDemoModel()
     {
-        // Exact P1 test model: 80x60x30 box minus a Ø24 through-cylinder.
+        // Exact P1 test model: 80x60x30 box minus a Ø24 through-cylinder at its center.
         _demoBody?.Dispose();
         using var box = _kernel.CreateBox(80, 60, 30);
-        using var hole = _kernel.CreateCylinder(12, 30);
+        using var cyl = _kernel.CreateCylinder(12, 30);
+        using var hole = _kernel.Translated(cyl, 40, 30, 0);
         _demoBody = _kernel.BooleanSubtract(box, hole);
         _host!.DisplayBody(_demoBody);
         _host.SetView(CadStandardView.Isometric);
@@ -158,10 +174,46 @@ public sealed class ExactSpineWindow : Window
         SetStatus($"STEP exported: {path} ({size:N0} bytes)");
     }
 
+    /// <summary>
+    /// `My3DApp.exe --export-step &lt;path&gt;` exports the demo body through the same
+    /// kernel path as the toolbar button (minus the file picker) — used for
+    /// scripted end-to-end verification of app-triggered STEP export.
+    /// </summary>
+    private void RunStartupExportIfRequested()
+    {
+        var args = Environment.GetCommandLineArgs();
+        var i = Array.IndexOf(args, "--export-step");
+        if (i < 0 || i + 1 >= args.Length || _demoBody is null)
+        {
+            return;
+        }
+
+        try
+        {
+            ((IExactCadExporter)_kernel).ExportStep(_demoBody, args[i + 1]);
+            SetStatus($"STEP exported (startup): {args[i + 1]}");
+        }
+        catch (Exception ex)
+        {
+            SetStatus($"ERROR exporting STEP: {ex.Message}");
+        }
+    }
+
     private static string Describe(TopologySelection sel)
         => sel.Kind == TopologyKind.Body
             ? $"Body {sel.BodyId:N}"
             : $"{sel.Kind} #{sel.TransientIndex} of body {sel.BodyId:N} ({sel.Provenance})";
 
-    private void SetStatus(string text) => Dispatcher.UIThread.Post(() => _status.Text = text);
+    private void SetStatus(string text)
+    {
+        Dispatcher.UIThread.Post(() => _status.Text = text);
+        try
+        {
+            File.AppendAllText(EventLogPath, $"{DateTime.Now:HH:mm:ss.fff} {text}{Environment.NewLine}");
+        }
+        catch
+        {
+            // status logging must never break the UI
+        }
+    }
 }

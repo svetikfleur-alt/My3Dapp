@@ -12,6 +12,9 @@ public interface IExactCadKernel : IDisposable
 
     IExactBodyHandle CreateCylinder(double radius, double height);
 
+    /// <summary>Returns a new translated body; the input remains owned by the caller.</summary>
+    IExactBodyHandle Translated(IExactBodyHandle body, double dx, double dy, double dz);
+
     /// <summary>Returns a new body; inputs remain owned by the caller.</summary>
     IExactBodyHandle BooleanSubtract(IExactBodyHandle target, IExactBodyHandle tool);
 

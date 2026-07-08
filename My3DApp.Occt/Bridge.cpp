@@ -73,6 +73,15 @@ public:
         return gcnew OcctBody(s, Guid::NewGuid());
     }
 
+    OcctBody^ Translated(OcctBody^ body, double dx, double dy, double dz)
+    {
+        Ensure();
+        CheckBody(body, "body");
+        OcctShape* s = OcctCore_Translate(body->_shape, dx, dy, dz);
+        if (s == nullptr) throw NativeError("Translated");
+        return gcnew OcctBody(s, Guid::NewGuid());
+    }
+
     OcctBody^ BooleanSubtract(OcctBody^ target, OcctBody^ tool)
     {
         Ensure();

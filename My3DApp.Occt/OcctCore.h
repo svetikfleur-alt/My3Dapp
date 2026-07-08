@@ -21,6 +21,7 @@ OcctShape* OcctCore_MakeBox(double dx, double dy, double dz);
 OcctShape* OcctCore_MakeCylinder(double radius, double height);
 OcctShape* OcctCore_BooleanCut(OcctShape* target, OcctShape* tool);
 OcctShape* OcctCore_BooleanFuse(OcctShape* a, OcctShape* b);
+OcctShape* OcctCore_Translate(OcctShape* shape, double dx, double dy, double dz);
 void       OcctCore_FreeShape(OcctShape* shape);
 // Basic validity probe (non-null, non-empty shape).
 int        OcctCore_ShapeIsValid(OcctShape* shape);
