@@ -76,6 +76,10 @@ public sealed class AclParser
                 {
                     nodes.Add(ParsePartDeclaration());
                 }
+                else if (Current.Kind == AclTokenKind.KeywordSketch)
+                {
+                    nodes.Add(ParseSketchDeclaration());
+                }
                 else
                 {
                     ReportError($"Unexpected token '{Current.Text}' at top level.", Current.Span);
@@ -93,7 +97,7 @@ public sealed class AclParser
     private void RecoverTopLevel()
     {
         Advance();
-        while (Current.Kind != AclTokenKind.EndOfFile && Current.Kind != AclTokenKind.KeywordLet && Current.Kind != AclTokenKind.KeywordPart)
+        while (Current.Kind != AclTokenKind.EndOfFile && Current.Kind != AclTokenKind.KeywordLet && Current.Kind != AclTokenKind.KeywordPart && Current.Kind != AclTokenKind.KeywordSketch)
         {
             Advance();
         }
@@ -124,9 +128,9 @@ public sealed class AclParser
 
     private AclPartDeclaration ParsePartDeclaration()
     {
-        var partToken = Consume(AclTokenKind.KeywordPart, "Expected 'part'.");
+        var startToken = Consume(AclTokenKind.KeywordPart, "Expected 'part' keyword.");
         var nameToken = Consume(AclTokenKind.Identifier, "Expected part name.");
-        Consume(AclTokenKind.OpenBrace, "Expected '{' after part name.");
+        var openBrace = Consume(AclTokenKind.OpenBrace, "Expected '{' to start part body.");
 
         var statements = new List<AclStatement>();
         while (Current.Kind != AclTokenKind.EndOfFile && Current.Kind != AclTokenKind.CloseBrace)
@@ -141,8 +145,35 @@ public sealed class AclParser
             }
         }
 
-        var closeToken = Consume(AclTokenKind.CloseBrace, "Expected '}' at end of part body.");
-        return new AclPartDeclaration(nameToken.Text, statements, new AclSourceSpan(partToken.Span.StartLine, partToken.Span.StartColumn, closeToken.Span.EndLine, closeToken.Span.EndColumn));
+        var closeBrace = Consume(AclTokenKind.CloseBrace, "Expected '}' to end part body.");
+
+        return new AclPartDeclaration(nameToken.Text, statements, new AclSourceSpan(startToken.Span.StartLine, startToken.Span.StartColumn, closeBrace.Span.EndLine, closeBrace.Span.EndColumn));
+    }
+
+    private AclSketchDeclaration ParseSketchDeclaration()
+    {
+        var startToken = Consume(AclTokenKind.KeywordSketch, "Expected 'sketch' keyword.");
+        var nameToken = Consume(AclTokenKind.Identifier, "Expected sketch name.");
+        Consume(AclTokenKind.KeywordOn, "Expected 'on' after sketch name.");
+        var planeToken = Consume(AclTokenKind.Identifier, "Expected plane name (e.g. Top, Front, Right).");
+        var openBrace = Consume(AclTokenKind.OpenBrace, "Expected '{' to start sketch body.");
+
+        var statements = new List<AclStatement>();
+        while (Current.Kind != AclTokenKind.EndOfFile && Current.Kind != AclTokenKind.CloseBrace)
+        {
+            try
+            {
+                statements.Add(ParseStatement());
+            }
+            catch (ParseException)
+            {
+                RecoverStatement();
+            }
+        }
+
+        var closeBrace = Consume(AclTokenKind.CloseBrace, "Expected '}' to end sketch body.");
+
+        return new AclSketchDeclaration(nameToken.Text, planeToken.Text, statements, new AclSourceSpan(startToken.Span.StartLine, startToken.Span.StartColumn, closeBrace.Span.EndLine, closeBrace.Span.EndColumn));
     }
 
     private AclStatement ParseStatement()

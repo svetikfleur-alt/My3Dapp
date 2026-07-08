@@ -111,6 +111,11 @@ public sealed class AclWorkspaceViewModel : ViewModelBase, IDisposable
 
     public AclBuildCoordinator BuildCoordinator => _buildCoordinator;
 
+    public FormaCore.Engine.Exact.Graph.ExactFeatureGraph? ComputePreview(string tempSource)
+    {
+        return _buildCoordinator.ComputePreview(tempSource);
+    }
+
     public event EventHandler<FormaCore.Engine.Exact.Graph.ExactFeatureGraph?>? BuildCompleted;
 
     public void Dispose()

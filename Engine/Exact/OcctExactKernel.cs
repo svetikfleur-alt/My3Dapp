@@ -18,6 +18,25 @@ public sealed class OcctExactKernel : IExactCadKernel, IExactCadExporter
     public IExactBodyHandle CreateCylinder(double radius, double height)
         => new OcctBodyHandle(Kernel.CreateCylinder(radius, height));
 
+    public IExactBodyHandle CreateWire(double[] points2d, bool closed)
+        => new OcctBodyHandle(Kernel.CreateWire(points2d, closed));
+
+    public IExactBodyHandle CreateCircleWire(double radius)
+        => new OcctBodyHandle(Kernel.CreateCircleWire(radius));
+
+    public IExactBodyHandle CreateFace(IExactBodyHandle wire)
+        => new OcctBodyHandle(Kernel.CreateFace(Unwrap(wire)));
+
+    public IExactBodyHandle CreatePrism(IExactBodyHandle face, double dx, double dy, double dz)
+        => new OcctBodyHandle(Kernel.CreatePrism(Unwrap(face), dx, dy, dz));
+
+    public IExactBodyHandle CreateCompound(System.Collections.Generic.IReadOnlyList<IExactBodyHandle> bodies)
+    {
+        var arr = new My3DApp.Occt.OcctBody[bodies.Count];
+        for (int i = 0; i < bodies.Count; i++) arr[i] = Unwrap(bodies[i]);
+        return new OcctBodyHandle(Kernel.CreateCompound(arr));
+    }
+
     public IExactBodyHandle Translated(IExactBodyHandle body, double dx, double dy, double dz)
         => new OcctBodyHandle(Kernel.Translated(Unwrap(body), dx, dy, dz));
 

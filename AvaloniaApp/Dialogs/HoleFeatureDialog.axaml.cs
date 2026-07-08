@@ -43,8 +43,25 @@ public sealed partial class HoleFeatureDialog : AWindow
         BlindRadioControl.IsChecked = isBlind;
         DepthValueInputControl.Value = (decimal)depthValue;
         DepthValueInputControl.IsEnabled = isBlind;
+        DiameterInputControl.ValueChanged += (_, _) => OnInputsChanged();
+        CenterXInputControl.ValueChanged += (_, _) => OnInputsChanged();
+        CenterYInputControl.ValueChanged += (_, _) => OnInputsChanged();
+        ThroughAllRadioControl.IsCheckedChanged += (_, _) => OnInputsChanged();
+        BlindRadioControl.IsCheckedChanged += (_, _) => OnInputsChanged();
+        DepthValueInputControl.ValueChanged += (_, _) => OnInputsChanged();
     }
 
+    public event EventHandler<HoleFeatureDialogResult>? PreviewRequested;
+
+    private void OnInputsChanged()
+    {
+        var diameter = (double)(DiameterInputControl.Value ?? 10m);
+        var cx = (double)(CenterXInputControl.Value ?? 0m);
+        var cy = (double)(CenterYInputControl.Value ?? 0m);
+        var depthKind = BlindRadioControl.IsChecked == true ? "Blind" : "ThroughAll";
+        var depthValue = (double)(DepthValueInputControl.Value ?? 20m);
+        PreviewRequested?.Invoke(this, new HoleFeatureDialogResult(diameter, depthKind, depthValue, cx, cy));
+    }
     public double ConfirmedDiameter { get; private set; } = 10d;
 
     public string ConfirmedDepthKind { get; private set; } = "ThroughAll";

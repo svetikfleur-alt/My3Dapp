@@ -36,6 +36,15 @@ public sealed partial class LinearPatternDialog : AWindow
         };
     }
 
+    public event EventHandler<LinearPatternDialogResult>? PreviewRequested;
+
+    private void OnInputsChanged()
+    {
+        var count = Math.Max(2, (int)(CountInputControl.Value ?? 3m));
+        var spacing = Math.Max(0.1d, (double)(SpacingInputControl.Value ?? 20m));
+        var axis = (AxisComboBoxControl.SelectedItem as ComboBoxItem)?.Tag?.ToString()?.Trim().ToLowerInvariant() ?? "x";
+        PreviewRequested?.Invoke(this, new LinearPatternDialogResult(count, spacing, axis));
+    }
     public int ConfirmedCount { get; private set; } = 3;
 
     public double ConfirmedSpacing { get; private set; } = 20d;

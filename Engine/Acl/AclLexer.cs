@@ -11,6 +11,8 @@ public enum AclTokenKind
     String,
     KeywordLet,
     KeywordPart,
+    KeywordSketch,
+    KeywordOn,
     KeywordTrue,
     KeywordFalse,
     OpenParen,
@@ -158,6 +160,8 @@ public sealed class AclLexer
         {
             "let" => AclTokenKind.KeywordLet,
             "part" => AclTokenKind.KeywordPart,
+            "sketch" => AclTokenKind.KeywordSketch,
+            "on" => AclTokenKind.KeywordOn,
             "true" => AclTokenKind.KeywordTrue,
             "false" => AclTokenKind.KeywordFalse,
             _ => AclTokenKind.Identifier

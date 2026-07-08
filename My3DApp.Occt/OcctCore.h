@@ -19,6 +19,11 @@ typedef void(OCCTCORE_CALL* OcctPickCallback)(int slot, int kind, int subIndex, 
 // ---- kernel (exact solids) ----
 OcctShape* OcctCore_MakeBox(double dx, double dy, double dz);
 OcctShape* OcctCore_MakeCylinder(double radius, double height);
+OcctShape* OcctCore_MakeWire(const double* points2d, int ptCount, int closed);
+OcctShape* OcctCore_MakeCircleWire(double radius);
+OcctShape* OcctCore_MakeFace(OcctShape* wire);
+OcctShape* OcctCore_MakePrism(OcctShape* baseFace, double dx, double dy, double dz);
+OcctShape* OcctCore_MakeCompound(OcctShape** shapes, int shapeCount);
 OcctShape* OcctCore_BooleanCut(OcctShape* target, OcctShape* tool);
 OcctShape* OcctCore_BooleanFuse(OcctShape* a, OcctShape* b);
 OcctShape* OcctCore_Translate(OcctShape* shape, double dx, double dy, double dz);

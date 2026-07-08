@@ -7,11 +7,20 @@
 #include "OcctCore.h"
 
 #include <TopoDS_Shape.hxx>
+#include <TopoDS.hxx>
 #include <TopAbs_ShapeEnum.hxx>
 #include <TopExp.hxx>
 #include <TopTools_IndexedMapOfShape.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
+#include <BRepPrimAPI_MakePrism.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakeWire.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <GC_MakeCircle.hxx>
+#include <gp_Circ.hxx>
+#include <TopoDS_Compound.hxx>
+#include <BRep_Builder.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
@@ -86,6 +95,123 @@ OcctShape* OcctCore_MakeCylinder(double radius, double height)
     }
     catch (const Standard_Failure& f) { SetError(f.GetMessageString()); return nullptr; }
     catch (...) { SetError("MakeCylinder: unknown failure"); return nullptr; }
+}
+
+OcctShape* OcctCore_MakeWire(const double* points2d, int ptCount, int closed)
+{
+    try
+    {
+        if (ptCount < 2) { SetError("wire needs at least 2 points"); return nullptr; }
+        BRepBuilderAPI_MakeWire mkWire;
+        for (int i = 0; i < ptCount - 1; i++)
+        {
+            gp_Pnt p1(points2d[i * 2], points2d[i * 2 + 1], 0);
+            gp_Pnt p2(points2d[(i + 1) * 2], points2d[(i + 1) * 2 + 1], 0);
+            BRepBuilderAPI_MakeEdge mkEdge(p1, p2);
+            mkWire.Add(mkEdge.Edge());
+        }
+        if (closed && ptCount > 2)
+        {
+            gp_Pnt p1(points2d[(ptCount - 1) * 2], points2d[(ptCount - 1) * 2 + 1], 0);
+            gp_Pnt p2(points2d[0], points2d[1], 0);
+            if (!p1.IsEqual(p2, 1e-6))
+            {
+                BRepBuilderAPI_MakeEdge mkEdge(p1, p2);
+                mkWire.Add(mkEdge.Edge());
+            }
+        }
+        mkWire.Build();
+        if (!mkWire.IsDone()) { SetError("MakeWire failed"); return nullptr; }
+        return new OcctShape{ mkWire.Wire() };
+    }
+    catch (const Standard_Failure& f) { SetError(f.GetMessageString()); return nullptr; }
+    catch (...) { SetError("MakeWire: unknown failure"); return nullptr; }
+}
+
+OcctShape* OcctCore_MakeCircleWire(double radius)
+{
+    try
+    {
+        if (radius <= 0) { SetError("circle radius must be positive"); return nullptr; }
+        gp_Ax2 axis(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1));
+        gp_Circ circ(axis, radius);
+        BRepBuilderAPI_MakeEdge mkEdge(circ);
+        BRepBuilderAPI_MakeWire mkWire(mkEdge.Edge());
+        if (!mkWire.IsDone()) { SetError("MakeCircleWire failed"); return nullptr; }
+        return new OcctShape{ mkWire.Wire() };
+    }
+    catch (const Standard_Failure& f) { SetError(f.GetMessageString()); return nullptr; }
+    catch (...) { SetError("MakeCircleWire: unknown failure"); return nullptr; }
+}
+
+OcctShape* OcctCore_MakeFace(OcctShape* wire)
+{
+    try
+    {
+        if (!wire || wire->shape.IsNull()) { SetError("invalid wire"); return nullptr; }
+        if (wire->shape.ShapeType() == TopAbs_COMPOUND)
+        {
+            TopTools_IndexedMapOfShape map;
+            TopExp::MapShapes(wire->shape, TopAbs_WIRE, map);
+            if (map.Extent() == 0) { SetError("MakeFace: no wires found in compound"); return nullptr; }
+            
+            TopoDS_Wire outerWire = TopoDS::Wire(map.FindKey(1));
+            BRepBuilderAPI_MakeFace mkFace(outerWire, true);
+            for (int i = 2; i <= map.Extent(); ++i)
+            {
+                TopoDS_Wire innerWire = TopoDS::Wire(map.FindKey(i));
+                mkFace.Add(innerWire);
+            }
+            mkFace.Build();
+            if (!mkFace.IsDone()) { SetError("MakeFace failed for compound"); return nullptr; }
+            return new OcctShape{ mkFace.Face() };
+        }
+        else
+        {
+            BRepBuilderAPI_MakeFace mkFace(TopoDS::Wire(wire->shape), true);
+            mkFace.Build();
+            if (!mkFace.IsDone()) { SetError("MakeFace failed"); return nullptr; }
+            return new OcctShape{ mkFace.Face() };
+        }
+    }
+    catch (const Standard_Failure& f) { SetError(f.GetMessageString()); return nullptr; }
+    catch (...) { SetError("MakeFace: unknown failure"); return nullptr; }
+}
+
+OcctShape* OcctCore_MakePrism(OcctShape* baseFace, double dx, double dy, double dz)
+{
+    try
+    {
+        if (!baseFace || baseFace->shape.IsNull()) { SetError("invalid base face"); return nullptr; }
+        gp_Vec vec(dx, dy, dz);
+        if (vec.Magnitude() <= 1e-6) { SetError("prism vector is too short"); return nullptr; }
+        BRepPrimAPI_MakePrism mkPrism(baseFace->shape, vec);
+        mkPrism.Build();
+        if (!mkPrism.IsDone()) { SetError("MakePrism failed"); return nullptr; }
+        return new OcctShape{ mkPrism.Shape() };
+    }
+    catch (const Standard_Failure& f) { SetError(f.GetMessageString()); return nullptr; }
+    catch (...) { SetError("MakePrism: unknown failure"); return nullptr; }
+}
+
+OcctShape* OcctCore_MakeCompound(OcctShape** shapes, int shapeCount)
+{
+    try
+    {
+        TopoDS_Compound comp;
+        BRep_Builder builder;
+        builder.MakeCompound(comp);
+        for (int i = 0; i < shapeCount; i++)
+        {
+            if (shapes[i] && !shapes[i]->shape.IsNull())
+            {
+                builder.Add(comp, shapes[i]->shape);
+            }
+        }
+        return new OcctShape{ comp };
+    }
+    catch (const Standard_Failure& f) { SetError(f.GetMessageString()); return nullptr; }
+    catch (...) { SetError("MakeCompound: unknown failure"); return nullptr; }
 }
 
 static OcctShape* RunBoolean(OcctShape* a, OcctShape* b, bool cut)

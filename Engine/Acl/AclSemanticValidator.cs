@@ -19,11 +19,29 @@ public sealed class AclValidationResult
 public sealed class AclSemanticValidator
 {
     private static readonly HashSet<string> ValidUnits = ["mm", "cm", "m", "inch", "deg", "rad"];
+    private readonly HashSet<string> _declaredIdentifiers = new();
     
     public AclValidationResult Validate(AclDocument document)
     {
         var diagnostics = new List<AclDiagnostic>();
         var variables = new Dictionary<string, double>();
+
+        _declaredIdentifiers.Clear();
+        foreach (var node in document.Nodes)
+        {
+            if (node is AclLetDeclaration letDecl)
+            {
+                _declaredIdentifiers.Add(letDecl.Name);
+            }
+            else if (node is AclSketchDeclaration sketchDecl)
+            {
+                _declaredIdentifiers.Add(sketchDecl.Name);
+            }
+            else if (node is AclPartDeclaration partDecl)
+            {
+                _declaredIdentifiers.Add(partDecl.Name);
+            }
+        }
 
         foreach (var node in document.Nodes)
         {
@@ -71,7 +89,7 @@ public sealed class AclSemanticValidator
 
     private void ValidateFeatureCall(AclCallExpression call, Dictionary<string, double> variables, List<AclDiagnostic> diagnostics)
     {
-        var allowedFeatures = new HashSet<string> { "box", "cylinder" };
+        var allowedFeatures = new HashSet<string> { "box", "cylinder", "rectangle", "circle", "extrude", "hole", "linear_pattern" };
         if (!allowedFeatures.Contains(call.FunctionName))
         {
             diagnostics.Add(new AclDiagnostic(AclDiagnosticSeverity.Error, "Semantic", $"Unknown feature '{call.FunctionName}'.", call.Span));
@@ -96,6 +114,36 @@ public sealed class AclSemanticValidator
             CheckRequiredArgument(call, "width", argNames, diagnostics);
             CheckRequiredArgument(call, "depth", argNames, diagnostics);
             CheckRequiredArgument(call, "height", argNames, diagnostics);
+        }
+        else if (call.FunctionName == "cylinder")
+        {
+            CheckRequiredArgument(call, "radius", argNames, diagnostics);
+            CheckRequiredArgument(call, "height", argNames, diagnostics);
+        }
+        else if (call.FunctionName == "rectangle")
+        {
+            CheckRequiredArgument(call, "width", argNames, diagnostics);
+            CheckRequiredArgument(call, "height", argNames, diagnostics);
+        }
+        else if (call.FunctionName == "circle")
+        {
+            CheckRequiredArgument(call, "radius", argNames, diagnostics);
+        }
+        else if (call.FunctionName == "extrude")
+        {
+            CheckRequiredArgument(call, "profile", argNames, diagnostics);
+            CheckRequiredArgument(call, "depth", argNames, diagnostics);
+        }
+        else if (call.FunctionName == "hole")
+        {
+            CheckRequiredArgument(call, "target", argNames, diagnostics);
+            CheckRequiredArgument(call, "diameter", argNames, diagnostics);
+        }
+        else if (call.FunctionName == "linear_pattern")
+        {
+            CheckRequiredArgument(call, "source", argNames, diagnostics);
+            CheckRequiredArgument(call, "count", argNames, diagnostics);
+            CheckRequiredArgument(call, "spacing", argNames, diagnostics);
         }
     }
 
@@ -129,9 +177,17 @@ public sealed class AclSemanticValidator
                 {
                     return val;
                 }
+                if (_declaredIdentifiers.Contains(id.Name))
+                {
+                    return null;
+                }
                 diagnostics.Add(new AclDiagnostic(AclDiagnosticSeverity.Error, "Semantic", $"Unknown identifier '{id.Name}'.", id.Span));
                 return null;
                 
+            case AclCallExpression call:
+                ValidateFeatureCall(call, variables, diagnostics);
+                return null;
+
             case AclUnaryExpression unary:
                 var operand = EvaluateConstantExpression(unary.Operand, variables, diagnostics);
                 if (operand.HasValue && unary.OperatorToken == "-") return -operand.Value;

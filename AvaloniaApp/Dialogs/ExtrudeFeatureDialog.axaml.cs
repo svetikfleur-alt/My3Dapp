@@ -43,9 +43,23 @@ public sealed partial class ExtrudeFeatureDialog : AWindow
             TargetBodyComboBox.SelectedIndex = preferredIndex >= 0 ? preferredIndex : 0;
         }
 
+        DistanceInput.ValueChanged += (_, _) => OnInputsChanged();
+        ReverseDirectionCheckBox.IsCheckedChanged += (_, _) => OnInputsChanged();
+        TargetBodyComboBox.SelectionChanged += (_, _) => OnInputsChanged();
         UpdateOperationUi(CadExtrudeOperation.NewBody);
     }
 
+    public event EventHandler<ExtrudeFeatureDialogResult>? PreviewRequested;
+
+    private void OnInputsChanged()
+    {
+        var distance = (double)(DistanceInput.Value ?? 0m);
+        var reverse = ReverseDirectionCheckBox.IsChecked == true;
+        var signedDistance = reverse ? -distance : distance;
+        var op = ResolveSelectedOperation();
+        var targetId = ResolveTargetBodyId();
+        PreviewRequested?.Invoke(this, new ExtrudeFeatureDialogResult(signedDistance, reverse, op, targetId));
+    }
     public double ConfirmedDistance { get; private set; }
     public bool ReverseDirection { get; private set; }
     public CadExtrudeOperation SelectedOperation { get; private set; } = CadExtrudeOperation.NewBody;

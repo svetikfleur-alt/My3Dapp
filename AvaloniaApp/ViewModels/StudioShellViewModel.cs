@@ -182,6 +182,43 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     }
 
     public AclWorkspaceViewModel AclWorkspace { get; }
+    private readonly FormaCore.Engine.Acl.IAclSourceEditService _aclEditService = new FormaCore.Engine.Acl.AclSourceEditService();
+
+    private string GetSelectedFeatureName()
+    {
+        if (string.IsNullOrEmpty(AssistantSelectionSummary)) return "sketch1";
+        var parts = AssistantSelectionSummary.Split(new[] { ": " }, StringSplitOptions.None);
+        return parts.Length > 1 ? parts[1].Trim() : "sketch1";
+    }
+
+    public FormaCore.Engine.Exact.Graph.ExactFeatureGraph? PreviewExtrude(double distance, FormaCore.Engine.CadExtrudeOperation operation, Guid targetBodyId)
+    {
+        var sketchName = GetSelectedFeatureName();
+        var featureCode = $"extrude(profile: {sketchName}, depth: {distance}mm);";
+        var tempSource = _aclEditService.AppendFeatureToPart(AclWorkspace.SourceText, "plate", featureCode);
+        return AclWorkspace.ComputePreview(tempSource);
+    }
+
+    public FormaCore.Engine.Exact.Graph.ExactFeatureGraph? PreviewHole(double diameter, double centerOffsetX, double centerOffsetY, string depthInfo)
+    {
+        var targetName = GetSelectedFeatureName();
+        var depth = depthInfo.StartsWith("Blind:") ? depthInfo.Substring(6) + "mm" : "0mm";
+        var featureCode = $"hole(target: {targetName}, diameter: {diameter}mm, depth: {depth}, x: {centerOffsetX}mm, y: {centerOffsetY}mm);";
+        var tempSource = _aclEditService.AppendFeatureToPart(AclWorkspace.SourceText, "plate", featureCode);
+        return AclWorkspace.ComputePreview(tempSource);
+    }
+
+    public FormaCore.Engine.Exact.Graph.ExactFeatureGraph? PreviewLinearPattern(int count, double spacing, string axis)
+    {
+        var sourceName = GetSelectedFeatureName();
+        double dx = axis == "x" ? 1 : 0;
+        double dy = axis == "y" ? 1 : 0;
+        double dz = axis == "z" ? 1 : 0;
+        var featureCode = $"linear_pattern(source: {sourceName}, count: {count}, spacing: {spacing}mm, dx: {dx}, dy: {dy}, dz: {dz});";
+        var tempSource = _aclEditService.AppendFeatureToPart(AclWorkspace.SourceText, "plate", featureCode);
+        return AclWorkspace.ComputePreview(tempSource);
+    }
+
 
     private void OnAclBuildCompleted(object? sender, FormaCore.Engine.Exact.Graph.ExactFeatureGraph? graph)
     {
@@ -2284,14 +2321,11 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public async Task ExtrudeSelectedSketchAsync(double distance, CadExtrudeOperation operation, Guid targetBodyId, CancellationToken cancellationToken = default)
     {
-        await ExecuteToolbarCommandAsync(
-            new CadViewportCommand(
-                CadViewportCommandKind.ExtrudeSketch,
-                Distance: distance,
-                ExtrudeOp: operation.ToString(),
-                TargetBodyId: targetBodyId),
-            switchToProperties: true,
-            cancellationToken);
+        var sketchName = GetSelectedFeatureName();
+        var featureCode = $"extrude(profile: {sketchName}, depth: {distance}mm);";
+        AclWorkspace.SourceText = _aclEditService.AppendFeatureToPart(AclWorkspace.SourceText, "plate", featureCode);
+        AclWorkspace.Build();
+        await Task.CompletedTask;
     }
 
     public async Task RevolveSelectedSketchAsync(CancellationToken cancellationToken = default)
@@ -2338,10 +2372,14 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public async Task LinearPatternSelectedBodyAsync(int count = 3, double spacing = 20d, string axis = "x", CancellationToken cancellationToken = default)
     {
-        await ExecuteToolbarCommandAsync(
-            new CadViewportCommand(CadViewportCommandKind.LinearPatternBody, Distance: count, U: spacing, Axis: axis),
-            switchToProperties: true,
-            cancellationToken);
+        var sourceName = GetSelectedFeatureName();
+        double dx = axis == "x" ? 1 : 0;
+        double dy = axis == "y" ? 1 : 0;
+        double dz = axis == "z" ? 1 : 0;
+        var featureCode = $"linear_pattern(source: {sourceName}, count: {count}, spacing: {spacing}mm, dx: {dx}, dy: {dy}, dz: {dz});";
+        AclWorkspace.SourceText = _aclEditService.AppendFeatureToPart(AclWorkspace.SourceText, "plate", featureCode);
+        AclWorkspace.Build();
+        await Task.CompletedTask;
     }
 
     public async Task CircularPatternSelectedBodyAsync(int count = 4, double totalAngle = 360d, string axis = "y", CancellationToken cancellationToken = default)
@@ -2475,10 +2513,12 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     public async Task HoleSelectedBodyAsync(double diameter = 10d, double centerOffsetX = 0d, double centerOffsetY = 0d, string depthInfo = "ThroughAll", CancellationToken cancellationToken = default)
     {
-        await ExecuteToolbarCommandAsync(
-            new CadViewportCommand(CadViewportCommandKind.HoleBody, Distance: diameter, U: centerOffsetX, V: centerOffsetY, Axis: depthInfo),
-            switchToProperties: true,
-            cancellationToken);
+        var targetName = GetSelectedFeatureName();
+        var depth = depthInfo.StartsWith("Blind:") ? depthInfo.Substring(6) + "mm" : "0mm";
+        var featureCode = $"hole(target: {targetName}, diameter: {diameter}mm, depth: {depth}, x: {centerOffsetX}mm, y: {centerOffsetY}mm);";
+        AclWorkspace.SourceText = _aclEditService.AppendFeatureToPart(AclWorkspace.SourceText, "plate", featureCode);
+        AclWorkspace.Build();
+        await Task.CompletedTask;
     }
 
     public (double Diameter, string DepthKind, double DepthValue, double CenterOffsetX, double CenterOffsetY)? GetHoleParams(Guid featureId)

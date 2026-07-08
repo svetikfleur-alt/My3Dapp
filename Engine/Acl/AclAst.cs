@@ -44,6 +44,20 @@ public sealed class AclPartDeclaration : AclNode
     public IReadOnlyList<AclStatement> Statements { get; }
 }
 
+public sealed class AclSketchDeclaration : AclNode
+{
+    public AclSketchDeclaration(string name, string plane, IReadOnlyList<AclStatement> statements, AclSourceSpan span) : base(span)
+    {
+        Name = name;
+        Plane = plane;
+        Statements = statements;
+    }
+
+    public string Name { get; }
+    public string Plane { get; }
+    public IReadOnlyList<AclStatement> Statements { get; }
+}
+
 public abstract class AclStatement : AclNode
 {
     protected AclStatement(AclSourceSpan span) : base(span) { }

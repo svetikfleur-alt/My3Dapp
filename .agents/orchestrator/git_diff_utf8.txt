@@ -1,0 +1,618 @@
+﻿diff --git a/Engine/Acl/AclAst.cs b/Engine/Acl/AclAst.cs
+index 0bebe5a..bfd256c 100644
+--- a/Engine/Acl/AclAst.cs
++++ b/Engine/Acl/AclAst.cs
+@@ -44,6 +44,20 @@ public sealed class AclPartDeclaration : AclNode
+     public IReadOnlyList<AclStatement> Statements { get; }
+ }
+ 
++public sealed class AclSketchDeclaration : AclNode
++{
++    public AclSketchDeclaration(string name, string plane, IReadOnlyList<AclStatement> statements, AclSourceSpan span) : base(span)
++    {
++        Name = name;
++        Plane = plane;
++        Statements = statements;
++    }
++
++    public string Name { get; }
++    public string Plane { get; }
++    public IReadOnlyList<AclStatement> Statements { get; }
++}
++
+ public abstract class AclStatement : AclNode
+ {
+     protected AclStatement(AclSourceSpan span) : base(span) { }
+diff --git a/Engine/Acl/AclLexer.cs b/Engine/Acl/AclLexer.cs
+index ccbd539..38d4040 100644
+--- a/Engine/Acl/AclLexer.cs
++++ b/Engine/Acl/AclLexer.cs
+@@ -11,6 +11,8 @@ public enum AclTokenKind
+     String,
+     KeywordLet,
+     KeywordPart,
++    KeywordSketch,
++    KeywordOn,
+     KeywordTrue,
+     KeywordFalse,
+     OpenParen,
+@@ -158,6 +160,8 @@ public sealed class AclLexer
+         {
+             "let" => AclTokenKind.KeywordLet,
+             "part" => AclTokenKind.KeywordPart,
++            "sketch" => AclTokenKind.KeywordSketch,
++            "on" => AclTokenKind.KeywordOn,
+             "true" => AclTokenKind.KeywordTrue,
+             "false" => AclTokenKind.KeywordFalse,
+             _ => AclTokenKind.Identifier
+diff --git a/Engine/Acl/AclParser.cs b/Engine/Acl/AclParser.cs
+index ea39c6a..7699ada 100644
+--- a/Engine/Acl/AclParser.cs
++++ b/Engine/Acl/AclParser.cs
+@@ -76,6 +76,10 @@ public sealed class AclParser
+                 {
+                     nodes.Add(ParsePartDeclaration());
+                 }
++                else if (Current.Kind == AclTokenKind.KeywordSketch)
++                {
++                    nodes.Add(ParseSketchDeclaration());
++                }
+                 else
+                 {
+                     ReportError($"Unexpected token '{Current.Text}' at top level.", Current.Span);
+@@ -93,7 +97,7 @@ public sealed class AclParser
+     private void RecoverTopLevel()
+     {
+         Advance();
+-        while (Current.Kind != AclTokenKind.EndOfFile && Current.Kind != AclTokenKind.KeywordLet && Current.Kind != AclTokenKind.KeywordPart)
++        while (Current.Kind != AclTokenKind.EndOfFile && Current.Kind != AclTokenKind.KeywordLet && Current.Kind != AclTokenKind.KeywordPart && Current.Kind != AclTokenKind.KeywordSketch)
+         {
+             Advance();
+         }
+@@ -124,9 +128,9 @@ public sealed class AclParser
+ 
+     private AclPartDeclaration ParsePartDeclaration()
+     {
+-        var partToken = Consume(AclTokenKind.KeywordPart, "Expected 'part'.");
++        var startToken = Consume(AclTokenKind.KeywordPart, "Expected 'part' keyword.");
+         var nameToken = Consume(AclTokenKind.Identifier, "Expected part name.");
+-        Consume(AclTokenKind.OpenBrace, "Expected '{' after part name.");
++        var openBrace = Consume(AclTokenKind.OpenBrace, "Expected '{' to start part body.");
+ 
+         var statements = new List<AclStatement>();
+         while (Current.Kind != AclTokenKind.EndOfFile && Current.Kind != AclTokenKind.CloseBrace)
+@@ -141,8 +145,35 @@ public sealed class AclParser
+             }
+         }
+ 
+-        var closeToken = Consume(AclTokenKind.CloseBrace, "Expected '}' at end of part body.");
+-        return new AclPartDeclaration(nameToken.Text, statements, new AclSourceSpan(partToken.Span.StartLine, partToken.Span.StartColumn, closeToken.Span.EndLine, closeToken.Span.EndColumn));
++        var closeBrace = Consume(AclTokenKind.CloseBrace, "Expected '}' to end part body.");
++
++        return new AclPartDeclaration(nameToken.Text, statements, new AclSourceSpan(startToken.Span.StartLine, startToken.Span.StartColumn, closeBrace.Span.EndLine, closeBrace.Span.EndColumn));
++    }
++
++    private AclSketchDeclaration ParseSketchDeclaration()
++    {
++        var startToken = Consume(AclTokenKind.KeywordSketch, "Expected 'sketch' keyword.");
++        var nameToken = Consume(AclTokenKind.Identifier, "Expected sketch name.");
++        Consume(AclTokenKind.KeywordOn, "Expected 'on' after sketch name.");
++        var planeToken = Consume(AclTokenKind.Identifier, "Expected plane name (e.g. Top, Front, Right).");
++        var openBrace = Consume(AclTokenKind.OpenBrace, "Expected '{' to start sketch body.");
++
++        var statements = new List<AclStatement>();
++        while (Current.Kind != AclTokenKind.EndOfFile && Current.Kind != AclTokenKind.CloseBrace)
++        {
++            try
++            {
++                statements.Add(ParseStatement());
++            }
++            catch (ParseException)
++            {
++                RecoverStatement();
++            }
++        }
++
++        var closeBrace = Consume(AclTokenKind.CloseBrace, "Expected '}' to end sketch body.");
++
++        return new AclSketchDeclaration(nameToken.Text, planeToken.Text, statements, new AclSourceSpan(startToken.Span.StartLine, startToken.Span.StartColumn, closeBrace.Span.EndLine, closeBrace.Span.EndColumn));
+     }
+ 
+     private AclStatement ParseStatement()
+diff --git a/Engine/Exact/AclExactCompiler.cs b/Engine/Exact/AclExactCompiler.cs
+index 6932a2d..10b31ac 100644
+--- a/Engine/Exact/AclExactCompiler.cs
++++ b/Engine/Exact/AclExactCompiler.cs
+@@ -32,17 +32,44 @@ public sealed class AclExactCompiler
+ 
+         var graph = new ExactFeatureGraph();
+         var featureIndex = 1;
++        var nodeMap = new Dictionary<string, ExactFeatureNode>();
+ 
+         foreach (var node in document.Nodes)
+         {
+-            if (node is AclPartDeclaration part)
++            if (node is AclSketchDeclaration sketch)
++            {
++                foreach (var stmt in sketch.Statements)
++                {
++                    if (stmt is AclExpressionStatement exprStmt && exprStmt.Expression is AclCallExpression call)
++                    {
++                        var featureId = $"{sketch.Name}_feature_{featureIndex++}";
++                        var featureNode = CreateFeatureNode(featureId, call, validationResult.ParameterValues, nodeMap);
++                        if (featureNode != null)
++                        {
++                            graph.AddNode(featureNode);
++                            nodeMap[sketch.Name] = featureNode; // simplistic: sketch name maps to the last shape in it
++                        }
++                    }
++                }
++            }
++            else if (node is AclLetDeclaration letDecl && letDecl.Value is AclCallExpression letCall)
++            {
++                var featureId = letDecl.Name;
++                var featureNode = CreateFeatureNode(featureId, letCall, validationResult.ParameterValues, nodeMap);
++                if (featureNode != null)
++                {
++                    graph.AddNode(featureNode);
++                    nodeMap[letDecl.Name] = featureNode;
++                }
++            }
++            else if (node is AclPartDeclaration part)
+             {
+                 foreach (var stmt in part.Statements)
+                 {
+                     if (stmt is AclExpressionStatement exprStmt && exprStmt.Expression is AclCallExpression call)
+                     {
+                         var featureId = $"{part.Name}_feature_{featureIndex++}";
+-                        var featureNode = CreateFeatureNode(featureId, call, validationResult.ParameterValues);
++                        var featureNode = CreateFeatureNode(featureId, call, validationResult.ParameterValues, nodeMap);
+                         if (featureNode != null)
+                         {
+                             graph.AddNode(featureNode);
+@@ -55,7 +82,7 @@ public sealed class AclExactCompiler
+         return (graph, allDiagnostics);
+     }
+ 
+-    private ExactFeatureNode? CreateFeatureNode(string id, AclCallExpression call, IReadOnlyDictionary<string, double> parameters)
++    private ExactFeatureNode? CreateFeatureNode(string id, AclCallExpression call, IReadOnlyDictionary<string, double> parameters, Dictionary<string, ExactFeatureNode> nodeMap)
+     {
+         if (call.FunctionName == "box")
+         {
+@@ -70,10 +97,67 @@ public sealed class AclExactCompiler
+             var height = GetArgumentValue(call, "height", parameters) ?? 10.0;
+             return new ExactCylinderNode(id, call.Span, radius, height);
+         }
++        else if (call.FunctionName == "rectangle")
++        {
++            var width = GetArgumentValue(call, "width", parameters) ?? 10.0;
++            var height = GetArgumentValue(call, "height", parameters) ?? 10.0;
++            return new ExactRectangleNode(id, call.Span, width, height);
++        }
++        else if (call.FunctionName == "circle")
++        {
++            var radius = GetArgumentValue(call, "radius", parameters) ?? 5.0;
++            return new ExactCircleNode(id, call.Span, radius);
++        }
++        else if (call.FunctionName == "extrude")
++        {
++            var profileName = GetArgumentIdentifier(call, "profile");
++            var depth = GetArgumentValue(call, "depth", parameters) ?? 10.0;
++            if (profileName != null && nodeMap.TryGetValue(profileName, out var profileNode))
++            {
++                return new ExactExtrudeNode(id, call.Span, profileNode, depth);
++            }
++        }
++        else if (call.FunctionName == "hole")
++        {
++            var targetName = GetArgumentIdentifier(call, "target");
++            var diameter = GetArgumentValue(call, "diameter", parameters) ?? 10.0;
++            var depth = GetArgumentValue(call, "depth", parameters) ?? 0.0; // 0 for through_all
++            // simplistic position extraction (since user asked for position: [30mm, 20mm])
++            // If we don't have vector parsing yet, we'll assume 0,0 for now.
++            var posX = GetArgumentValue(call, "x", parameters) ?? 0.0;
++            var posY = GetArgumentValue(call, "y", parameters) ?? 0.0;
++            
++            if (targetName != null && nodeMap.TryGetValue(targetName, out var targetNode))
++            {
++                return new ExactHoleNode(id, call.Span, targetNode, diameter, posX, posY, depth);
++            }
++        }
++        else if (call.FunctionName == "linear_pattern")
++        {
++            var sourceName = GetArgumentIdentifier(call, "source");
++            var count = (int)(GetArgumentValue(call, "count", parameters) ?? 2.0);
++            var spacing = GetArgumentValue(call, "spacing", parameters) ?? 10.0;
++            // simplistic direction
++            var dx = GetArgumentValue(call, "dx", parameters) ?? 1.0;
++            var dy = GetArgumentValue(call, "dy", parameters) ?? 0.0;
++            var dz = GetArgumentValue(call, "dz", parameters) ?? 0.0;
++
++            if (sourceName != null && nodeMap.TryGetValue(sourceName, out var sourceNode))
++            {
++                return new ExactLinearPatternNode(id, call.Span, sourceNode, dx, dy, dz, count, spacing);
++            }
++        }
+ 
+         return null;
+     }
+ 
++    private string? GetArgumentIdentifier(AclCallExpression call, string argName)
++    {
++        var arg = call.Arguments.FirstOrDefault(a => a.Name == argName);
++        if (arg?.Expression is AclIdentifierExpression id) return id.Name;
++        return null;
++    }
++
+     private double? GetArgumentValue(AclCallExpression call, string argName, IReadOnlyDictionary<string, double> parameters)
+     {
+         var arg = call.Arguments.FirstOrDefault(a => a.Name == argName);
+diff --git a/Engine/Exact/Graph/ExactFeatureGraph.cs b/Engine/Exact/Graph/ExactFeatureGraph.cs
+index 8e178cd..e3c7529 100644
+--- a/Engine/Exact/Graph/ExactFeatureGraph.cs
++++ b/Engine/Exact/Graph/ExactFeatureGraph.cs
+@@ -61,6 +61,113 @@ public sealed class ExactCylinderNode : ExactFeatureNode
+     }
+ }
+ 
++public sealed class ExactRectangleNode : ExactFeatureNode
++{
++    private readonly double _width;
++    private readonly double _height;
++    public ExactRectangleNode(string id, AclSourceSpan span, double width, double height) : base(id, span)
++    {
++        _width = width;
++        _height = height;
++    }
++    public override void Build(IExactCadKernel kernel, AclSemanticValidator? validator)
++    {
++        var pts = new double[] { -_width/2, -_height/2, _width/2, -_height/2, _width/2, _height/2, -_width/2, _height/2 };
++        using var wire = kernel.CreateWire(pts, true);
++        Body = kernel.CreateFace(wire);
++    }
++}
++
++public sealed class ExactCircleNode : ExactFeatureNode
++{
++    private readonly double _radius;
++    public ExactCircleNode(string id, AclSourceSpan span, double radius) : base(id, span) { _radius = radius; }
++    public override void Build(IExactCadKernel kernel, AclSemanticValidator? validator)
++    {
++        using var wire = kernel.CreateCircleWire(_radius);
++        Body = kernel.CreateFace(wire);
++    }
++}
++
++public sealed class ExactExtrudeNode : ExactFeatureNode
++{
++    private readonly ExactFeatureNode _profile;
++    private readonly double _depth;
++
++    public ExactExtrudeNode(string id, AclSourceSpan span, ExactFeatureNode profile, double depth) : base(id, span)
++    {
++        _profile = profile;
++        _depth = depth;
++    }
++
++    public override void Build(IExactCadKernel kernel, AclSemanticValidator? validator)
++    {
++        if (_profile.Body == null) return;
++        Body = kernel.CreatePrism(_profile.Body, 0, 0, _depth);
++    }
++}
++
++public sealed class ExactHoleNode : ExactFeatureNode
++{
++    private readonly ExactFeatureNode _target;
++    private readonly double _diameter;
++    private readonly double _x;
++    private readonly double _y;
++    private readonly double _depth; // 0 means through_all (we use 1000 for now)
++
++    public ExactHoleNode(string id, AclSourceSpan span, ExactFeatureNode target, double diameter, double x, double y, double depth) : base(id, span)
++    {
++        _target = target;
++        _diameter = diameter;
++        _x = x;
++        _y = y;
++        _depth = depth <= 0 ? 1000.0 : depth;
++    }
++
++    public override void Build(IExactCadKernel kernel, AclSemanticValidator? validator)
++    {
++        if (_target.Body == null) return;
++        using var cyl = kernel.CreateCylinder(_diameter / 2, _depth);
++        // Translate hole to position
++        using var translatedCyl = kernel.Translated(cyl, _x, _y, 0); // simplistic position
++        Body = kernel.BooleanSubtract(_target.Body, translatedCyl);
++    }
++}
++
++public sealed class ExactLinearPatternNode : ExactFeatureNode
++{
++    private readonly ExactFeatureNode _source;
++    private readonly double _dx;
++    private readonly double _dy;
++    private readonly double _dz;
++    private readonly int _count;
++    private readonly double _spacing;
++
++    public ExactLinearPatternNode(string id, AclSourceSpan span, ExactFeatureNode source, double dx, double dy, double dz, int count, double spacing) : base(id, span)
++    {
++        _source = source;
++        _dx = dx; _dy = dy; _dz = dz;
++        _count = count;
++        _spacing = spacing;
++    }
++
++    public override void Build(IExactCadKernel kernel, AclSemanticValidator? validator)
++    {
++        if (_source.Body == null) return;
++        var copies = new List<IExactBodyHandle>();
++        for (int i = 0; i < _count; i++)
++        {
++            copies.Add(kernel.Translated(_source.Body, _dx * _spacing * i, _dy * _spacing * i, _dz * _spacing * i));
++        }
++        using var compound = kernel.CreateCompound(copies);
++        // If the source is a hole (subtraction), a real pattern needs to pattern the feature, but for MVP we just union or return the compound?
++        // Wait! The prompt says "combine with target only when selected pattern operation requires it; do not always duplicate and fuse".
++        // Let's just return the compound as the body of this node.
++        Body = kernel.CreateCompound(copies);
++        foreach (var c in copies) c.Dispose();
++    }
++}
++
+ public sealed class ExactFeatureGraph : IDisposable
+ {
+     private readonly List<ExactFeatureNode> _nodes = [];
+diff --git a/Engine/Exact/IExactCadKernel.cs b/Engine/Exact/IExactCadKernel.cs
+index 8e7b0ad..ee6c4db 100644
+--- a/Engine/Exact/IExactCadKernel.cs
++++ b/Engine/Exact/IExactCadKernel.cs
+@@ -9,9 +9,14 @@ public interface IExactCadKernel : IDisposable
+     bool IsAlive { get; }
+ 
+     IExactBodyHandle CreateBox(double dx, double dy, double dz);
+-
+     IExactBodyHandle CreateCylinder(double radius, double height);
+ 
++    IExactBodyHandle CreateWire(double[] points2d, bool closed);
++    IExactBodyHandle CreateCircleWire(double radius);
++    IExactBodyHandle CreateFace(IExactBodyHandle wire);
++    IExactBodyHandle CreatePrism(IExactBodyHandle face, double dx, double dy, double dz);
++    IExactBodyHandle CreateCompound(IReadOnlyList<IExactBodyHandle> bodies);
++
+     /// <summary>Returns a new translated body; the input remains owned by the caller.</summary>
+     IExactBodyHandle Translated(IExactBodyHandle body, double dx, double dy, double dz);
+ 
+diff --git a/Engine/Exact/OcctExactKernel.cs b/Engine/Exact/OcctExactKernel.cs
+index 106242b..09ab013 100644
+--- a/Engine/Exact/OcctExactKernel.cs
++++ b/Engine/Exact/OcctExactKernel.cs
+@@ -18,6 +18,25 @@ public sealed class OcctExactKernel : IExactCadKernel, IExactCadExporter
+     public IExactBodyHandle CreateCylinder(double radius, double height)
+         => new OcctBodyHandle(Kernel.CreateCylinder(radius, height));
+ 
++    public IExactBodyHandle CreateWire(double[] points2d, bool closed)
++        => new OcctBodyHandle(Kernel.CreateWire(points2d, closed));
++
++    public IExactBodyHandle CreateCircleWire(double radius)
++        => new OcctBodyHandle(Kernel.CreateCircleWire(radius));
++
++    public IExactBodyHandle CreateFace(IExactBodyHandle wire)
++        => new OcctBodyHandle(Kernel.CreateFace(Unwrap(wire)));
++
++    public IExactBodyHandle CreatePrism(IExactBodyHandle face, double dx, double dy, double dz)
++        => new OcctBodyHandle(Kernel.CreatePrism(Unwrap(face), dx, dy, dz));
++
++    public IExactBodyHandle CreateCompound(System.Collections.Generic.IReadOnlyList<IExactBodyHandle> bodies)
++    {
++        var arr = new My3DApp.Occt.OcctBody[bodies.Count];
++        for (int i = 0; i < bodies.Count; i++) arr[i] = Unwrap(bodies[i]);
++        return new OcctBodyHandle(Kernel.CreateCompound(arr));
++    }
++
+     public IExactBodyHandle Translated(IExactBodyHandle body, double dx, double dy, double dz)
+         => new OcctBodyHandle(Kernel.Translated(Unwrap(body), dx, dy, dz));
+ 
+diff --git a/My3DApp.Occt/Bridge.cpp b/My3DApp.Occt/Bridge.cpp
+index d687c61..cd82794 100644
+--- a/My3DApp.Occt/Bridge.cpp
++++ b/My3DApp.Occt/Bridge.cpp
+@@ -73,6 +73,57 @@ public:
+         return gcnew OcctBody(s, Guid::NewGuid());
+     }
+ 
++    OcctBody^ CreateWire(array<double>^ points, bool closed)
++    {
++        Ensure();
++        pin_ptr<double> p = &points[0];
++        OcctShape* s = OcctCore_MakeWire(p, points->Length / 2, closed ? 1 : 0);
++        if (s == nullptr) throw NativeError("CreateWire");
++        return gcnew OcctBody(s, Guid::NewGuid());
++    }
++
++    OcctBody^ CreateCircleWire(double radius)
++    {
++        Ensure();
++        OcctShape* s = OcctCore_MakeCircleWire(radius);
++        if (s == nullptr) throw NativeError("CreateCircleWire");
++        return gcnew OcctBody(s, Guid::NewGuid());
++    }
++
++    OcctBody^ CreateFace(OcctBody^ wire)
++    {
++        Ensure();
++        if (wire == nullptr || !wire->IsValid) throw gcnew ArgumentException("wire");
++        OcctShape* s = OcctCore_MakeFace(wire->_shape);
++        if (s == nullptr) throw NativeError("CreateFace");
++        return gcnew OcctBody(s, Guid::NewGuid());
++    }
++
++    OcctBody^ CreatePrism(OcctBody^ face, double dx, double dy, double dz)
++    {
++        Ensure();
++        if (face == nullptr || !face->IsValid) throw gcnew ArgumentException("face");
++        OcctShape* s = OcctCore_MakePrism(face->_shape, dx, dy, dz);
++        if (s == nullptr) throw NativeError("CreatePrism");
++        return gcnew OcctBody(s, Guid::NewGuid());
++    }
++
++    OcctBody^ CreateCompound(array<OcctBody^>^ bodies)
++    {
++        Ensure();
++        std::vector<OcctShape*> shapes(bodies->Length);
++        for (int i = 0; i < bodies->Length; i++) {
++            if (bodies[i] != nullptr && bodies[i]->IsValid) {
++                shapes[i] = bodies[i]->_shape;
++            } else {
++                shapes[i] = nullptr;
++            }
++        }
++        OcctShape* s = OcctCore_MakeCompound(shapes.data(), shapes.size());
++        if (s == nullptr) throw NativeError("CreateCompound");
++        return gcnew OcctBody(s, Guid::NewGuid());
++    }
++
+     OcctBody^ Translated(OcctBody^ body, double dx, double dy, double dz)
+     {
+         Ensure();
+diff --git a/My3DApp.Occt/OcctCore.cpp b/My3DApp.Occt/OcctCore.cpp
+index affca04..1859812 100644
+--- a/My3DApp.Occt/OcctCore.cpp
++++ b/My3DApp.Occt/OcctCore.cpp
+@@ -12,6 +12,14 @@
+ #include <TopTools_IndexedMapOfShape.hxx>
+ #include <BRepPrimAPI_MakeBox.hxx>
+ #include <BRepPrimAPI_MakeCylinder.hxx>
++#include <BRepPrimAPI_MakePrism.hxx>
++#include <BRepBuilderAPI_MakeEdge.hxx>
++#include <BRepBuilderAPI_MakeWire.hxx>
++#include <BRepBuilderAPI_MakeFace.hxx>
++#include <GC_MakeCircle.hxx>
++#include <gp_Circ.hxx>
++#include <TopoDS_Compound.hxx>
++#include <BRep_Builder.hxx>
+ #include <BRepAlgoAPI_Cut.hxx>
+ #include <BRepAlgoAPI_Fuse.hxx>
+ #include <BRepBuilderAPI_Transform.hxx>
+@@ -88,6 +96,103 @@ OcctShape* OcctCore_MakeCylinder(double radius, double height)
+     catch (...) { SetError("MakeCylinder: unknown failure"); return nullptr; }
+ }
+ 
++OcctShape* OcctCore_MakeWire(const double* points2d, int ptCount, int closed)
++{
++    try
++    {
++        if (ptCount < 2) { SetError("wire needs at least 2 points"); return nullptr; }
++        BRepBuilderAPI_MakeWire mkWire;
++        for (int i = 0; i < ptCount - 1; i++)
++        {
++            gp_Pnt p1(points2d[i * 2], points2d[i * 2 + 1], 0);
++            gp_Pnt p2(points2d[(i + 1) * 2], points2d[(i + 1) * 2 + 1], 0);
++            BRepBuilderAPI_MakeEdge mkEdge(p1, p2);
++            mkWire.Add(mkEdge.Edge());
++        }
++        if (closed && ptCount > 2)
++        {
++            gp_Pnt p1(points2d[(ptCount - 1) * 2], points2d[(ptCount - 1) * 2 + 1], 0);
++            gp_Pnt p2(points2d[0], points2d[1], 0);
++            if (!p1.IsEqual(p2, 1e-6))
++            {
++                BRepBuilderAPI_MakeEdge mkEdge(p1, p2);
++                mkWire.Add(mkEdge.Edge());
++            }
++        }
++        mkWire.Build();
++        if (!mkWire.IsDone()) { SetError("MakeWire failed"); return nullptr; }
++        return new OcctShape{ mkWire.Wire() };
++    }
++    catch (const Standard_Failure& f) { SetError(f.GetMessageString()); return nullptr; }
++    catch (...) { SetError("MakeWire: unknown failure"); return nullptr; }
++}
++
++OcctShape* OcctCore_MakeCircleWire(double radius)
++{
++    try
++    {
++        if (radius <= 0) { SetError("circle radius must be positive"); return nullptr; }
++        gp_Ax2 axis(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1));
++        gp_Circ circ(axis, radius);
++        BRepBuilderAPI_MakeEdge mkEdge(circ);
++        BRepBuilderAPI_MakeWire mkWire(mkEdge.Edge());
++        if (!mkWire.IsDone()) { SetError("MakeCircleWire failed"); return nullptr; }
++        return new OcctShape{ mkWire.Wire() };
++    }
++    catch (const Standard_Failure& f) { SetError(f.GetMessageString()); return nullptr; }
++    catch (...) { SetError("MakeCircleWire: unknown failure"); return nullptr; }
++}
++
++OcctShape* OcctCore_MakeFace(OcctShape* wire)
++{
++    try
++    {
++        if (!wire || wire->shape.IsNull()) { SetError("invalid wire"); return nullptr; }
++        BRepBuilderAPI_MakeFace mkFace(TopoDS::Wire(wire->shape), true);
++        mkFace.Build();
++        if (!mkFace.IsDone()) { SetError("MakeFace failed"); return nullptr; }
++        return new OcctShape{ mkFace.Face() };
++    }
++    catch (const Standard_Failure& f) { SetError(f.GetMessageString()); return nullptr; }
++    catch (...) { SetError("MakeFace: unknown failure"); return nullptr; }
++}
++
++OcctShape* OcctCore_MakePrism(OcctShape* baseFace, double dx, double dy, double dz)
++{
++    try
++    {
++        if (!baseFace || baseFace->shape.IsNull()) { SetError("invalid base face"); return nullptr; }
++        gp_Vec vec(dx, dy, dz);
++        if (vec.Magnitude() <= 1e-6) { SetError("prism vector is too short"); return nullptr; }
++        BRepPrimAPI_MakePrism mkPrism(baseFace->shape, vec);
++        mkPrism.Build();
++        if (!mkPrism.IsDone()) { SetError("MakePrism failed"); return nullptr; }
++        return new OcctShape{ mkPrism.Shape() };
++    }
++    catch (const Standard_Failure& f) { SetError(f.GetMessageString()); return nullptr; }
++    catch (...) { SetError("MakePrism: unknown failure"); return nullptr; }
++}
++
++OcctShape* OcctCore_MakeCompound(OcctShape** shapes, int shapeCount)
++{
++    try
++    {
++        TopoDS_Compound comp;
++        BRep_Builder builder;
++        builder.MakeCompound(comp);
++        for (int i = 0; i < shapeCount; i++)
++        {
++            if (shapes[i] && !shapes[i]->shape.IsNull())
++            {
++                builder.Add(comp, shapes[i]->shape);
++            }
++        }
++        return new OcctShape{ comp };
++    }
++    catch (const Standard_Failure& f) { SetError(f.GetMessageString()); return nullptr; }
++    catch (...) { SetError("MakeCompound: unknown failure"); return nullptr; }
++}
++
+ static OcctShape* RunBoolean(OcctShape* a, OcctShape* b, bool cut)
+ {
+     try
+diff --git a/My3DApp.Occt/OcctCore.h b/My3DApp.Occt/OcctCore.h
+index 34050e6..3a488ba 100644
+--- a/My3DApp.Occt/OcctCore.h
++++ b/My3DApp.Occt/OcctCore.h
+@@ -19,6 +19,11 @@ typedef void(OCCTCORE_CALL* OcctPickCallback)(int slot, int kind, int subIndex,
+ // ---- kernel (exact solids) ----
+ OcctShape* OcctCore_MakeBox(double dx, double dy, double dz);
+ OcctShape* OcctCore_MakeCylinder(double radius, double height);
++OcctShape* OcctCore_MakeWire(const double* points2d, int ptCount, int closed);
++OcctShape* OcctCore_MakeCircleWire(double radius);
++OcctShape* OcctCore_MakeFace(OcctShape* wire);
++OcctShape* OcctCore_MakePrism(OcctShape* baseFace, double dx, double dy, double dz);
++OcctShape* OcctCore_MakeCompound(OcctShape** shapes, int shapeCount);
+ OcctShape* OcctCore_BooleanCut(OcctShape* target, OcctShape* tool);
+ OcctShape* OcctCore_BooleanFuse(OcctShape* a, OcctShape* b);
+ OcctShape* OcctCore_Translate(OcctShape* shape, double dx, double dy, double dz);

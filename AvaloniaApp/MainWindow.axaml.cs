@@ -2619,7 +2619,13 @@ public sealed partial class MainWindow : Window
             }
 
             var dialog = new HoleFeatureDialog(10d, "ThroughAll", 20d, 0d, 0d);
+            dialog.PreviewRequested += (s, args) =>
+            {
+                var graph = _wiredViewModel.PreviewHole(args.Diameter, args.CenterOffsetX, args.CenterOffsetY, args.DepthKind == "Blind" ? $"Blind:{args.DepthValue}" : "ThroughAll");
+                if (graph != null) _exactScene?.DisplayFeatureGraph(graph);
+            };
             var result = await ShowAnchoredDialogAsync<HoleFeatureDialogResult?>(dialog);
+            if (result == null && _wiredViewModel.AclWorkspace.BuildCoordinator.Session.CurrentGraph != null) _exactScene?.DisplayFeatureGraph(_wiredViewModel.AclWorkspace.BuildCoordinator.Session.CurrentGraph);
             if (result is null)
             {
                 e.Handled = true;
@@ -2802,7 +2808,13 @@ public sealed partial class MainWindow : Window
             8d,
             bodies,
             preferredBodyId);
+        dialog.PreviewRequested += (s, args) =>
+        {
+            var graph = _wiredViewModel.PreviewExtrude(args.Distance, args.Operation, args.TargetBodyId);
+            if (graph != null) _exactScene?.DisplayFeatureGraph(graph);
+        };
         var result = await ShowAnchoredDialogAsync<ExtrudeFeatureDialogResult?>(dialog);
+        if (result == null && _wiredViewModel.AclWorkspace.BuildCoordinator.Session.CurrentGraph != null) _exactScene?.DisplayFeatureGraph(_wiredViewModel.AclWorkspace.BuildCoordinator.Session.CurrentGraph);
         if (result is null)
         {
             return null;
@@ -3945,7 +3957,13 @@ public sealed partial class MainWindow : Window
             if (holeParams is not null)
             {
                 var dialog = new HoleFeatureDialog(holeParams.Value.Diameter, holeParams.Value.DepthKind, holeParams.Value.DepthValue, holeParams.Value.CenterOffsetX, holeParams.Value.CenterOffsetY);
-                var result = await ShowAnchoredDialogAsync<HoleFeatureDialogResult?>(dialog);
+            dialog.PreviewRequested += (s, args) =>
+            {
+                var graph = _wiredViewModel.PreviewHole(args.Diameter, args.CenterOffsetX, args.CenterOffsetY, args.DepthKind == "Blind" ? $"Blind:{args.DepthValue}" : "ThroughAll");
+                if (graph != null) _exactScene?.DisplayFeatureGraph(graph);
+            };
+            var result = await ShowAnchoredDialogAsync<HoleFeatureDialogResult?>(dialog);
+            if (result == null && _wiredViewModel.AclWorkspace.BuildCoordinator.Session.CurrentGraph != null) _exactScene?.DisplayFeatureGraph(_wiredViewModel.AclWorkspace.BuildCoordinator.Session.CurrentGraph);
                 if (result is not null)
                 {
                     await _wiredViewModel.UpdateHoleAsync(selectedNode.EntityId, result.Diameter, result.DepthKind, result.DepthValue, result.CenterOffsetX, result.CenterOffsetY);
@@ -3958,7 +3976,13 @@ public sealed partial class MainWindow : Window
             if (lpParams is not null)
             {
                 var lpDialog = new LinearPatternDialog(lpParams.Value.Count, lpParams.Value.Spacing, lpParams.Value.Axis);
+                lpDialog.PreviewRequested += (s, args) =>
+                {
+                    var graph = _wiredViewModel.PreviewLinearPattern(args.Count, args.Spacing, args.Axis);
+                    if (graph != null) _exactScene?.DisplayFeatureGraph(graph);
+                };
                 var lpResult = await ShowAnchoredDialogAsync<LinearPatternDialogResult?>(lpDialog);
+                if (lpResult == null && _wiredViewModel.AclWorkspace.BuildCoordinator.Session.CurrentGraph != null) _exactScene?.DisplayFeatureGraph(_wiredViewModel.AclWorkspace.BuildCoordinator.Session.CurrentGraph);
                 if (lpResult is not null)
                 {
                     await _wiredViewModel.UpdateLinearPatternAsync(selectedNode.EntityId, lpResult.Count, lpResult.Spacing, lpResult.Axis);

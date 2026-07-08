@@ -36,4 +36,10 @@ public sealed class AclBuildCoordinator
 
         return (true, diagnostics, graph);
     }
+
+    public ExactFeatureGraph? ComputePreview(string source)
+    {
+        var (graph, _) = _compiler.Compile(source);
+        return graph;
+    }
 }

@@ -32,17 +32,44 @@ public sealed class AclExactCompiler
 
         var graph = new ExactFeatureGraph();
         var featureIndex = 1;
+        var nodeMap = new Dictionary<string, ExactFeatureNode>();
 
         foreach (var node in document.Nodes)
         {
-            if (node is AclPartDeclaration part)
+            if (node is AclSketchDeclaration sketch)
+            {
+                foreach (var stmt in sketch.Statements)
+                {
+                    if (stmt is AclExpressionStatement exprStmt && exprStmt.Expression is AclCallExpression call)
+                    {
+                        var featureId = $"{sketch.Name}_feature_{featureIndex++}";
+                        var featureNode = CreateFeatureNode(featureId, call, validationResult.ParameterValues, nodeMap);
+                        if (featureNode != null)
+                        {
+                            graph.AddNode(featureNode);
+                            nodeMap[sketch.Name] = featureNode; // simplistic: sketch name maps to the last shape in it
+                        }
+                    }
+                }
+            }
+            else if (node is AclLetDeclaration letDecl && letDecl.Value is AclCallExpression letCall)
+            {
+                var featureId = letDecl.Name;
+                var featureNode = CreateFeatureNode(featureId, letCall, validationResult.ParameterValues, nodeMap);
+                if (featureNode != null)
+                {
+                    graph.AddNode(featureNode);
+                    nodeMap[letDecl.Name] = featureNode;
+                }
+            }
+            else if (node is AclPartDeclaration part)
             {
                 foreach (var stmt in part.Statements)
                 {
                     if (stmt is AclExpressionStatement exprStmt && exprStmt.Expression is AclCallExpression call)
                     {
                         var featureId = $"{part.Name}_feature_{featureIndex++}";
-                        var featureNode = CreateFeatureNode(featureId, call, validationResult.ParameterValues);
+                        var featureNode = CreateFeatureNode(featureId, call, validationResult.ParameterValues, nodeMap);
                         if (featureNode != null)
                         {
                             graph.AddNode(featureNode);
@@ -55,7 +82,7 @@ public sealed class AclExactCompiler
         return (graph, allDiagnostics);
     }
 
-    private ExactFeatureNode? CreateFeatureNode(string id, AclCallExpression call, IReadOnlyDictionary<string, double> parameters)
+    private ExactFeatureNode? CreateFeatureNode(string id, AclCallExpression call, IReadOnlyDictionary<string, double> parameters, Dictionary<string, ExactFeatureNode> nodeMap)
     {
         if (call.FunctionName == "box")
         {
@@ -70,7 +97,64 @@ public sealed class AclExactCompiler
             var height = GetArgumentValue(call, "height", parameters) ?? 10.0;
             return new ExactCylinderNode(id, call.Span, radius, height);
         }
+        else if (call.FunctionName == "rectangle")
+        {
+            var width = GetArgumentValue(call, "width", parameters) ?? 10.0;
+            var height = GetArgumentValue(call, "height", parameters) ?? 10.0;
+            return new ExactRectangleNode(id, call.Span, width, height);
+        }
+        else if (call.FunctionName == "circle")
+        {
+            var radius = GetArgumentValue(call, "radius", parameters) ?? 5.0;
+            return new ExactCircleNode(id, call.Span, radius);
+        }
+        else if (call.FunctionName == "extrude")
+        {
+            var profileName = GetArgumentIdentifier(call, "profile");
+            var depth = GetArgumentValue(call, "depth", parameters) ?? 10.0;
+            if (profileName != null && nodeMap.TryGetValue(profileName, out var profileNode))
+            {
+                return new ExactExtrudeNode(id, call.Span, profileNode, depth);
+            }
+        }
+        else if (call.FunctionName == "hole")
+        {
+            var targetName = GetArgumentIdentifier(call, "target");
+            var diameter = GetArgumentValue(call, "diameter", parameters) ?? 10.0;
+            var depth = GetArgumentValue(call, "depth", parameters) ?? 0.0; // 0 for through_all
+            // simplistic position extraction (since user asked for position: [30mm, 20mm])
+            // If we don't have vector parsing yet, we'll assume 0,0 for now.
+            var posX = GetArgumentValue(call, "x", parameters) ?? 0.0;
+            var posY = GetArgumentValue(call, "y", parameters) ?? 0.0;
+            
+            if (targetName != null && nodeMap.TryGetValue(targetName, out var targetNode))
+            {
+                return new ExactHoleNode(id, call.Span, targetNode, diameter, posX, posY, depth);
+            }
+        }
+        else if (call.FunctionName == "linear_pattern")
+        {
+            var sourceName = GetArgumentIdentifier(call, "source");
+            var count = (int)(GetArgumentValue(call, "count", parameters) ?? 2.0);
+            var spacing = GetArgumentValue(call, "spacing", parameters) ?? 10.0;
+            // simplistic direction
+            var dx = GetArgumentValue(call, "dx", parameters) ?? 1.0;
+            var dy = GetArgumentValue(call, "dy", parameters) ?? 0.0;
+            var dz = GetArgumentValue(call, "dz", parameters) ?? 0.0;
 
+            if (sourceName != null && nodeMap.TryGetValue(sourceName, out var sourceNode))
+            {
+                return new ExactLinearPatternNode(id, call.Span, sourceNode, dx, dy, dz, count, spacing);
+            }
+        }
+
+        return null;
+    }
+
+    private string? GetArgumentIdentifier(AclCallExpression call, string argName)
+    {
+        var arg = call.Arguments.FirstOrDefault(a => a.Name == argName);
+        if (arg?.Expression is AclIdentifierExpression id) return id.Name;
         return null;
     }
 

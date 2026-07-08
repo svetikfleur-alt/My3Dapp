@@ -2,6 +2,7 @@
 #include "OcctCore.h"
 
 #include <vcclr.h>
+#include <vector>
 
 using namespace System;
 using namespace System::Collections::Generic;
@@ -70,6 +71,57 @@ public:
         Ensure();
         OcctShape* s = OcctCore_MakeCylinder(radius, height);
         if (s == nullptr) throw NativeError("CreateCylinder");
+        return gcnew OcctBody(s, Guid::NewGuid());
+    }
+
+    OcctBody^ CreateWire(array<double>^ points, bool closed)
+    {
+        Ensure();
+        pin_ptr<double> p = &points[0];
+        OcctShape* s = OcctCore_MakeWire(p, points->Length / 2, closed ? 1 : 0);
+        if (s == nullptr) throw NativeError("CreateWire");
+        return gcnew OcctBody(s, Guid::NewGuid());
+    }
+
+    OcctBody^ CreateCircleWire(double radius)
+    {
+        Ensure();
+        OcctShape* s = OcctCore_MakeCircleWire(radius);
+        if (s == nullptr) throw NativeError("CreateCircleWire");
+        return gcnew OcctBody(s, Guid::NewGuid());
+    }
+
+    OcctBody^ CreateFace(OcctBody^ wire)
+    {
+        Ensure();
+        if (wire == nullptr || !wire->IsValid) throw gcnew ArgumentException("wire");
+        OcctShape* s = OcctCore_MakeFace(wire->_shape);
+        if (s == nullptr) throw NativeError("CreateFace");
+        return gcnew OcctBody(s, Guid::NewGuid());
+    }
+
+    OcctBody^ CreatePrism(OcctBody^ face, double dx, double dy, double dz)
+    {
+        Ensure();
+        if (face == nullptr || !face->IsValid) throw gcnew ArgumentException("face");
+        OcctShape* s = OcctCore_MakePrism(face->_shape, dx, dy, dz);
+        if (s == nullptr) throw NativeError("CreatePrism");
+        return gcnew OcctBody(s, Guid::NewGuid());
+    }
+
+    OcctBody^ CreateCompound(array<OcctBody^>^ bodies)
+    {
+        Ensure();
+        std::vector<OcctShape*> shapes(bodies->Length);
+        for (int i = 0; i < bodies->Length; i++) {
+            if (bodies[i] != nullptr && bodies[i]->IsValid) {
+                shapes[i] = bodies[i]->_shape;
+            } else {
+                shapes[i] = nullptr;
+            }
+        }
+        OcctShape* s = OcctCore_MakeCompound(shapes.data(), shapes.size());
+        if (s == nullptr) throw NativeError("CreateCompound");
         return gcnew OcctBody(s, Guid::NewGuid());
     }
 
