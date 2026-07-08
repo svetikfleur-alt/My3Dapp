@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json;
 using FormaCore.Core;
 
@@ -873,7 +873,7 @@ public sealed class CadProjectStore
                 lineB.EndX = ix + Math.Cos(targetAngle) * len2;
                 lineB.EndY = iy + Math.Sin(targetAngle) * len2;
 
-                var updatedLabel = $"{newAngleDeg:0.#}°";
+                var updatedLabel = $"{newAngleDeg:0.#}В°";
                 sketch.Dimensions = sketch.Dimensions
                     .Select(d => d == dim
                         ? new CadSketchDimension(d.Kind, updatedLabel, newAngleDeg, d.EntityIds, d.ParameterKey)
@@ -1114,7 +1114,7 @@ public sealed class CadProjectStore
             {
                 Project.ActiveSketchSession = null;
                 Project.ActiveMode = CadMode.DirectPrimitive;
-                return Failure("Edited sketch was not found — session aborted.");
+                return Failure("Edited sketch was not found вЂ” session aborted.");
             }
 
             existingSketch.Entities = normalizedEntities;
@@ -1372,8 +1372,8 @@ public sealed class CadProjectStore
 
         var featureName = extrudeOp switch
         {
-            CadExtrudeOperation.Join when targetBody is not null => $"Extrude (Join ← {targetBody.Name})",
-            CadExtrudeOperation.Cut when targetBody is not null => $"Extrude (Cut ← {targetBody.Name})",
+            CadExtrudeOperation.Join when targetBody is not null => $"Extrude (Join в†ђ {targetBody.Name})",
+            CadExtrudeOperation.Cut when targetBody is not null => $"Extrude (Cut в†ђ {targetBody.Name})",
             CadExtrudeOperation.Symmetric => "Extrude (Symmetric)",
             _ => "Extrude"
         };
@@ -1658,7 +1658,7 @@ public sealed class CadProjectStore
         sketchBody.Name = $"Part{NextBodyIndex("Part")}";
         Project.Selection = new CadSelection(CadEntityKind.Body, sketchBody.Id, sketchBody.Name);
         Project.ActiveMode = CadMode.DirectPrimitive;
-        return Success($"Created {sketchBody.Name} via revolve ({angle:0.#}° around {revolve.Axis}).", true);
+        return Success($"Created {sketchBody.Name} via revolve ({angle:0.#}В° around {revolve.Axis}).", true);
     }
 
     private CadActionResult HandleSweepSelectedSketch(CadCommandAction action)
@@ -1900,12 +1900,12 @@ public sealed class CadProjectStore
         var totalAngle = action.U > 0 ? action.U : 360d;
         body.Features.Add(new CircularPatternFeature
         {
-            Name = $"Circular Pattern ({count} × {body.Name})",
+            Name = $"Circular Pattern ({count} Г— {body.Name})",
             Count = count,
             TotalAngle = totalAngle,
             Axis = action.Axis
         });
-        return Success($"Circular pattern: {count} copies, {totalAngle:0.###}° around {action.Axis}.", true);
+        return Success($"Circular pattern: {count} copies, {totalAngle:0.###}В° around {action.Axis}.", true);
     }
 
     private CadActionResult HandleHoleSelectedBody(CadCommandAction action)
@@ -1935,7 +1935,7 @@ public sealed class CadProjectStore
         var depthLabel = depthKind == HoleDepthKind.ThroughAll ? "Through" : $"{depthValue:0.###}mm";
         body.Features.Add(new HoleFeature
         {
-            Name = $"Hole (⌀{diameter:0.###} × {depthLabel})",
+            Name = $"Hole (вЊЂ{diameter:0.###} Г— {depthLabel})",
             Diameter = diameter,
             DepthKind = depthKind,
             DepthValue = depthValue,
@@ -1980,7 +1980,7 @@ public sealed class CadProjectStore
         Project.Selection = new CadSelection(CadEntityKind.Body, boolBody.Id, boolBody.Name);
         Project.ActiveMode = CadMode.Boolean;
 
-        return Success($"{opName}: {bodyA.Name} + {bodyB.Name} → {resultName}.", true);
+        return Success($"{opName}: {bodyA.Name} + {bodyB.Name} в†’ {resultName}.", true);
     }
 
     private static List<CadSketchEntity>? CreatePlacedRectangleLines(
@@ -2317,13 +2317,13 @@ public sealed class CadProjectStore
             return null;
         }
 
-        // Second click: perform mirror across axis through anchor→point
+        // Second click: perform mirror across axis through anchorв†’point
         var axisStart = session.PendingShapeAnchor.Value;
         session.PendingShapeAnchor = null;
 
         if (Distance(axisStart, point) <= 0.001d)
         {
-            message = "Mirror axis is too short — try again.";
+            message = "Mirror axis is too short вЂ” try again.";
             return null;
         }
 
@@ -2347,8 +2347,8 @@ public sealed class CadProjectStore
         }
 
         message = skipped > 0
-            ? $"Mirror applied — {mirrored.Count} entit{(mirrored.Count == 1 ? "y" : "ies")} mirrored; {skipped} unsupported type(s) skipped."
-            : $"Mirror applied — {mirrored.Count} entit{(mirrored.Count == 1 ? "y" : "ies")} mirrored.";
+            ? $"Mirror applied вЂ” {mirrored.Count} entit{(mirrored.Count == 1 ? "y" : "ies")} mirrored; {skipped} unsupported type(s) skipped."
+            : $"Mirror applied вЂ” {mirrored.Count} entit{(mirrored.Count == 1 ? "y" : "ies")} mirrored.";
         return mirrored;
     }
 
@@ -2359,7 +2359,7 @@ public sealed class CadProjectStore
         var hit = FindTrimHit(session.DraftEntities, point, HitThreshold);
         if (hit.Entity is null)
         {
-            message = "No entity found near click — try clicking closer to a line or arc.";
+            message = "No entity found near click вЂ” try clicking closer to a line or arc.";
             return null;
         }
 
@@ -2373,7 +2373,7 @@ public sealed class CadProjectStore
                 var tParams = CollectLineIntersectionParams(clickedLine, others);
                 if (tParams.Count == 0)
                 {
-                    message = "No intersection found near click — trim requires the entity to cross another.";
+                    message = "No intersection found near click вЂ” trim requires the entity to cross another.";
                     return null;
                 }
                 replacements = TrimLine(clickedLine, hit.T, tParams);
@@ -2384,7 +2384,7 @@ public sealed class CadProjectStore
                 var tParams = CollectArcIntersectionAngles(clickedArc, others);
                 if (tParams.Count == 0)
                 {
-                    message = "No intersection found near click — trim requires the entity to cross another.";
+                    message = "No intersection found near click вЂ” trim requires the entity to cross another.";
                     return null;
                 }
                 replacements = TrimArc(clickedArc, hit.T, tParams);
@@ -2396,8 +2396,8 @@ public sealed class CadProjectStore
                 if (angles.Count < 2)
                 {
                     message = angles.Count == 0
-                        ? "Circle has no intersections — add a crossing entity first."
-                        : "Circle needs at least 2 intersections to trim — add a crossing entity first.";
+                        ? "Circle has no intersections вЂ” add a crossing entity first."
+                        : "Circle needs at least 2 intersections to trim вЂ” add a crossing entity first.";
                     return null;
                 }
                 replacements = TrimCircle(clickedCircle, hit.T, angles);
@@ -2410,8 +2410,8 @@ public sealed class CadProjectStore
 
         session.DraftEntities.Remove(hit.Entity);
         message = replacements.Count > 0
-            ? $"Trim applied — {replacements.Count} segment(s) kept."
-            : "Trim applied — segment fully removed.";
+            ? $"Trim applied вЂ” {replacements.Count} segment(s) kept."
+            : "Trim applied вЂ” segment fully removed.";
         return replacements;
     }
 
@@ -2456,25 +2456,25 @@ public sealed class CadProjectStore
 
         if (angleDeg < 0.1)
         {
-            message = "Lines are parallel — angle is 0° or 180°; use linear dimension.";
+            message = "Lines are parallel вЂ” angle is 0В° or 180В°; use linear dimension.";
             return null;
         }
 
         var dofBefore = ComputeSketchDof(session);
         var isDriven = dofBefore <= 0;
-        var label = isDriven ? $"({angleDeg:0.#}°)" : $"{angleDeg:0.#}°";
+        var label = isDriven ? $"({angleDeg:0.#}В°)" : $"{angleDeg:0.#}В°";
         var dim = new CadSketchDimension(
             CadSketchDimensionKind.Angle,
             label,
             angleDeg,
             [lineA.Id, lineB.Id],
             "Angle",
-            IsDriven: isDriven);
+            isDriven: isDriven);
 
         session.ManualDimensions.Add(dim);
         SolveSketchSession(session);
         message = isDriven
-            ? $"Sketch is fully constrained — angle dimension added as reference: {label}"
+            ? $"Sketch is fully constrained вЂ” angle dimension added as reference: {label}"
             : $"Angle dimension placed: {label}";
         return [];
     }
@@ -2513,12 +2513,12 @@ public sealed class CadProjectStore
             length,
             [hit.Id],
             "Length",
-            IsDriven: isDriven);
+            isDriven: isDriven);
 
         session.ManualDimensions.Add(dim);
         SolveSketchSession(session);
         message = isDriven
-            ? $"Sketch is fully constrained — linear dimension added as reference: {label}"
+            ? $"Sketch is fully constrained вЂ” linear dimension added as reference: {label}"
             : $"Linear dimension placed: {label} mm";
         return [];
     }
@@ -2580,12 +2580,12 @@ public sealed class CadProjectStore
             radius,
             [hit.Id],
             paramKey,
-            IsDriven: isDriven);
+            isDriven: isDriven);
 
         session.ManualDimensions.Add(dim);
         SolveSketchSession(session);
         message = isDriven
-            ? $"Sketch is fully constrained — radius dimension added as reference: {label}"
+            ? $"Sketch is fully constrained вЂ” radius dimension added as reference: {label}"
             : $"Radius dimension placed: {label} mm";
         return [];
     }
@@ -2914,7 +2914,7 @@ public sealed class CadProjectStore
         var result = new List<CadSketchEntity>();
         var n = angles.Count;
 
-        // Find which CCW segment [angles[i] → angles[(i+1)%n]] contains clickAngle
+        // Find which CCW segment [angles[i] в†’ angles[(i+1)%n]] contains clickAngle
         var clickInterval = n - 1;
         for (var i = 0; i < n - 1; i++)
         {
@@ -3492,7 +3492,7 @@ public sealed class CadProjectStore
     }
 
     /// <summary>
-    /// Returns the normalized angle (0–360°) from <paramref name="cx"/>,<paramref name="cy"/>
+    /// Returns the normalized angle (0вЂ“360В°) from <paramref name="cx"/>,<paramref name="cy"/>
     /// to point <paramref name="px"/>,<paramref name="py"/>.
     /// </summary>
     private static double PointToAngleDegrees(double px, double py, double cx, double cy) =>
@@ -5220,3 +5220,4 @@ public static class CadProjectTextExporter
     }
 
 }
+

@@ -100,12 +100,43 @@ public enum CadSketchConstraintKind
     Concentric
 }
 
+public enum CadSketchConstraintStatus
+{
+    Active,
+    Failed,
+    Unsupported
+}
+
 public enum CadSketchDimensionKind
 {
     Length,
     Radius,
     Diameter,
     Angle
+}
+
+public enum CadSketchDimensionStatus
+{
+    Active,
+    Failed,
+    Unsupported
+}
+
+public enum CadSketchSolveStatus
+{
+    Solved,
+    Underdefined,
+    Failed,
+    Unsupported
+}
+
+public enum CadSketchStatus
+{
+    Empty,
+    Underdefined,
+    Solved,
+    Failed,
+    Unsupported
 }
 
 public enum CadFeatureKind
@@ -1306,18 +1337,93 @@ public sealed class CadSketchSpline : CadSketchEntity
     public override bool TrySetParameter(string key, double value) => false;
 }
 
-public sealed record CadSketchConstraint(
-    CadSketchConstraintKind Kind,
-    string Description,
-    IReadOnlyList<Guid> EntityIds);
+public sealed class CadSketchConstraint
+{
+    public CadSketchConstraint()
+    {
+    }
 
-public sealed record CadSketchDimension(
-    CadSketchDimensionKind Kind,
-    string Label,
-    double Value,
-    IReadOnlyList<Guid> EntityIds,
-    string? ParameterKey = null,
-    bool IsDriven = false);
+    public CadSketchConstraint(
+        CadSketchConstraintKind kind,
+        string description,
+        IReadOnlyList<Guid> entityIds,
+        IReadOnlyDictionary<string, double>? parameters = null,
+        CadSketchConstraintStatus status = CadSketchConstraintStatus.Active,
+        string? error = null)
+    {
+        Kind = kind;
+        Description = description;
+        EntityIds = entityIds.ToList();
+        Parameters = parameters is null
+            ? new Dictionary<string, double>(StringComparer.Ordinal)
+            : new Dictionary<string, double>(parameters, StringComparer.Ordinal);
+        Status = status;
+        Error = error;
+    }
+
+    public Guid Id { get; set; } = Guid.NewGuid();
+
+    public CadSketchConstraintKind Kind { get; set; }
+
+    public string Description { get; set; } = string.Empty;
+
+    public List<Guid> EntityIds { get; set; } = [];
+
+    public Dictionary<string, double> Parameters { get; set; } = new(StringComparer.Ordinal);
+
+    public CadSketchConstraintStatus Status { get; set; } = CadSketchConstraintStatus.Active;
+
+    public string? Error { get; set; }
+}
+
+public sealed class CadSketchDimension
+{
+    public CadSketchDimension()
+    {
+    }
+
+    public CadSketchDimension(
+        CadSketchDimensionKind kind,
+        string label,
+        double value,
+        IReadOnlyList<Guid> entityIds,
+        string? parameterKey = null,
+        bool isDriven = false,
+        string units = "mm",
+        CadSketchDimensionStatus status = CadSketchDimensionStatus.Active,
+        string? error = null)
+    {
+        Kind = kind;
+        Label = label;
+        Value = value;
+        EntityIds = entityIds.ToList();
+        ParameterKey = parameterKey;
+        IsDriven = isDriven;
+        Units = units;
+        Status = status;
+        Error = error;
+    }
+
+    public Guid Id { get; set; } = Guid.NewGuid();
+
+    public CadSketchDimensionKind Kind { get; set; }
+
+    public string Label { get; set; } = string.Empty;
+
+    public double Value { get; set; }
+
+    public List<Guid> EntityIds { get; set; } = [];
+
+    public string? ParameterKey { get; set; }
+
+    public bool IsDriven { get; set; }
+
+    public string Units { get; set; } = "mm";
+
+    public CadSketchDimensionStatus Status { get; set; } = CadSketchDimensionStatus.Active;
+
+    public string? Error { get; set; }
+}
 
 public sealed class SketchFeature : CadFeature
 {
@@ -1334,6 +1440,16 @@ public sealed class SketchFeature : CadFeature
 
     public List<CadSketchDimension> Dimensions { get; set; } = [];
 
+    public CadSketchStatus Status { get; set; } = CadSketchStatus.Empty;
+
+    public CadSketchSolveStatus SolverStatus { get; set; } = CadSketchSolveStatus.Underdefined;
+
+    public List<string> SolverErrors { get; set; } = [];
+
+    public List<string> SolverWarnings { get; set; } = [];
+
+    public int? DegreesOfFreedomEstimate { get; set; }
+
     public bool IsClosedProfile => ProfileBuilder.CanBuildClosedProfile(Entities);
 
     public override CadFeatureKind Kind => CadFeatureKind.Sketch;
@@ -1349,6 +1465,7 @@ public sealed class SketchFeature : CadFeature
             CadParameter.Number("Entities", Entities.Count, editable: false),
             CadParameter.Number("Constraints", constraints.Count, editable: false),
             CadParameter.Number("Dimensions", GetBasicDimensions().Count, editable: false),
+            CadParameter.Text("Status", Status.ToString()),
             CadParameter.Text("Closed", IsClosedProfile ? "Yes" : "No")
         };
 
@@ -2161,6 +2278,16 @@ public sealed class CadSketchSession
 
     public List<CadSketchDimension> ManualDimensions { get; set; } = [];
 
+    public CadSketchStatus Status { get; set; } = CadSketchStatus.Empty;
+
+    public CadSketchSolveStatus SolverStatus { get; set; } = CadSketchSolveStatus.Underdefined;
+
+    public List<string> SolverErrors { get; set; } = [];
+
+    public List<string> SolverWarnings { get; set; } = [];
+
+    public int? DegreesOfFreedomEstimate { get; set; }
+
     public Guid EditingSketchId { get; set; }
 }
 
@@ -2190,6 +2317,10 @@ public sealed class CadCompiledSketch
     public int EntityCount { get; init; }
 
     public bool IsClosedProfile { get; init; }
+
+    public CadSketchStatus Status { get; init; } = CadSketchStatus.Empty;
+
+    public int? DegreesOfFreedomEstimate { get; init; }
 }
 
 public sealed class CadCompiledBody
