@@ -33,6 +33,9 @@
 #include <StdSelect_BRepOwner.hxx>
 #include <Prs3d_Drawer.hxx>
 #include <Prs3d_LineAspect.hxx>
+#include <Prs3d_ShadingAspect.hxx>
+#include <Graphic3d_MaterialAspect.hxx>
+#include <Aspect_GradientFillMethod.hxx>
 #include <Quantity_Color.hxx>
 #include <Standard_Failure.hxx>
 #include <NCollection_DataMap.hxx>
@@ -438,13 +441,26 @@ OcctViewerCore* OcctCore_CreateViewer(void* parentHwnd, int width, int height, O
         c->view->SetWindow(wnd);
         if (!wnd->IsMapped()) wnd->Map();
 
-        c->view->SetBackgroundColor(Quantity_Color(0.93, 0.94, 0.96, Quantity_TOC_sRGB));
+        // Neutral professional background: soft vertical gradient, no debug cage.
+        c->view->SetBgGradientColors(
+            Quantity_Color(0.94, 0.95, 0.97, Quantity_TOC_sRGB),
+            Quantity_Color(0.72, 0.75, 0.80, Quantity_TOC_sRGB),
+            Aspect_GradientFillMethod_Vertical, Standard_False);
         c->view->TriedronDisplay(Aspect_TOTP_LEFT_LOWER, Quantity_NOC_GRAY30, 0.08, V3d_ZBUFFER);
         c->view->SetProj(V3d_XposYnegZpos); // isometric default
 
         c->ctx = new AIS_InteractiveContext(c->viewer);
         c->ctx->SetDisplayMode(AIS_Shaded, false);
-        c->ctx->DefaultDrawer()->SetFaceBoundaryDraw(true);
+
+        // Body presentation: contrasting steel-blue matte material with dark B-Rep edges.
+        Handle(Prs3d_Drawer) drawer = c->ctx->DefaultDrawer();
+        drawer->SetFaceBoundaryDraw(true);
+        drawer->FaceBoundaryAspect()->SetColor(Quantity_Color(0.10, 0.10, 0.12, Quantity_TOC_sRGB));
+        drawer->FaceBoundaryAspect()->SetWidth(1.5);
+        Graphic3d_MaterialAspect mat(Graphic3d_NameOfMaterial_Aluminum);
+        mat.SetShininess(0.08f); // matte, readable curvature
+        drawer->ShadingAspect()->SetMaterial(mat);
+        drawer->ShadingAspect()->SetColor(Quantity_Color(0.45, 0.55, 0.68, Quantity_TOC_sRGB));
 
         c->view->MustBeResized();
         c->view->Redraw();
@@ -534,14 +550,14 @@ void OcctCore_SetView(OcctViewerCore* core, int view)
     case 2: core->view->SetProj(V3d_Xpos); break;          // Right
     default: core->view->SetProj(V3d_XposYnegZpos); break; // Isometric
     }
-    core->view->FitAll(0.05, false);
+    core->view->FitAll(0.10, false);
     core->view->Redraw();
 }
 
 void OcctCore_FitAll(OcctViewerCore* core)
 {
     if (!core || core->view.IsNull()) return;
-    core->view->FitAll(0.05, false);
+    core->view->FitAll(0.10, false);
     core->view->ZFitAll();
     core->view->Redraw();
 }

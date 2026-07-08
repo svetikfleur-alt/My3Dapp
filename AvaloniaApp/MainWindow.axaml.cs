@@ -26,7 +26,8 @@ namespace My3DApp.AvaloniaApp;
 public sealed partial class MainWindow : Window
 {
     private StudioShellViewModel? _wiredViewModel;
-    private WebViewportHost? _viewportHost;
+    private StudioNativeViewport? _viewportHost;
+    private ExactSceneController? _exactScene;
     private AutosaveService? _autosaveService;
     private ToggleButton? _lightThemeButton;
     private ToggleButton? _darkThemeButton;
@@ -245,10 +246,138 @@ public sealed partial class MainWindow : Window
         RuntimeLog.Write("MainWindow", $"{handlerName} failed.", ex);
     }
 
+    // -----------------------------------------------------------------
+    // Native exact-CAD viewport wiring (the new viewport contract).
+
+    private void OnExactViewportReady(object? sender, EventArgs e)
+    {
+        var host = _viewportHost?.ExactHost;
+        if (host is null)
+        {
+            return;
+        }
+
+        _exactScene = new ExactSceneController(host);
+        host.SetSelectionMode(FormaCore.Engine.Exact.TopologyKind.Face, true);
+        host.SetSelectionMode(FormaCore.Engine.Exact.TopologyKind.Edge, true);
+
+        // Developer Mode scripted check: --export-validation-step <path> shows the
+        // validation body and exports it through the product kernel path.
+        if (ExactMigration.IsDeveloperMode)
+        {
+            var args = Environment.GetCommandLineArgs();
+            var i = Array.IndexOf(args, "--export-validation-step");
+            if (i >= 0 && i + 1 < args.Length)
+            {
+                try
+                {
+                    _exactScene.ShowValidationBody();
+                    _exactScene.ExportValidationStep(args[i + 1]);
+                    RuntimeLog.Write("MainWindow", $"Validation STEP exported to {args[i + 1]}");
+                }
+                catch (Exception ex)
+                {
+                    LogHandlerFailure(nameof(OnExactViewportReady), ex);
+                }
+            }
+        }
+        host.SelectionChanged += (_, sel) => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            _wiredViewModel?.SetExactSelectionSummary(
+                sel.Kind == FormaCore.Engine.Exact.TopologyKind.Body
+                    ? $"Body {sel.BodyId.ToString("N")[..8]}"
+                    : $"{sel.Kind} #{sel.TransientIndex} · body {sel.BodyId.ToString("N")[..8]}"));
+    }
+
+    private void OnNativeViewClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is AButton { Tag: string tag } &&
+            Enum.TryParse<FormaCore.Engine.Exact.CadStandardView>(tag, out var view))
+        {
+            _viewportHost?.ExactHost?.SetView(view);
+        }
+    }
+
+    private void OnNativeFitClick(object? sender, RoutedEventArgs e)
+        => _viewportHost?.ExactHost?.FitAll();
+
+    private void OnNativeDisplayModeClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is AButton { Tag: string tag } &&
+            Enum.TryParse<FormaCore.Engine.Exact.CadDisplayMode>(tag, out var mode))
+        {
+            _viewportHost?.ExactHost?.SetDisplayMode(mode);
+        }
+    }
+
+    // Developer Mode only (MY3DAPP_DEVELOPER=1): kernel/viewport validation geometry.
+
+    private void OnDevValidateKernelClick(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (_exactScene is null)
+            {
+                _wiredViewModel?.ShowNotification("Native viewport is not ready yet.", NotificationSeverity.Warning);
+                return;
+            }
+
+            var bounds = _exactScene.ShowValidationBody();
+            _wiredViewModel?.ShowNotification(
+                $"Validation body displayed: {bounds.XMax:0.###} × {bounds.YMax:0.###} × {bounds.ZMax:0.###} mm (developer check, not a document).",
+                NotificationSeverity.Success);
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnDevValidateKernelClick), ex);
+            _wiredViewModel?.ShowNotification($"Kernel validation failed: {ex.Message}", NotificationSeverity.Error);
+        }
+    }
+
+    private void OnDevClearValidationClick(object? sender, RoutedEventArgs e)
+    {
+        _exactScene?.ClearValidationBody();
+        _wiredViewModel?.SetExactSelectionSummary(string.Empty);
+    }
+
+    private async void OnDevExportValidationStepClick(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (_exactScene is null || !_exactScene.HasValidationBody)
+            {
+                _wiredViewModel?.ShowNotification("Show the validation body first.", NotificationSeverity.Warning);
+                return;
+            }
+
+            var file = await StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
+            {
+                Title = "Export validation STEP (developer)",
+                SuggestedFileName = "kernel-validation.step",
+                FileTypeChoices = [new Avalonia.Platform.Storage.FilePickerFileType("STEP") { Patterns = ["*.step", "*.stp"] }],
+            });
+            if (file is null)
+            {
+                return;
+            }
+
+            _exactScene.ExportValidationStep(file.Path.LocalPath);
+            _wiredViewModel?.ShowNotification($"STEP exported: {file.Path.LocalPath}", NotificationSeverity.Success);
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnDevExportValidationStepClick), ex);
+            _wiredViewModel?.ShowNotification($"STEP export failed: {ex.Message}", NotificationSeverity.Error);
+        }
+    }
+
     private void ResolveNamedControls()
     {
         _commandUiBindings.Clear();
-        _viewportHost = this.FindControl<WebViewportHost>("ViewportHost");
+        _viewportHost = this.FindControl<StudioNativeViewport>("ViewportHost");
+        if (_viewportHost is not null)
+        {
+            _viewportHost.ExactHostReady += OnExactViewportReady;
+        }
         _lightThemeButton = this.FindControl<ToggleButton>("LightThemeButton");
         _darkThemeButton = this.FindControl<ToggleButton>("DarkThemeButton");
         _moveToolButton = this.FindControl<ToggleButton>("MoveToolButton");
@@ -407,24 +536,23 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async Task ApplyViewportStateAsync(ViewportRenderState state)
+    private Task ApplyViewportStateAsync(ViewportRenderState state)
     {
-        if (_viewportHost is null)
+        // CAD_CANON: mesh scene DTOs must not reach the native OCCT viewport.
+        // The legacy engine still emits render states during the migration; they are
+        // dropped here (counted, never converted, never displayed as fake geometry).
+        lock (StudioNativeViewport.CompatCallCounters)
         {
-            return;
+            StudioNativeViewport.CompatCallCounters["MeshSceneDropped"] =
+                StudioNativeViewport.CompatCallCounters.GetValueOrDefault("MeshSceneDropped") + 1;
         }
-
-        await _viewportHost.SetSceneAsync(state);
+        return Task.CompletedTask;
     }
 
-    private async Task ApplyViewportThemeAsync(StudioThemeMode mode)
+    private Task ApplyViewportThemeAsync(StudioThemeMode mode)
     {
-        if (_viewportHost is null)
-        {
-            return;
-        }
-
-        await _viewportHost.SetThemeAsync(mode);
+        // Native viewport theming is handled inside OcctCore presentation setup.
+        return Task.CompletedTask;
     }
 
     private async void OnWindowOpened(object? sender, EventArgs e)
@@ -437,34 +565,10 @@ public sealed partial class MainWindow : Window
             await Task.Delay(250);
             await _viewportHost.EnsureInitializedAsync();
 
-            if (_wiredViewModel is not null)
-            {
-                _autosaveService = new AutosaveService(
-                    () => _wiredViewModel.HasUnsavedChanges,
-                    path => _wiredViewModel.SaveProject(path),
-                    timestamp => Dispatcher.UIThread.Post(() => _wiredViewModel?.MarkAutosaved(timestamp)));
-
-                _wiredViewModel.UpdateRecoveryStatus(AutosaveService.HasAutosave, AutosaveService.GetAutosaveTimestamp());
-
-                if (AutosaveService.HasAutosave)
-                {
-                    var recoveryTime = AutosaveService.GetAutosaveTimestamp();
-                    var recover = await ConfirmDiscardAsync("Recover unsaved work?",
-                        recoveryTime.HasValue
-                            ? $"My3DApp found an autosave from {recoveryTime.Value.ToLocalTime():yyyy-MM-dd HH:mm}. Restore it?"
-                            : "My3DApp found an autosave from a previous session. Restore it?");
-                    if (recover)
-                    {
-                        _wiredViewModel.OpenProject(AutosaveService.AutosavePath);
-                        _wiredViewModel.UpdateRecoveryStatus(false, null);
-                    }
-                    else
-                    {
-                        AutosaveService.DeleteAutosave();
-                        _wiredViewModel.UpdateRecoveryStatus(false, null);
-                    }
-                }
-            }
+            // Exact-kernel migration: the .umxproj autosave/recovery pipeline is a hidden
+            // proprietary persistence path and is disabled per CAD_CANON. Save/open moves
+            // to ACL files in the ACL phase. Existing autosave files on disk are untouched.
+            _wiredViewModel?.UpdateRecoveryStatus(false, null);
         }
         catch (Exception ex)
         {
@@ -1428,6 +1532,14 @@ public sealed partial class MainWindow : Window
     protected override void OnKeyDown(Avalonia.Input.KeyEventArgs e)
     {
         base.OnKeyDown(e);
+
+        // Developer Mode: F9 = validate exact kernel (same handler as the Developer menu).
+        if (!e.Handled && e.Key == Key.F9 && ExactMigration.IsDeveloperMode)
+        {
+            OnDevValidateKernelClick(this, new RoutedEventArgs());
+            e.Handled = true;
+            return;
+        }
 
         if (!e.Handled && e.KeyModifiers == KeyModifiers.Control && e.Key == Key.N)
         {

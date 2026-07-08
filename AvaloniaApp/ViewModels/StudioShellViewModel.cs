@@ -75,7 +75,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     private string _selectedAssistantModel = "deepseek-chat";
     private string _selectedAssistantBaseUrl = string.Empty;
     private string _currentProjectPath = string.Empty;
-    private string _projectTitle = "My3DApp Project / unsaved.umxproj";
+    private string _projectTitle = "My3DApp Project / unsaved";
     private string _assistantInput = string.Empty;
     private string _assistantKeyInput = string.Empty;
     private string _assistantStatus = "Ready";
@@ -405,14 +405,31 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     private void RefreshWorkspaceTabs()
     {
+        // Exact-kernel migration: Sketch is a workflow (not a workspace), and the
+        // Templates/Prepare/Copilot legacy workspaces are removed from the canon.
         WorkspaceTabs.Clear();
         WorkspaceTabs.Add(new StudioWorkspaceTabItem(_workspaceController.ActivePartStudioName, "PartStudio", IsPartStudioWorkspace));
-        WorkspaceTabs.Add(new StudioWorkspaceTabItem("Sketch", "Sketch", IsSketchWorkspace));
-        WorkspaceTabs.Add(new StudioWorkspaceTabItem("Templates", "Templates", IsTemplatesWorkspace));
-        WorkspaceTabs.Add(new StudioWorkspaceTabItem("Prepare", "Prepare", IsPrepareWorkspace));
-        WorkspaceTabs.Add(new StudioWorkspaceTabItem("Copilot", "Assistant", IsAssistantWorkspace));
         WorkspaceTabs.Add(new StudioWorkspaceTabItem("+", "Add", false, IsAddButton: true));
     }
+
+    /// <summary>Summary of the last native topology pick, shown in the viewport header.</summary>
+    public string ExactSelectionSummary
+    {
+        get => _exactSelectionSummary;
+        private set => SetProperty(ref _exactSelectionSummary, value);
+    }
+
+    private string _exactSelectionSummary = string.Empty;
+
+    public bool HasExactSelection => !string.IsNullOrEmpty(_exactSelectionSummary);
+
+    public void SetExactSelectionSummary(string summary)
+    {
+        ExactSelectionSummary = summary;
+        RaisePropertyChanged(nameof(HasExactSelection));
+    }
+
+    public bool IsDeveloperMode => Services.ExactMigration.IsDeveloperMode;
 
     public event EventHandler<ViewportRenderState>? ViewportStateChanged;
 
@@ -2664,7 +2681,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         _workspaceController.NewProject();
         DocumentName = displayName;
         CurrentProjectPath = string.Empty;
-        ProjectTitleBase = $"{displayName} / unsaved.umxproj";
+        ProjectTitleBase = $"{displayName} / unsaved";
         _productProjectId = Guid.NewGuid().ToString("D");
         _productProjectType = normalizedType;
         _productProjectCreatedAt = now.ToString("O", CultureInfo.InvariantCulture);
@@ -3078,6 +3095,19 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     public StudioCommandState GetCommandState(string commandId)
     {
         var definition = StudioCommandCatalog.GetRequired(commandId);
+
+        // Exact-kernel migration gate: legacy concepts are hidden, mesh-viewport
+        // commands are visibly disabled (never silent no-ops). See CAD_CANON.
+        if (ExactMigration.HiddenCommandIds.Contains(commandId))
+        {
+            return BuildCommandState(definition, false, string.Empty, ExactMigration.HiddenReason, isVisible: false);
+        }
+
+        if (ExactMigration.SuspendedCommandIds.Contains(commandId))
+        {
+            return BuildCommandState(definition, false, string.Empty, ExactMigration.SuspendedReason);
+        }
+
         var visibleBodyCount = _workspaceController.CurrentState.CompileResult.Bodies.Count;
         var selectedBodyId = CurrentSelectedBodyId;
 
@@ -3239,7 +3269,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
     {
         var fileName = Path.GetFileName(path);
         return string.IsNullOrWhiteSpace(fileName)
-            ? "My3DApp Project / unsaved.umxproj"
+            ? "My3DApp Project / unsaved"
             : $"My3DApp Project / {fileName}";
     }
 
@@ -4292,7 +4322,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
         documentRoot.Children.Add(documentsRoot);
         documentRoot.Children.Add(new FeatureNodeViewModel(
-            string.IsNullOrWhiteSpace(CurrentProjectPath) ? "unsaved.umxproj" : Path.GetFileName(CurrentProjectPath),
+            string.IsNullOrWhiteSpace(CurrentProjectPath) ? "unsaved" : Path.GetFileName(CurrentProjectPath),
             "document",
             "Local file",
             $"{SaveStateLabel} | {SelectedWorkspaceKind} | {PartStudios.Count.ToString(CultureInfo.InvariantCulture)} studio tab(s)",
@@ -4401,34 +4431,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             roots.Add(partsRoot);
         }
 
-        if (TemplateCatalog.Count > 0)
-        {
-            var templateRoot = new FeatureNodeViewModel(
-                "Templates",
-                "template-group",
-                string.Empty,
-                string.Empty,
-                isExpanded: true);
-
-            foreach (var template in TemplateCatalog)
-            {
-                var isSelectedTemplate = string.Equals(SelectedMakerTemplate?.Id, template.Id, StringComparison.OrdinalIgnoreCase);
-                templateRoot.Children.Add(new FeatureNodeViewModel(
-                    template.DisplayName,
-                    "template",
-                    template.Category,
-                    template.Description,
-                    template.TagSummary,
-                    string.Empty,
-                    CadEntityKind.None,
-                    Guid.Empty,
-                    isSelectable: false,
-                    isExpanded: false,
-                    isBodyVisible: true));
-            }
-
-            roots.Add(templateRoot);
-        }
+        // Templates removed from the product canon — no Templates group in the navigator.
 
         if (ExportJobs.Count > 0)
         {

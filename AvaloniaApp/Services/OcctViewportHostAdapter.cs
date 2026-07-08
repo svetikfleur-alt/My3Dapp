@@ -42,6 +42,17 @@ public sealed class OcctViewportHostAdapter : ICadViewportHost
 
     public void SetSelectionMode(TopologyKind kind, bool enabled) => Viewer.SetSelectionMode((OcctTopoKind)kind, enabled);
 
+    public void ShowFeaturePreview(IExactBodyHandle body)
+        => throw new NotSupportedException("Exact feature preview arrives with the feature-dialog phase; no preview was shown.");
+
+    public void ClearFeaturePreview()
+    {
+        // No preview can exist yet (ShowFeaturePreview throws), so clearing is a no-op by definition.
+    }
+
+    public void SetReferenceGeometryVisible(bool visible)
+        => throw new NotSupportedException("Reference-geometry display arrives with the sketch phase; nothing was toggled.");
+
     private OcctViewer Viewer => _control.Viewer
         ?? throw new InvalidOperationException("OCCT viewport is not initialized yet");
 

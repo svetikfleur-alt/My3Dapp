@@ -1,6 +1,35 @@
 # INTEGRATION STATUS
 
-Updated: 2026-07-07 (P1 complete)
+Updated: 2026-07-08 (single-app integration complete)
+
+## Integration result (two-application split ELIMINATED) — verified at runtime
+
+- ONE executable, ONE window: `MainWindow` ("… — My3DApp") hosts the native OCCT
+  viewport via `StudioNativeViewport` (AvaloniaApp/Controls). `ExactSpineWindow`
+  deleted. 0 WebView2 child processes at runtime; `WebViewportHost` and
+  `SoftwareViewportControl` have zero incoming references (graph-verified) and are
+  slated for source removal with the shell phase.
+- New viewport contract = `ICadViewportHost` (+ ShowFeaturePreview/ClearFeaturePreview/
+  SetReferenceGeometryVisible). Legacy WebViewportHost-shaped calls are a transitional
+  compat surface: unsupported members return `ViewportCompatResult.Unsupported` +
+  RuntimeLog (never silent success); mesh scene transport (`SetSceneAsync`) is NOT
+  implemented — MainWindow drops legacy render states with a counter
+  (`StudioNativeViewport.CompatCallCounters`).
+- Honest command gating (`ExactMigration`): 37 mesh-pipeline commands visibly
+  Disabled with reason; Templates/Recipe/Prepare/AI-legacy commands Hidden.
+  `.umxproj` autosave/recovery disabled; `.umxproj` text removed from UI.
+- Developer Mode (`MY3DAPP_DEVELOPER=1`): Developer menu + F9 shows the ASYMMETRIC
+  validation body (120×80×18 plate, offset Ø22 hole, Ø30×25 boss) — not a document,
+  clearable, never persisted. `--export-validation-step <path>` for scripted checks.
+- Runtime verified: gradient background, matte steel body, black B-Rep edges,
+  true CAD wireframe, face pick reaches the VM and is SHOWN in the viewport header
+  ("Face #3 · body 5fe1493f"), clean WM_CLOSE shutdown.
+- App-exported STEP re-verified in FreeCAD: 1 Solid, 9 faces, bbox exactly
+  120×80×43 mm, volume 183 629.070 mm³ = analytic (delta 0.000000), Plane+Cylinder.
+- Known cosmetic debt (shell phase): top toolbar rows overlap visually; startup
+  page ACL promo card layout; theme switch does not restyle the native viewport yet.
+
+Previous checkpoint (P1, superseded):
 
 ## P1 result (exact spine) — DONE, verified
 

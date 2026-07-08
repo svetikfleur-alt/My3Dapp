@@ -11,5 +11,25 @@
         "temp_github_export",
         "temp_main_clean_export",
         "temp_sync_backup"
-    ]
+    ],
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#f7d2b1",
+        "activityBar.background": "#f7d2b1",
+        "activityBar.foreground": "#15202b",
+        "activityBar.inactiveForeground": "#15202b99",
+        "activityBarBadge.background": "#12ad5b",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "commandCenter.border": "#15202b99",
+        "sash.hoverBorder": "#f7d2b1",
+        "statusBar.background": "#f2b883",
+        "statusBar.foreground": "#15202b",
+        "statusBarItem.hoverBackground": "#ed9e55",
+        "statusBarItem.remoteBackground": "#f2b883",
+        "statusBarItem.remoteForeground": "#15202b",
+        "titleBar.activeBackground": "#f2b883",
+        "titleBar.activeForeground": "#15202b",
+        "titleBar.inactiveBackground": "#f2b88399",
+        "titleBar.inactiveForeground": "#15202b99"
+    },
+    "peacock.color": "#f2b883"
 }

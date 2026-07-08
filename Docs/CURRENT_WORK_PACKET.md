@@ -15,6 +15,15 @@ Delivered: `My3DApp.Occt` C++/CLI bridge (OCCT 7.9), engine boundary
 `ExactSpineWindow` as primary runtime path, app-triggered STEP verified in
 FreeCAD, 67/67 tests. Details: INTEGRATION_STATUS.md.
 
+## INT — single-application integration ✅ (verified 2026-07-08)
+
+Two-app split eliminated: MainWindow hosts the native OCCT viewport
+(`StudioNativeViewport`), `ExactSpineWindow` deleted, WebView2/Three.js/
+SoftwareViewportControl unreachable (0 incoming refs, 0 WebView2 processes),
+legacy commands honestly disabled/hidden (`ExactMigration`), `.umxproj`
+autosave off, dev-only validation body (F9 / `--export-validation-step`),
+STEP from the real app FreeCAD-verified. Details: INTEGRATION_STATUS.md.
+
 ## Next — P2: ACL core
 
 Real lexer/parser/AST + source maps, units, expressions, functions, if/loops,

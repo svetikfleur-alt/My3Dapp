@@ -200,31 +200,25 @@
               </Button.Flyout>
             </Button>
 
-            <Button Content="AI" Classes="ToolbarMenuButton">
-              <Button.Flyout>
-                <MenuFlyout>
-                  <MenuItem x:Name="AiOpenMenuItem" Header="Open Copilot" Click="OnOpenAssistantWorkspaceClick" />
-                  <MenuItem x:Name="AiConfigureMenuItem" Header="Configure AI..." Click="OnAiSettingsClick" />
-                </MenuFlyout>
-              </Button.Flyout>
-            </Button>
-
-            <Button Content="Recipe" Classes="ToolbarMenuButton">
-              <Button.Flyout>
-                <MenuFlyout>
-                  <MenuItem x:Name="RecipeOpenAclMenuItem" Header="Open ACL Panel" Click="OnOpenAclPanelClick" />
-                  <MenuItem x:Name="RecipeOpenSampleMenuItem" Header="Open Sample Recipe" Click="OnOpenSampleRecipeClick" />
-                  <MenuItem x:Name="RecipeRunMenuItem" Header="Run Active Recipe" Click="OnRunActiveRecipeClick" />
-                </MenuFlyout>
-              </Button.Flyout>
-            </Button>
-
+            <!-- Legacy AI/Recipe/Prepare menus removed from the runtime (CAD_CANON migration).
+                 The assistant returns as the ACL-patch pipeline in the assistant phase. -->
             <Button Content="Export" Classes="ToolbarMenuButton">
               <Button.Flyout>
                 <MenuFlyout>
-                  <MenuItem x:Name="ExportPrepareMenuItem" Header="Prepare Workspace" Click="OnPrepareWorkspaceMenuClick" />
                   <MenuItem x:Name="ExportDialogMenuItem" Header="Export STL / OBJ..." Click="OnExportClick" />
                   <MenuItem x:Name="ExportQuickExportMenuItem" Header="Quick Export STL" Click="OnQuickExportClick" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+
+            <Button Content="Developer"
+                    Classes="ToolbarMenuButton"
+                    IsVisible="{Binding IsDeveloperMode}">
+              <Button.Flyout>
+                <MenuFlyout>
+                  <MenuItem Header="Validate Exact Kernel (asymmetric body)" Click="OnDevValidateKernelClick" />
+                  <MenuItem Header="Clear Validation Body" Click="OnDevClearValidationClick" />
+                  <MenuItem Header="Export Validation STEP..." Click="OnDevExportValidationStepClick" />
                 </MenuFlyout>
               </Button.Flyout>
             </Button>
@@ -517,28 +511,8 @@
                 <svg:Svg Path="avares://My3DApp/Assets/Icons/move.svg" Width="16" Height="16" />
               </ToggleButton>
 
-              <Border Classes="ToolbarDivider" />
-              <TextBlock Text="Workflow" Classes="ToolbarGroupLabel" />
-              <Button x:Name="ToolbarTemplatesButton"
-                      Classes="ToolbarActionButton"
-                      Content="Templates"
-                      Click="OnOpenTemplatesWorkspaceClick" />
-              <Button x:Name="ToolbarAclButton"
-                      Classes="ToolbarActionButton"
-                      Content="ACL"
-                      Click="OnOpenAclPanelClick" />
-              <Button x:Name="ToolbarRecipeButton"
-                      Classes="ToolbarActionButton"
-                      Content="Recipe"
-                      Click="OnOpenSampleRecipeClick" />
-              <Button x:Name="ToolbarCopilotButton"
-                      Classes="ToolbarActionButton"
-                      Content="Copilot"
-                      Click="OnOpenAssistantWorkspaceClick" />
-              <Button x:Name="ToolbarPrepareButton"
-                      Classes="ToolbarActionButton"
-                      Content="Prepare"
-                      Click="OnPrepareWorkspaceMenuClick" />
+              <!-- Legacy workflow buttons (Templates/ACL panel/Recipe/Copilot/Prepare)
+                   removed from the runtime during the exact-kernel migration. -->
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsSketchMode}">
@@ -790,24 +764,8 @@
         <ScrollViewer HorizontalScrollBarVisibility="Auto"
                       VerticalScrollBarVisibility="Disabled">
           <StackPanel Orientation="Horizontal" Spacing="2">
-            <ItemsControl ItemsSource="{Binding WorkspaceTabs}">
-              <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                  <StackPanel Orientation="Horizontal" Spacing="4" />
-                </ItemsPanelTemplate>
-              </ItemsControl.ItemsPanel>
-              <ItemsControl.ItemTemplate>
-                <DataTemplate DataType="vm:StudioWorkspaceTabItem">
-                  <Button Content="{Binding Title}"
-                          Tag="{Binding Kind}"
-                          Classes="PartStudioTab"
-                          Classes.active="{Binding IsActive}"
-                          Click="OnWorkspaceTabClick"
-                          ToolTip.Tip="{Binding Title}" />
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-            <Border Width="1" Height="18" Background="{DynamicResource Studio.BorderBrush}" Opacity="0.5" Margin="4,0" />
+            <!-- Workspace tab strip removed: it duplicated Part Studio navigation
+                 (legacy Sketch/Templates/Prepare/Copilot workspaces are out of the canon). -->
             <ItemsControl ItemsSource="{Binding PartStudios}">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -900,6 +858,7 @@
                           Click="OnProjectPaneClick" />
             <ToggleButton Content="Templates"
                           Classes="NavigatorSectionTab"
+                          IsVisible="False"
                           IsChecked="{Binding IsTemplatesPaneSelected}"
                           Click="OnTemplatesPaneClick" />
             <ToggleButton Content="Library"
@@ -1286,34 +1245,7 @@
                                IsVisible="{Binding HasNoRecentDocumentItems}" />
                   </StackPanel>
                 </Border>
-                <Border Classes="AssistantContextCard">
-                  <StackPanel Spacing="6">
-                    <TextBlock Text="Template library"
-                               Classes="AssistantContextPrimary" />
-                    <TextBlock Text="Open a starter template directly into the Templates workspace and keep building from there."
-                               TextWrapping="Wrap"
-                               Classes="AssistantContextSecondary" />
-                    <ItemsControl ItemsSource="{Binding TemplateCatalog}">
-                      <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="services:MakerTemplateDefinition">
-                          <Button Tag="{Binding Id}"
-                                  Margin="0,0,0,6"
-                                  HorizontalAlignment="Stretch"
-                                  HorizontalContentAlignment="Left"
-                                  Classes="AssistantSecondaryButton"
-                                  ToolTip.Tip="{Binding Description}"
-                                  Click="OnLibraryTemplateOpenClick">
-                            <StackPanel Spacing="1">
-                              <TextBlock Text="{Binding DisplayName}" />
-                              <TextBlock Text="{Binding Category}"
-                                         Classes="ToolbarMetaLabel" />
-                            </StackPanel>
-                          </Button>
-                        </DataTemplate>
-                      </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                  </StackPanel>
-                </Border>
+                <!-- Template library card removed (Templates is not part of the product canon). -->
                 <Border Classes="AssistantContextCard">
                   <StackPanel Spacing="6">
                     <TextBlock Text="Studio launch"
@@ -1334,9 +1266,6 @@
                     <TextBlock Text="{Binding LastExportSummary}"
                                TextWrapping="Wrap"
                                Classes="AssistantContextSecondary" />
-                    <Button Content="Open Prepare workspace"
-                            Classes="AssistantSecondaryButton"
-                            Click="OnPrepareWorkspaceMenuClick" />
                   </StackPanel>
                 </Border>
               </StackPanel>
@@ -1359,7 +1288,7 @@
                     BorderBrush="{DynamicResource Studio.BorderBrush}"
                     BorderThickness="0,0,0,1"
                     Padding="12,7">
-              <Grid ColumnDefinitions="*,Auto,Auto">
+              <Grid ColumnDefinitions="*,Auto,Auto,Auto">
                 <StackPanel Spacing="2">
                   <TextBlock FontWeight="SemiBold"
                              Foreground="{DynamicResource Studio.TextPrimaryBrush}"
@@ -1374,9 +1303,34 @@
                 <Border Grid.Column="2" Classes="ViewportInfoTag" Margin="8,0,0,0">
                   <TextBlock Text="{Binding AssistantPlaneSummary}" Classes="ViewportInfoTagText" />
                 </Border>
+                <Border Grid.Column="3" Classes="ViewportInfoTag" Margin="8,0,0,0"
+                        IsVisible="{Binding HasExactSelection}">
+                  <TextBlock Text="{Binding ExactSelectionSummary}" Classes="ViewportInfoTagText" />
+                </Border>
               </Grid>
             </Border>
-            <controls:WebViewportHost x:Name="ViewportHost" Grid.Row="1" IsVisible="{Binding IsCadWorkspaceVisible}" />
+            <controls:StudioNativeViewport x:Name="ViewportHost" Grid.Row="1" IsVisible="{Binding IsCadWorkspaceVisible}" />
+            <!-- Native viewport controls (exact-CAD contract): views / fit / display mode -->
+            <Border Grid.Row="1"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Margin="0,10,14,0"
+                    Background="{DynamicResource Studio.SurfaceBrush}"
+                    CornerRadius="6"
+                    Padding="4"
+                    IsVisible="{Binding IsCadWorkspaceVisible}">
+              <StackPanel Orientation="Horizontal" Spacing="2">
+                <Button Content="Top" Click="OnNativeViewClick" Tag="Top" Padding="8,3" />
+                <Button Content="Front" Click="OnNativeViewClick" Tag="Front" Padding="8,3" />
+                <Button Content="Right" Click="OnNativeViewClick" Tag="Right" Padding="8,3" />
+                <Button Content="Iso" Click="OnNativeViewClick" Tag="Isometric" Padding="8,3" />
+                <Button Content="Fit" Click="OnNativeFitClick" Padding="8,3" />
+                <Separator Width="8" />
+                <Button Content="Shaded" Click="OnNativeDisplayModeClick" Tag="Shaded" Padding="8,3" />
+                <Button Content="Edges" Click="OnNativeDisplayModeClick" Tag="ShadedWithEdges" Padding="8,3" />
+                <Button Content="Wire" Click="OnNativeDisplayModeClick" Tag="Wireframe" Padding="8,3" />
+              </StackPanel>
+            </Border>
             <Grid Grid.Row="1"
                   Margin="14"
                   RowDefinitions="Auto,Auto,*">
@@ -1828,7 +1782,7 @@
                           <StackPanel Spacing="4">
                             <TextBlock Text="Open Existing Project"
                                        Classes="StartupActionTitle" />
-                            <TextBlock Text="Open a `.umxproj` file and restore its studios, exports, and UI state."
+                            <TextBlock Text="Project open moves to ACL files with the exact-kernel migration."
                                        TextWrapping="Wrap"
                                        Classes="StartupActionSummary" />
                           </StackPanel>
@@ -2177,7 +2131,7 @@
             </Grid>
           </TabItem>
 
-          <TabItem ToolTip.Tip="ACL Scripting">
+          <TabItem ToolTip.Tip="ACL Scripting" IsVisible="False">
             <TabItem.Header>
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <svg:Svg Path="avares://My3DApp/Assets/Icons/draft.svg"
@@ -2216,7 +2170,7 @@
             </Grid>
           </TabItem>
 
-          <TabItem ToolTip.Tip="Feature recipe">
+          <TabItem ToolTip.Tip="Feature recipe" IsVisible="False">
             <TabItem.Header>
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <svg:Svg Path="avares://My3DApp/Assets/Icons/line.svg"
@@ -2307,7 +2261,7 @@
             </Grid>
           </TabItem>
 
-          <TabItem>
+          <TabItem IsVisible="False">
             <TabItem.Header>
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <svg:Svg Path="avares://My3DApp/Assets/Icons/focus.svg"
