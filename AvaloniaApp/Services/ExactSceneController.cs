@@ -1,4 +1,5 @@
 using FormaCore.Engine.Exact;
+using FormaCore.Engine.Exact.Graph;
 
 namespace My3DApp.AvaloniaApp.Services;
 
@@ -70,6 +71,42 @@ public sealed class ExactSceneController : IDisposable
     public void Dispose()
     {
         ClearValidationBody();
+        ClearFeatureGraph();
         _kernel.Dispose();
+    }
+
+    private ExactFeatureGraph? _currentGraph;
+
+    public void DisplayFeatureGraph(ExactFeatureGraph graph)
+    {
+        ClearValidationBody();
+        ClearFeatureGraph();
+        
+        _currentGraph = graph;
+        
+        foreach (var node in graph.Nodes)
+        {
+            if (node.Body != null)
+            {
+                _host.DisplayBody(node.Body);
+            }
+        }
+        
+        _host.FitAll();
+    }
+
+    public void ClearFeatureGraph()
+    {
+        if (_currentGraph != null)
+        {
+            foreach (var node in _currentGraph.Nodes)
+            {
+                if (node.Body != null)
+                {
+                    _host.HideBody(node.Body.BodyId);
+                }
+            }
+            _currentGraph = null;
+        }
     }
 }

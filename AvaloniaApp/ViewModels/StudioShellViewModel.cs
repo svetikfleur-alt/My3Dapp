@@ -176,6 +176,25 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         RefreshWorkspaceTabs();
         RefreshAssistantConfiguration();
         SeedAssistantHistory();
+
+        AclWorkspace = new AclWorkspaceViewModel();
+        AclWorkspace.BuildCompleted += OnAclBuildCompleted;
+    }
+
+    public AclWorkspaceViewModel AclWorkspace { get; }
+
+    private void OnAclBuildCompleted(object? sender, FormaCore.Engine.Exact.Graph.ExactFeatureGraph? graph)
+    {
+        // Update feature tree from graph
+        FeatureNodes.Clear();
+        if (graph != null)
+        {
+            foreach (var node in graph.Nodes)
+            {
+                var icon = node is FormaCore.Engine.Exact.Graph.ExactBoxNode ? "box" : "cylinder";
+                FeatureNodes.Add(new FeatureNodeViewModel(node.Id, iconKind: icon, typeLabel: "Feature", entityKind: FormaCore.Engine.CadEntityKind.Feature, isSelectable: true));
+            }
+        }
     }
 
     public ObservableCollection<PartStudioTabItem> PartStudios { get; }

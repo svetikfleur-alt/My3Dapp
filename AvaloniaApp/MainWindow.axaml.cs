@@ -260,6 +260,25 @@ public sealed partial class MainWindow : Window
         _exactScene = new ExactSceneController(host);
         host.SetSelectionMode(FormaCore.Engine.Exact.TopologyKind.Face, true);
         host.SetSelectionMode(FormaCore.Engine.Exact.TopologyKind.Edge, true);
+        
+        if (_wiredViewModel != null)
+        {
+            _wiredViewModel.AclWorkspace.BuildCoordinator.Session.SetKernel(_exactScene.Kernel);
+            _wiredViewModel.AclWorkspace.BuildCompleted += (s, graph) => 
+            {
+                if (graph != null)
+                {
+                    _exactScene.DisplayFeatureGraph(graph);
+                }
+                else
+                {
+                    _exactScene.ClearFeatureGraph();
+                }
+            };
+            
+            // Build the initial default ACL document to display something
+            _wiredViewModel.AclWorkspace.Build();
+        }
 
         // Developer Mode scripted check: --export-validation-step <path> shows the
         // validation body and exports it through the product kernel path.

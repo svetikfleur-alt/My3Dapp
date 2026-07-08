@@ -2131,43 +2131,16 @@
             </Grid>
           </TabItem>
 
-          <TabItem ToolTip.Tip="ACL Scripting" IsVisible="False">
+          <TabItem ToolTip.Tip="ACL Workspace" IsVisible="True">
             <TabItem.Header>
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <svg:Svg Path="avares://My3DApp/Assets/Icons/draft.svg"
                          Width="15"
                          Height="15" />
-                <TextBlock Text="Script" />
+                <TextBlock Text="ACL" />
               </StackPanel>
             </TabItem.Header>
-            <Grid RowDefinitions="Auto,*,Auto" Margin="10">
-              <Border Classes="RecipeHeaderCard" Margin="0,0,0,10">
-                <StackPanel Spacing="4">
-                  <TextBlock Text="ACL Script Editor"
-                             Classes="RecipeHeaderTitle" />
-                  <TextBlock Text="Write Advanced CAD Language (ACL) scripts with variables, loops, and logic. Scripts are parsed into sequence steps and executed against the active studio."
-                             TextWrapping="Wrap"
-                             Classes="RecipeHeaderSummary" />
-                </StackPanel>
-              </Border>
-
-              <TextBox Grid.Row="1"
-                       Text="{Binding AclScriptText, Mode=TwoWay}"
-                       AcceptsReturn="True"
-                       TextWrapping="NoWrap"
-                       FontFamily="Consolas, Cascadia Mono, monospace"
-                       Classes="DocumentTextView"
-                       Watermark="def my_macro(r) {&#x0a;  circle(r)&#x0a;  extrude(10)&#x0a;}&#x0a;&#x0a;my_macro(5)" />
-
-              <Button Grid.Row="2"
-                      Margin="0,10,0,0"
-                      HorizontalAlignment="Right"
-                      Content="▶ Run Script"
-                      Classes="FeatureDialogButtonPrimary"
-                      ToolTip.Tip="Execute the script against the current project"
-                      IsEnabled="{Binding CanRunAclScript}"
-                      Click="OnRunAclScriptClick" />
-            </Grid>
+            <controls:AclWorkspacePanel DataContext="{Binding AclWorkspace}" />
           </TabItem>
 
           <TabItem ToolTip.Tip="Feature recipe" IsVisible="False">
