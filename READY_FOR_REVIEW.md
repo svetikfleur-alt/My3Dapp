@@ -66,3 +66,37 @@ Result: **BLOCKED by environment.** The app targets `net10.0-windows` with `UseW
 
 ## Next recommended task
 Run the app once on Windows and confirm visually: empty-state card appears on a fresh document, both actions create a visible body, and the card disappears afterwards.
+
+## Windows UI Verification
+
+A Windows UI verification pass was requested, but this session again ran in a **Linux container** — there is no Windows runtime available here, so the on-screen portion remains blocked. Results of everything that could be executed or verified:
+
+### Build result
+`dotnet build -p:EnableWindowsTargeting=true` — **Build succeeded, 0 warnings, 0 errors** (re-run on this branch tip, commit `36261b9`).
+
+### Smoke runner result
+`dotnet run` in `Tools/AclSmokeRunner` — **All smoke stages passed, 16/16 checks** (ACL expansion, 70-step template parsing, sample-box end-to-end incl. STL export, sample-ACL end-to-end incl. OBJ export).
+
+### App launch result
+`dotnet run --project My3DApp.csproj` — **BLOCKED by environment**, not by code: `Framework 'Microsoft.WindowsDesktop.App', version '10.0.0' — No frameworks were found.` The app requires the Windows Desktop runtime (WinForms `NativeControlHost` + WebView2 viewport), which does not exist on Linux. No screenshots are possible; none are provided rather than fabricating any.
+
+### Tested UI actions
+None could be exercised on screen. In place of on-screen testing, the specific wiring concerns were verified statically against the code on this branch:
+
+- **UI bindings compile:** `MainWindow.axaml` declares `x:DataType="vm:StudioShellViewModel"` and the project sets `AvaloniaUseCompiledBindingsByDefault=true`, so every binding in the window — including `IsCreateFirstPartVisible` and both empty-state button handlers — is checked at build time. The clean build is a real (compile-level) verification of the bindings.
+- **`IsCreateFirstPartVisible` updates after body creation:** `StudioWorkspaceController.ExecuteCommand` raises `WorkspaceChanged` after every state mutation → `StudioShellViewModel.OnWorkspaceChanged` → `ApplyWorkspaceState` → `UpdateWorkspaceSummaries`, which raises `PropertyChanged` for `IsCreateFirstPartVisible`. The card therefore hides as soon as a body exists.
+- **Viewport refresh after creation:** the same `ApplyWorkspaceState` call raises `ViewportStateChanged` with the new render payload; `MainWindow.OnViewportStateChanged` applies it via `ApplyViewportStateAsync`. The payload itself is confirmed real by the smoke runner (24 positions / 36 indices for the sample box).
+- **UI-thread correctness:** both empty-state click handlers follow the exact pattern of the existing `OnPrimitiveMenuItemClick` handler (async void, await VM method, `LogHandlerFailure` on exception); `ExecuteCommand` and the resulting events run synchronously on the UI thread. No cross-thread dispatch is introduced.
+- **Tree/history/undo and export see the body:** confirmed by smoke Stage 3 (scene tree, feature history, undo stack, STL export all reflect the created box) and Stage 4 (OBJ export of the ACL-created body).
+- **Honest export states:** the export dialog offers only STL and OBJ (both real exporters); STEP is not offered anywhere, and the Prepare workspace text states "STEP and slicer handoff are not in this MVP yet".
+
+### Confirmed working flows
+Headless (executed): build; ACL expansion/parsing; sample-box creation; sample-ACL creation; compile/tree/history/undo/viewport-payload updates; STL/OBJ export.
+Compile-level (verified): all MainWindow bindings including the empty-state card; event chain from command execution to card visibility and viewport refresh.
+
+### Bugs fixed
+None — no defects were found in the verifiable scope, so no code changes were made in this pass.
+
+### Remaining limitations
+- On-screen confirmation (window opens, card visible, body drawn, dialogs open) still requires one manual run on a real Windows machine; it cannot be produced from this environment, and this report deliberately does not claim it.
+- Native z-order of the WebView2 host relative to Avalonia overlays remains only empirically checkable on Windows (shared behavior with all pre-existing viewport overlays).
