@@ -1,125 +1,127 @@
-using System.Reflection;
+using My3DApp.AvaloniaApp.Services;
+
+// Headless smoke test for the MVP end-to-end flow. Exercises the real pipeline
+// (ACL expansion -> parse -> StudioWorkspaceController -> CadProjectStore ->
+// compile -> viewport payload -> STL/OBJ export) without any UI.
+// Exit code 0 = all stages passed.
 
 var invocation = args.Length > 0
     ? string.Join(' ', args)
     : "template controller-box-kit boxWidth=140 boxDepth=95 boxHeight=48 wallThickness=3 lidThickness=3 standoffHeight=10 cableDiameter=7 fanSize=80";
 
-var assemblyPath = ResolveAppAssemblyPath();
-var assembly = Assembly.LoadFrom(assemblyPath);
+var failures = 0;
 
-var scriptType = assembly.GetType("My3DApp.AvaloniaApp.Services.CadScriptLibrary", throwOnError: true)!;
-var parserType = assembly.GetType("My3DApp.AvaloniaApp.Services.CadCommandParser", throwOnError: true)!;
-
-var tryExpand = scriptType.GetMethod("TryExpandSequence", BindingFlags.Public | BindingFlags.Static);
-var tokenize = scriptType.GetMethod("TokenizeScript", BindingFlags.NonPublic | BindingFlags.Static);
-string expanded;
-string? aclError = null;
-var expandedOk = false;
-
-if (tryExpand is not null)
+void Check(bool condition, string label)
 {
-    object?[] invokeArgs = [invocation, null, null];
-    expandedOk = (bool)(tryExpand.Invoke(null, invokeArgs) ?? false);
-    expanded = invokeArgs[1] as string ?? string.Empty;
-    aclError = invokeArgs[2] as string;
-}
-else
-{
-    var expand = scriptType.GetMethod("ExpandSequence", BindingFlags.Public | BindingFlags.Static)
-        ?? throw new InvalidOperationException("CadScriptLibrary.ExpandSequence not found.");
-    expanded = expand.Invoke(null, [invocation]) as string ?? string.Empty;
-    expandedOk = true;
-}
-
-var parser = Activator.CreateInstance(parserType)
-    ?? throw new InvalidOperationException("Failed to create CadCommandParser.");
-var parseSequence = parserType.GetMethod("ParseSequence", BindingFlags.Public | BindingFlags.Instance)
-    ?? throw new InvalidOperationException("CadCommandParser.ParseSequence not found.");
-var steps = ((System.Collections.IEnumerable?)parseSequence.Invoke(parser, [invocation]))?.Cast<object>().ToArray()
-    ?? [];
-
-var failed = steps
-    .Where(step =>
+    Console.WriteLine($"[{(condition ? "PASS" : "FAIL")}] {label}");
+    if (!condition)
     {
-        var result = step.GetType().GetProperty("Result")?.GetValue(step);
-        return result?.GetType().GetProperty("IsSuccess")?.GetValue(result) as bool? != true;
-    })
-    .ToArray();
-
-Console.WriteLine("ACL sample invocation:");
-Console.WriteLine(invocation);
-Console.WriteLine();
-Console.WriteLine($"Using app assembly: {assemblyPath}");
-Console.WriteLine();
-if (tokenize is not null)
-{
-    var tokenList = ((System.Collections.IEnumerable?)tokenize.Invoke(null, [invocation]))?.Cast<object>().Select(item => item?.ToString() ?? string.Empty).ToArray()
-        ?? [];
-    Console.WriteLine($"Structured tokens: {tokenList.Length}");
-    foreach (var token in tokenList.Take(16))
-    {
-        Console.WriteLine($"  TOK: {token}");
+        failures++;
     }
-    Console.WriteLine();
 }
-Console.WriteLine("Expanded command sequence:");
-Console.WriteLine(expanded);
-Console.WriteLine();
-Console.WriteLine($"ACL structured expansion: {(expandedOk ? "OK" : "FALLBACK")}");
-if (!expandedOk && !string.IsNullOrWhiteSpace(aclError))
+
+// ---- Stage 1: ACL expansion --------------------------------------------
+Console.WriteLine("=== Stage 1: ACL expansion ===");
+Console.WriteLine($"Invocation: {invocation}");
+var expandedOk = CadScriptLibrary.TryExpandSequence(invocation, out var expanded, out var aclError);
+Check(expandedOk, "ACL structured expansion succeeds");
+if (!expandedOk)
 {
     Console.WriteLine($"ACL error: {aclError}");
 }
-Console.WriteLine();
-Console.WriteLine($"Parsed steps: {steps.Length}");
-Console.WriteLine($"Failed steps: {failed.Length}");
-Console.WriteLine();
-Console.WriteLine("First parsed steps:");
-foreach (var step in steps.Take(12))
+else
 {
-    var stepType = step.GetType();
-    var index = stepType.GetProperty("Index")?.GetValue(step);
-    var text = stepType.GetProperty("Text")?.GetValue(step);
-    var result = stepType.GetProperty("Result")?.GetValue(step);
-    var isSuccess = result?.GetType().GetProperty("IsSuccess")?.GetValue(result) as bool? == true;
-    var status = isSuccess ? "OK" : "FAIL";
-    Console.WriteLine($"[{status}] {index}: {text}");
+    Console.WriteLine($"Expanded: {expanded}");
 }
 
-if (failed.Length > 0)
+// ---- Stage 2: command parsing ------------------------------------------
+Console.WriteLine();
+Console.WriteLine("=== Stage 2: command parsing ===");
+var parser = new CadCommandParser();
+var steps = parser.ParseSequence(invocation);
+var failedSteps = steps.Where(step => !step.Result.IsSuccess || step.Result.Commands.Count == 0).ToArray();
+Console.WriteLine($"Parsed steps: {steps.Count}, failed: {failedSteps.Length}");
+foreach (var step in failedSteps)
 {
-    Console.WriteLine();
-    Console.WriteLine("Failures:");
-    foreach (var step in failed)
-    {
-        var stepType = step.GetType();
-        var index = stepType.GetProperty("Index")?.GetValue(step);
-        var result = stepType.GetProperty("Result")?.GetValue(step);
-        var message = result?.GetType().GetProperty("Message")?.GetValue(result);
-        Console.WriteLine($"Step {index}: {message}");
-    }
+    Console.WriteLine($"  Step {step.Index}: '{step.Text}' -> {step.Result.Message}");
+}
+Check(steps.Count > 0 && failedSteps.Length == 0, "all parsed steps succeed");
 
+// ---- Stage 3: end-to-end execution, state, and export -------------------
+Console.WriteLine();
+Console.WriteLine("=== Stage 3: headless end-to-end (sample box) ===");
+var controller = new StudioWorkspaceController();
+Check(controller.CurrentState.CompileResult.Bodies.Count == 0, "new workspace starts with zero bodies");
+
+var boxExecuted = ExecuteSequence(controller, parser, "create box 40x30x20");
+Check(boxExecuted, "'create box 40x30x20' executes through the command pipeline");
+
+var state = controller.CurrentState;
+Check(state.CompileResult.Bodies.Count == 1, $"compiled body count is 1 (actual {state.CompileResult.Bodies.Count})");
+Check(state.Project.Scene.Bodies.Count == 1, "scene tree contains the body");
+Check(state.Project.Scene.Bodies.Sum(b => b.Features.Count) > 0, "body carries feature history entries");
+
+var renderBody = state.ViewportState.Bodies.FirstOrDefault();
+Check(renderBody is not null, "viewport render state contains the body");
+Check(renderBody is { Positions.Length: > 0, Indices.Length: > 0 },
+    $"viewport body has real mesh data (positions {renderBody?.Positions.Length ?? 0}, indices {renderBody?.Indices.Length ?? 0})");
+Check(controller.CanUndo, "undo history recorded the mutation");
+
+var stlPath = Path.Combine(Path.GetTempPath(), $"acl-smoke-{Guid.NewGuid():N}.stl");
+controller.ExportStl(stlPath);
+var stlText = File.Exists(stlPath) ? File.ReadAllText(stlPath) : string.Empty;
+Check(stlText.Contains("facet normal") && stlText.Contains("vertex"), $"STL export contains real triangles ({stlText.Length} bytes)");
+File.Delete(stlPath);
+
+Console.WriteLine();
+Console.WriteLine("=== Stage 4: headless end-to-end (sample ACL script) ===");
+controller.NewProject();
+Check(controller.CurrentState.CompileResult.Bodies.Count == 0, "new project resets bodies");
+Console.WriteLine("Script:");
+Console.WriteLine(CadScriptLibrary.SampleAclScript);
+var aclExecuted = ExecuteSequence(controller, parser, CadScriptLibrary.SampleAclScript);
+Check(aclExecuted, "sample ACL script executes through the command pipeline");
+
+state = controller.CurrentState;
+Check(state.CompileResult.Bodies.Count >= 1, $"sample ACL produced a compiled body (actual {state.CompileResult.Bodies.Count})");
+Check(state.ViewportState.Bodies.Any(b => b.Positions.Length > 0 && b.Indices.Length > 0), "sample ACL body has real viewport mesh data");
+
+var objPath = Path.Combine(Path.GetTempPath(), $"acl-smoke-{Guid.NewGuid():N}.obj");
+controller.ExportObj(objPath);
+var objText = File.Exists(objPath) ? File.ReadAllText(objPath) : string.Empty;
+Check(objText.Contains("v ") && objText.Contains("f "), $"OBJ export contains vertices and faces ({objText.Length} bytes)");
+File.Delete(objPath);
+
+Console.WriteLine();
+if (failures > 0)
+{
+    Console.WriteLine($"Smoke test FAILED: {failures} check(s) failed.");
     return 1;
 }
 
-Console.WriteLine();
-Console.WriteLine("ACL smoke test passed.");
+Console.WriteLine("All smoke stages passed.");
 return 0;
 
-static string ResolveAppAssemblyPath()
+static bool ExecuteSequence(StudioWorkspaceController controller, CadCommandParser parser, string script)
 {
-    var current = new DirectoryInfo(AppContext.BaseDirectory);
-    while (current is not null)
+    foreach (var step in parser.ParseSequence(script))
     {
-        var repoMarker = Path.Combine(current.FullName, "My3DApp.csproj");
-        var candidate = Path.Combine(current.FullName, "bin", "Debug", "net10.0-windows", "My3DApp.dll");
-        if (File.Exists(repoMarker) && File.Exists(candidate))
+        if (!step.Result.IsSuccess || step.Result.Commands.Count == 0)
         {
-            return candidate;
+            Console.WriteLine($"  parse failure at step {step.Index}: '{step.Text}' -> {step.Result.Message}");
+            return false;
         }
 
-        current = current.Parent;
+        foreach (var command in step.Result.Commands)
+        {
+            var result = controller.ExecuteCommand(command);
+            if (!result.Success)
+            {
+                Console.WriteLine($"  execution failure at step {step.Index}: {command.Describe()} -> {result.Message}");
+                return false;
+            }
+        }
     }
 
-    return Path.Combine(AppContext.BaseDirectory, "My3DApp.dll");
+    return true;
 }

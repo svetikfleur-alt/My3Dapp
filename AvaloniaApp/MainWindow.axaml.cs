@@ -799,6 +799,41 @@ public sealed partial class MainWindow : Window
         await dialog.ShowDialog<bool?>(this);
     }
 
+    private async void OnCreateSampleBoxClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _wiredViewModel.CreatePrimitiveAsync("box");
+            _wiredViewModel.RecordRecentPrimitive("box");
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnCreateSampleBoxClick), ex);
+        }
+    }
+
+    private async void OnRunSampleAclClick(object? sender, RoutedEventArgs e)
+    {
+        if (_wiredViewModel is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _wiredViewModel.RunSampleAclAsync();
+        }
+        catch (Exception ex)
+        {
+            LogHandlerFailure(nameof(OnRunSampleAclClick), ex);
+        }
+    }
+
     private async void OnViewportDeleteRequested(object? sender, EventArgs e)
     {
         if (_wiredViewModel is null)

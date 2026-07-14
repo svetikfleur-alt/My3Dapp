@@ -1357,6 +1357,36 @@
 
               <Border Grid.RowSpan="3"
                       HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      MaxWidth="420"
+                      Classes="ViewportSketchSessionCard"
+                      IsVisible="{Binding IsCreateFirstPartVisible}">
+                <StackPanel Spacing="12" Width="380">
+                  <TextBlock Text="Create your first part"
+                             FontSize="18"
+                             FontWeight="SemiBold"
+                             Classes="ViewportSessionTitle" />
+                  <TextBlock Text="The workspace is empty. Both actions below run the real CAD pipeline and create an actual body you can inspect and export."
+                             TextWrapping="Wrap"
+                             Classes="ViewportSessionSummary" />
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="Create sample box"
+                            Classes="FeatureDialogButtonPrimary"
+                            ToolTip.Tip="Adds a real box primitive through the standard command pipeline"
+                            Click="OnCreateSampleBoxClick" />
+                    <Button Content="Run sample ACL"
+                            Classes="FeatureDialogButtonSecondary"
+                            ToolTip.Tip="Executes a small ACL script (variables, create box, fillet) through the parser"
+                            Click="OnRunSampleAclClick" />
+                  </StackPanel>
+                  <TextBlock Text="More options: the Templates tab (left panel) generates parametric starter parts. The AI assistant panel accepts the same local CAD commands with or without a provider key."
+                             TextWrapping="Wrap"
+                             Classes="ViewportSessionSummary" />
+                </StackPanel>
+              </Border>
+
+              <Border Grid.RowSpan="3"
+                      HorizontalAlignment="Center"
                       VerticalAlignment="Top"
                       MaxWidth="520"
                       Classes="ViewportSketchSessionCard"

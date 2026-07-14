@@ -879,6 +879,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
                 RaisePropertyChanged(nameof(WorkspaceSurfaceTitle));
                 RaisePropertyChanged(nameof(WorkspaceSurfaceSummary));
                 RaisePropertyChanged(nameof(LeftPaneSummary));
+                RaisePropertyChanged(nameof(IsCreateFirstPartVisible));
                 RefreshWorkspaceTabs();
             }
         }
@@ -1267,6 +1268,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
     private void RaiseSketchFlowProperties()
     {
+        RaisePropertyChanged(nameof(IsCreateFirstPartVisible));
         RaisePropertyChanged(nameof(CanSketchPrimaryAction));
         RaisePropertyChanged(nameof(CanStartSketchFromCurrentSelection));
         RaisePropertyChanged(nameof(SketchPrimarySummary));
@@ -1457,6 +1459,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
 
             RaisePropertyChanged(nameof(WorkspaceModeBadge));
             RaisePropertyChanged(nameof(WorkspaceModeSummary));
+            RaisePropertyChanged(nameof(IsCreateFirstPartVisible));
         }
     }
 
@@ -1510,6 +1513,23 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
             new CadViewportCommand(CadViewportCommandKind.AddPrimitive, PrimitiveKind: primitiveKind),
             switchToProperties: true,
             cancellationToken);
+    }
+
+    /// <summary>
+    /// True when the CAD workspace shows no bodies at all, so the viewport can
+    /// offer the "Create your first part" starter actions.
+    /// </summary>
+    public bool IsCreateFirstPartVisible =>
+        IsCadWorkspaceVisible &&
+        !IsSketchMode &&
+        !IsSelectingSketchPlane &&
+        _workspaceController.CurrentState.Project.Scene.Bodies.Count == 0 &&
+        _workspaceController.CurrentState.CompileResult.Bodies.Count == 0;
+
+    public async Task RunSampleAclAsync(CancellationToken cancellationToken = default)
+    {
+        var report = await ExecuteLocalCommandTextAsync(CadScriptLibrary.SampleAclScript, cancellationToken);
+        AddMessage("system", $"Sample ACL run:\n{report}");
     }
 
     public void RecordRecentPrimitive(string primitiveKind)
@@ -3530,6 +3550,7 @@ public sealed class StudioShellViewModel : ViewModelBase, IDisposable
         RaisePropertyChanged(nameof(HasPrepareWorkspaceChecks));
         RaisePropertyChanged(nameof(CanExportCurrentPart));
         RaisePropertyChanged(nameof(WorkspaceSurfaceSummary));
+        RaisePropertyChanged(nameof(IsCreateFirstPartVisible));
     }
 
     private void UpdateToolAvailability(CadProject project, CadCompileResult compileResult)

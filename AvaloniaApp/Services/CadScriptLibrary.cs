@@ -7,6 +7,22 @@ namespace My3DApp.AvaloniaApp.Services;
 
 public static class CadScriptLibrary
 {
+    /// <summary>
+    /// Small ACL script used by the "Run sample ACL" empty-state action and the
+    /// headless smoke runner. It must stay valid against the current parser.
+    /// </summary>
+    public const string SampleAclScript = """
+        let width = 60
+        let depth = 40
+        let height = 25
+        select plane top
+        start sketch
+        rectangle 0 0 ${width} ${depth}
+        finish sketch
+        extrude ${height}
+        fillet 3
+        """;
+
     private static readonly Regex SequenceSeparatorPattern = new(
         @"(?:\r?\n|;|->|\bthen\b)",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
